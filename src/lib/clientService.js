@@ -1,5 +1,21 @@
 import { supabase, isSupabaseConfigured } from './supabase.js';
 
+// Get current user email
+function getCurrentUserEmail() {
+  try {
+    const session = supabase?.auth?.session?.() || null;
+    // For newer supabase-js versions
+    return supabase?.auth?.getUser?.()?.then(r => r.data?.user?.email) || '';
+  } catch { return ''; }
+}
+
+async function getUserEmail() {
+  try {
+    const { data } = await supabase.auth.getUser();
+    return data?.user?.email || '';
+  } catch { return ''; }
+}
+
 // ─── Helpers ──────────────────────────────────────────
 
 function base64ToBlob(dataUrl) {
@@ -22,7 +38,7 @@ export async function listClients() {
   if (!isSupabaseConfigured()) return [];
   const { data, error } = await supabase
     .from('clients')
-    .select('id, empresa, sector, trabajadores, contacto, responsable, fecha, updated_at')
+    .select('id, empresa, sector, trabajadores, contacto, responsable, fecha, updated_at, created_by')
     .order('updated_at', { ascending: false });
   if (error) { console.error('listClients error:', error); return []; }
   return data || [];
@@ -35,7 +51,7 @@ export async function searchClients(query) {
   const q = `%${query}%`;
   const { data, error } = await supabase
     .from('clients')
-    .select('id, empresa, sector, trabajadores, contacto, responsable, fecha, updated_at')
+    .select('id, empresa, sector, trabajadores, contacto, responsable, fecha, updated_at, created_by')
     .or(`empresa.ilike.${q},sector.ilike.${q},contacto.ilike.${q},responsable.ilike.${q}`)
     .order('updated_at', { ascending: false });
   if (error) { console.error('searchClients error:', error); return []; }
@@ -73,6 +89,8 @@ export async function saveClient(id, { clientData, sectionEnabled, formData, ins
     const { error } = await supabase.from('clients').update(row).eq('id', clientId);
     if (error) throw error;
   } else {
+    // Set created_by on first save
+    row.created_by = await getUserEmail();
     const { data, error } = await supabase.from('clients').insert(row).select('id').single();
     if (error) throw error;
     clientId = data.id;

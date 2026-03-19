@@ -1141,13 +1141,7 @@ export default function App() {
               {currentFilePath && <div style={{ fontSize: 11, color: "#93c5fd", marginTop: 1 }}>{currentFilePath.split("\\").pop().split("/").pop()}{isDirty ? " •" : ""}</div>}
             </div>
             <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
-              <div style={{ textAlign: "right" }}>
-                <div style={{ fontSize: 11, color: "#93c5fd" }}>Progreso</div>
-                <div style={{ fontSize: 16, fontWeight: 700 }}>{answered}/{SECTIONS.length} secciones</div>
-              </div>
-              <div style={{ width: 48, height: 48, borderRadius: "50%", background: "rgba(255,255,255,0.1)", border: "3px solid #3b82f6", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, fontWeight: 700 }}>
-                {progress}%
-              </div>
+              {/* Left group: navigation + actions */}
               {isSupabaseConfigured() && (
                 <button onClick={() => {
                   if (isDirty) { unsavedCallbackRef.current = () => setView('dashboard'); setShowUnsaved(true); }
@@ -1162,21 +1156,26 @@ export default function App() {
               <button onClick={handleSave} disabled={saving} style={{ background: isDirty ? "#15803d" : "rgba(255,255,255,0.12)", color: "#fff", border: `1px solid ${isDirty ? "#16a34a" : "rgba(255,255,255,0.2)"}`, padding: "9px 14px", borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: "pointer", transition: "all 0.2s", opacity: saving ? 0.6 : 1 }}>
                 {saving ? "⏳ Guardando..." : isDirty ? "💾 Guardar *" : "💾 Guardar"}
               </button>
-              {isSupabaseConfigured() && (
-                <button onClick={handleExportFile} style={{ background: "rgba(255,255,255,0.12)", color: "#fff", border: "1px solid rgba(255,255,255,0.2)", padding: "9px 14px", borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: "pointer", transition: "all 0.2s" }}>
-                  📥 Exportar
-                </button>
-              )}
               {isSupabaseConfigured() && currentClientId && (
                 <button onClick={() => setShowVersionHistory(true)} style={{ background: "rgba(255,255,255,0.12)", color: "#fff", border: "1px solid rgba(255,255,255,0.2)", padding: "9px 14px", borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: "pointer", transition: "all 0.2s" }}>
                   📜 Historial
                 </button>
               )}
-              <button onClick={handlePrint} style={{ background: C.blue, color: "#fff", border: "none", padding: "9px 18px", borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", gap: 6 }}>
+              {/* Spacer */}
+              <div style={{ flex: 1 }} />
+              {/* Right group: progress + PDF + user */}
+              <div style={{ textAlign: "right" }}>
+                <div style={{ fontSize: 11, color: "#93c5fd" }}>Progreso</div>
+                <div style={{ fontSize: 14, fontWeight: 700 }}>{answered}/{SECTIONS.length}</div>
+              </div>
+              <div style={{ width: 42, height: 42, borderRadius: "50%", background: "rgba(255,255,255,0.1)", border: "3px solid #3b82f6", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 700 }}>
+                {progress}%
+              </div>
+              <button onClick={handlePrint} disabled={exporting} style={{ background: C.blue, color: "#fff", border: "none", padding: "9px 18px", borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", gap: 6, opacity: exporting ? 0.6 : 1 }}>
                 {exporting ? "⏳ Generando..." : "📄 Exportar PDF"}
               </button>
               {session && (
-                <div style={{ display: "flex", alignItems: "center", gap: 8, marginLeft: 8, paddingLeft: 8, borderLeft: "1px solid rgba(255,255,255,0.2)" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 8, paddingLeft: 8, borderLeft: "1px solid rgba(255,255,255,0.2)" }}>
                   <span style={{ fontSize: 12, color: "#93c5fd" }}>👤 {getUserName(session)}</span>
                   <button onClick={async () => { await signOut(); setSession(null); }} style={{ background: "rgba(255,255,255,0.08)", color: "#94a3b8", border: "none", padding: "6px 10px", borderRadius: 6, fontSize: 11, cursor: "pointer" }}>
                     Salir
@@ -1228,6 +1227,19 @@ export default function App() {
             </button>
             <input ref={fileInputLoadRef} type="file" accept=".alanait" style={{ display: "none" }}
               onChange={e => { if (e.target.files[0]) loadFromFile(e.target.files[0]); e.target.value = ""; }} />
+            {isSupabaseConfigured() && (
+              <button onClick={handleExportFile} style={{
+                width: "100%", padding: "8px 10px", background: "transparent",
+                border: "none", borderRadius: 6, color: "#64748b",
+                fontSize: 12, fontWeight: 500, cursor: "pointer", textAlign: "left",
+                display: "flex", alignItems: "center", gap: 7, marginBottom: 12,
+                whiteSpace: "nowrap",
+              }}
+              onMouseEnter={e => e.currentTarget.style.color = "#94a3b8"}
+              onMouseLeave={e => e.currentTarget.style.color = "#64748b"}>
+                💾 <span>Exportar a local (.alanait)</span>
+              </button>
+            )}
 
             {/* Recent projects list */}
             <div style={{ fontSize: 10, fontWeight: 600, color: "#374151", textTransform: "uppercase", letterSpacing: "0.08em", padding: "0 6px", marginBottom: 4 }}>

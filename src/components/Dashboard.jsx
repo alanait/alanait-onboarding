@@ -173,7 +173,7 @@ export default function Dashboard({ onOpenClient, onNewClient, onImportFile, ses
             <table style={{ width: "100%", borderCollapse: "collapse" }}>
               <thead>
                 <tr style={{ background: "#f8fafc", borderBottom: `2px solid ${C.border}` }}>
-                  {["Empresa", "Sector", "Contacto", "Responsable", "Fecha", "Actualizado", ""].map((h, i) => (
+                  {["Empresa", "Sector", "Contacto", "Responsable", "Creado por", "Fecha", ""].map((h, i) => (
                     <th key={i} style={{ padding: "12px 16px", textAlign: "left", fontSize: 11, fontWeight: 700, color: C.gray, textTransform: "uppercase", letterSpacing: "0.05em" }}>
                       {h}
                     </th>
@@ -195,11 +195,11 @@ export default function Dashboard({ onOpenClient, onNewClient, onImportFile, ses
                     <td style={{ padding: "14px 16px", fontSize: 13, color: "#374151" }}>{c.sector || "—"}</td>
                     <td style={{ padding: "14px 16px", fontSize: 13, color: "#374151" }}>{c.contacto || "—"}</td>
                     <td style={{ padding: "14px 16px", fontSize: 13, color: "#374151" }}>{c.responsable || "—"}</td>
-                    <td style={{ padding: "14px 16px", fontSize: 13, color: "#374151" }}>
-                      {c.fecha ? new Date(c.fecha).toLocaleDateString("es-ES", { day: "2-digit", month: "short", year: "numeric" }) : "—"}
+                    <td style={{ padding: "14px 16px", fontSize: 12, color: C.textLight }}>
+                      {c.created_by ? c.created_by.split('@')[0] : "—"}
                     </td>
                     <td style={{ padding: "14px 16px", fontSize: 12, color: C.textLight }}>
-                      {new Date(c.updated_at).toLocaleDateString("es-ES", { day: "2-digit", month: "short" })}
+                      {c.fecha ? new Date(c.fecha).toLocaleDateString("es-ES", { day: "2-digit", month: "short", year: "numeric" }) : new Date(c.updated_at).toLocaleDateString("es-ES", { day: "2-digit", month: "short" })}
                     </td>
                     <td style={{ padding: "14px 8px", textAlign: "right" }}>
                       {confirmDeleteId === c.id ? (
