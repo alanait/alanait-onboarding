@@ -821,16 +821,40 @@ export default function App() {
   const unsavedCallbackRef = React.useRef(null); // stores path to confirm
 
   const handlePrint = async () => {
-    const html = buildPrintHTML(clientData, sectionEnabled, formData, instanceCounts, sectionImages);
-    // Open print preview in a new window
-    const printWin = window.open("", "_blank");
-    if (printWin) {
-      printWin.document.write(html);
-      printWin.document.close();
-      setTimeout(() => { printWin.print(); }, 600);
-    } else {
-      alert("El navegador bloqueó la ventana emergente. Permite pop-ups para esta página.");
+    setExporting(true);
+    try {
+      const html2pdf = (await import('html2pdf.js')).default;
+      const html = buildPrintHTML(clientData, sectionEnabled, formData, instanceCounts, sectionImages);
+
+      // Create temporary container
+      const container = document.createElement('div');
+      container.innerHTML = html;
+      // Extract just the body content
+      const bodyMatch = html.match(/<body[^>]*>([\s\S]*)<\/body>/i);
+      if (bodyMatch) container.innerHTML = bodyMatch[1];
+      container.style.width = '210mm';
+      container.style.padding = '20px';
+      container.style.fontFamily = "'Segoe UI', system-ui, sans-serif";
+      document.body.appendChild(container);
+
+      const nombre = clientData.empresa ? clientData.empresa.replace(/[^a-zA-Z0-9áéíóúñÁÉÍÓÚÑ ]/g, "_") : "onboarding";
+      const fecha = new Date().toISOString().split("T")[0];
+
+      await html2pdf().set({
+        margin: [10, 10, 10, 10],
+        filename: `${nombre}_${fecha}.pdf`,
+        image: { type: 'jpeg', quality: 0.95 },
+        html2canvas: { scale: 2, useCORS: true, letterRendering: true },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+        pagebreak: { mode: ['avoid-all', 'css', 'legacy'] },
+      }).from(container).save();
+
+      document.body.removeChild(container);
+    } catch (err) {
+      console.error('PDF export error:', err);
+      alert("Error al generar PDF: " + err.message);
     }
+    setExporting(false);
   };
 
   const [currentFilePath, setCurrentFilePath] = useState(null);
