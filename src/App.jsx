@@ -4,7 +4,7 @@ import VersionHistory from "./components/VersionHistory.jsx";
 import LoginPage from "./components/LoginPage.jsx";
 import { isSupabaseConfigured } from "./lib/supabase.js";
 import { getSession, onAuthChange, signOut, getUserName } from "./lib/auth.js";
-import { saveClient as saveToCloud, loadClient, exportToFile } from "./lib/clientService.js";
+import { saveClient as saveToCloud, loadClient, exportToFile, searchClients } from "./lib/clientService.js";
 
 const SECTIONS = [
   {
@@ -1273,15 +1273,29 @@ export default function App() {
                       e.currentTarget.querySelector('.del-btn').style.opacity = "0";
                     }}
                   >
-                    <div onClick={() => {
-                      if (p.cloudId && isSupabaseConfigured()) {
+                    <div onClick={async () => {
+                      let targetId = p.cloudId;
+                      // If no cloudId but Supabase is configured, try to find by name
+                      if (!targetId && isSupabaseConfigured() && p.empresa) {
+                        try {
+                          const results = await searchClients(p.empresa);
+                          const match = results.find(c => c.empresa === p.empresa);
+                          if (match) {
+                            targetId = match.id;
+                            // Update the recent entry with the cloudId for next time
+                            addToRecent(p.empresa, match.id);
+                            loadRecent();
+                          }
+                        } catch {}
+                      }
+                      if (targetId && isSupabaseConfigured()) {
                         if (isDirty) {
-                          unsavedCallbackRef.current = () => openClientFromCloud(p.cloudId);
+                          unsavedCallbackRef.current = () => openClientFromCloud(targetId);
                           setShowUnsaved(true);
                         } else {
-                          openClientFromCloud(p.cloudId);
+                          openClientFromCloud(targetId);
                         }
-                      } else {
+                      } else if (!isSupabaseConfigured()) {
                         handleLoad();
                       }
                     }} style={{ flex: 1, minWidth: 0 }}>
