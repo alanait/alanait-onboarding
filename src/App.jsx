@@ -1,4 +1,8 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
+import Dashboard from "./components/Dashboard.jsx";
+import VersionHistory from "./components/VersionHistory.jsx";
+import { isSupabaseConfigured } from "./lib/supabase.js";
+import { saveClient as saveToCloud, loadClient, exportToFile } from "./lib/clientService.js";
 
 const SECTIONS = [
   {
@@ -748,6 +752,11 @@ function PrintView({ clientData, sectionEnabled, formData, instanceCounts, secti
 
 // ── Main Component ───────────────────────────────────────────────────────────
 export default function App() {
+  const [view, setView] = useState(isSupabaseConfigured() ? 'dashboard' : 'editor');
+  const [currentClientId, setCurrentClientId] = useState(null);
+  const [saving, setSaving] = useState(false);
+  const [showVersionHistory, setShowVersionHistory] = useState(false);
+
   const [clientData, setClientData] = useState({ empresa: "", sector: "", trabajadores: "", sedes: "", contacto: "", telefono: "", email: "", web: "", direccion: "", fecha: new Date().toISOString().split("T")[0], responsable: "" });
   const [sectionEnabled, setSectionEnabled] = useState({});
   const [formData, setFormData] = useState({});
@@ -821,7 +830,35 @@ export default function App() {
   const markDirty = () => setIsDirty(true);
 
   const handleSave = async () => {
-    const projectData = { clientData, sectionEnabled, formData, instanceCounts, sectionImages };
+    if (isSupabaseConfigured()) {
+      // Save to cloud
+      setSaving(true);
+      try {
+        const id = await saveToCloud(currentClientId, { clientData, sectionEnabled, formData, instanceCounts, sectionImages });
+        setCurrentClientId(id);
+        setCurrentFilePath(clientData.empresa || "proyecto");
+        setIsDirty(false);
+      } catch (err) {
+        alert("Error al guardar: " + err.message);
+      }
+      setSaving(false);
+    } else {
+      // Fallback: save as file
+      handleExportFile();
+    }
+  };
+
+  const handleExportFile = async () => {
+    let projectData;
+    if (isSupabaseConfigured() && currentClientId) {
+      try {
+        projectData = await exportToFile(currentClientId);
+      } catch {
+        projectData = { clientData, sectionEnabled, formData, instanceCounts, sectionImages };
+      }
+    } else {
+      projectData = { clientData, sectionEnabled, formData, instanceCounts, sectionImages };
+    }
     const json = JSON.stringify(projectData, null, 2);
     const blob = new Blob([json], { type: "application/json" });
     const url = URL.createObjectURL(blob);
@@ -833,7 +870,6 @@ export default function App() {
     a.click();
     document.body.removeChild(a);
     setTimeout(() => URL.revokeObjectURL(url), 3000);
-    // Save to recent in localStorage
     addToRecent(nombre);
     setCurrentFilePath(nombre);
     setIsDirty(false);
@@ -841,7 +877,7 @@ export default function App() {
   };
 
   const handleSaveAs = async () => {
-    await handleSave();
+    await handleExportFile();
   };
 
   const fileInputLoadRef = React.useRef(null);
@@ -909,8 +945,36 @@ export default function App() {
     setInstanceCounts({});
     setSectionImages({});
     setCurrentFilePath(null);
+    setCurrentClientId(null);
     setIsDirty(false);
     setShowRecent(false);
+    setView('editor');
+  };
+
+  const openClientFromCloud = async (id) => {
+    try {
+      const data = await loadClient(id);
+      setClientData(data.clientData);
+      setSectionEnabled(data.sectionEnabled);
+      setFormData(data.formData);
+      setInstanceCounts(data.instanceCounts);
+      setSectionImages(data.sectionImages);
+      setCurrentClientId(data.id);
+      setCurrentFilePath(data.clientData.empresa || "proyecto");
+      setIsDirty(false);
+      setView('editor');
+    } catch (err) {
+      alert("Error al cargar cliente: " + err.message);
+    }
+  };
+
+  const handleRestoreVersion = (snapshot) => {
+    if (snapshot.clientData) setClientData(snapshot.clientData);
+    if (snapshot.sectionEnabled) setSectionEnabled(snapshot.sectionEnabled);
+    if (snapshot.formData) setFormData(snapshot.formData);
+    if (snapshot.instanceCounts) setInstanceCounts(snapshot.instanceCounts);
+    setIsDirty(true);
+    setShowVersionHistory(false);
   };
 
   const handleNewProject = () => {
@@ -936,6 +1000,16 @@ export default function App() {
     { id: "responsable", label: "Responsable ALANA IT", placeholder: "Nombre técnico" },
   ];
 
+  // Dashboard view
+  if (view === 'dashboard') {
+    return (
+      <Dashboard
+        onOpenClient={openClientFromCloud}
+        onNewClient={doNewProject}
+      />
+    );
+  }
+
   return (
     <>
       <style>{`
@@ -960,6 +1034,14 @@ export default function App() {
           sectionImages={sectionImages}
         />
       </div>
+      {/* VERSION HISTORY MODAL */}
+      {showVersionHistory && currentClientId && (
+        <VersionHistory
+          clientId={currentClientId}
+          onRestore={handleRestoreVersion}
+          onClose={() => setShowVersionHistory(false)}
+        />
+      )}
       {/* UNSAVED CHANGES MODAL */}
       {showUnsaved && (
         <div style={{ position: "fixed", inset: 0, zIndex: 99999, background: "rgba(0,0,0,0.6)", display: "flex", alignItems: "center", justifyContent: "center" }}>
@@ -1004,7 +1086,7 @@ export default function App() {
               <div style={{ fontSize: 17, fontWeight: 700 }}>Onboarding Técnico</div>
               {currentFilePath && <div style={{ fontSize: 11, color: "#93c5fd", marginTop: 1 }}>{currentFilePath.split("\\").pop().split("/").pop()}{isDirty ? " •" : ""}</div>}
             </div>
-            <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
               <div style={{ textAlign: "right" }}>
                 <div style={{ fontSize: 11, color: "#93c5fd" }}>Progreso</div>
                 <div style={{ fontSize: 16, fontWeight: 700 }}>{answered}/{SECTIONS.length} secciones</div>
@@ -1012,12 +1094,30 @@ export default function App() {
               <div style={{ width: 48, height: 48, borderRadius: "50%", background: "rgba(255,255,255,0.1)", border: "3px solid #3b82f6", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, fontWeight: 700 }}>
                 {progress}%
               </div>
+              {isSupabaseConfigured() && (
+                <button onClick={() => {
+                  if (isDirty) { unsavedCallbackRef.current = () => setView('dashboard'); setShowUnsaved(true); }
+                  else setView('dashboard');
+                }} style={{ background: "rgba(255,255,255,0.12)", color: "#fff", border: "1px solid rgba(255,255,255,0.2)", padding: "9px 14px", borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: "pointer", transition: "all 0.2s" }}>
+                  ← Panel
+                </button>
+              )}
               <button onClick={() => { setSidebarOpen(p => !p); loadRecent(); }} style={{ background: sidebarOpen ? "rgba(29,78,216,0.4)" : "rgba(255,255,255,0.12)", color: "#fff", border: `1px solid ${sidebarOpen ? "rgba(29,78,216,0.6)" : "rgba(255,255,255,0.2)"}`, padding: "9px 14px", borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: "pointer", transition: "all 0.2s" }}>
                 ☰ Proyectos
               </button>
-              <button onClick={handleSave} style={{ background: isDirty ? "#15803d" : "rgba(255,255,255,0.12)", color: "#fff", border: `1px solid ${isDirty ? "#16a34a" : "rgba(255,255,255,0.2)"}`, padding: "9px 14px", borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: "pointer", transition: "all 0.2s" }}>
-                {isDirty ? "💾 Guardar *" : "💾 Guardar"}
+              <button onClick={handleSave} disabled={saving} style={{ background: isDirty ? "#15803d" : "rgba(255,255,255,0.12)", color: "#fff", border: `1px solid ${isDirty ? "#16a34a" : "rgba(255,255,255,0.2)"}`, padding: "9px 14px", borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: "pointer", transition: "all 0.2s", opacity: saving ? 0.6 : 1 }}>
+                {saving ? "⏳ Guardando..." : isDirty ? "💾 Guardar *" : "💾 Guardar"}
               </button>
+              {isSupabaseConfigured() && (
+                <button onClick={handleExportFile} style={{ background: "rgba(255,255,255,0.12)", color: "#fff", border: "1px solid rgba(255,255,255,0.2)", padding: "9px 14px", borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: "pointer", transition: "all 0.2s" }}>
+                  📥 Exportar
+                </button>
+              )}
+              {isSupabaseConfigured() && currentClientId && (
+                <button onClick={() => setShowVersionHistory(true)} style={{ background: "rgba(255,255,255,0.12)", color: "#fff", border: "1px solid rgba(255,255,255,0.2)", padding: "9px 14px", borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: "pointer", transition: "all 0.2s" }}>
+                  📜 Historial
+                </button>
+              )}
               <button onClick={handlePrint} style={{ background: C.blue, color: "#fff", border: "none", padding: "9px 18px", borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", gap: 6 }}>
                 {exporting ? "⏳ Generando..." : "📄 Exportar PDF"}
               </button>
