@@ -873,6 +873,8 @@ export default function App() {
         const id = await saveToCloud(currentClientId, { clientData, sectionEnabled, formData, instanceCounts, sectionImages });
         setCurrentClientId(id);
         setCurrentFilePath(clientData.empresa || "proyecto");
+        addToRecent(clientData.empresa || "proyecto", id);
+        loadRecent();
         setIsDirty(false);
       } catch (err) {
         alert("Error al guardar: " + err.message);
@@ -906,7 +908,7 @@ export default function App() {
     a.click();
     document.body.removeChild(a);
     setTimeout(() => URL.revokeObjectURL(url), 3000);
-    addToRecent(nombre);
+    addToRecent(nombre, currentClientId);
     setCurrentFilePath(nombre);
     setIsDirty(false);
     loadRecent();
@@ -948,12 +950,12 @@ export default function App() {
     fileInputLoadRef.current?.click();
   };
 
-  const addToRecent = (empresa) => {
+  const addToRecent = (empresa, cloudId = null) => {
     try {
       let recent = JSON.parse(localStorage.getItem("alanait_recent") || "[]");
       const name = empresa || "Sin nombre";
       recent = recent.filter(r => r.empresa !== name);
-      recent.unshift({ empresa: name, date: new Date().toISOString() });
+      recent.unshift({ empresa: name, date: new Date().toISOString(), cloudId: cloudId || null });
       localStorage.setItem("alanait_recent", JSON.stringify(recent.slice(0, 10)));
     } catch {}
   };
@@ -997,6 +999,8 @@ export default function App() {
       setSectionImages(data.sectionImages);
       setCurrentClientId(data.id);
       setCurrentFilePath(data.clientData.empresa || "proyecto");
+      addToRecent(data.clientData.empresa || "proyecto", data.id);
+      loadRecent();
       setIsDirty(false);
       setView('editor');
     } catch (err) {
@@ -1269,7 +1273,18 @@ export default function App() {
                       e.currentTarget.querySelector('.del-btn').style.opacity = "0";
                     }}
                   >
-                    <div onClick={() => handleLoad()} style={{ flex: 1, minWidth: 0 }}>
+                    <div onClick={() => {
+                      if (p.cloudId && isSupabaseConfigured()) {
+                        if (isDirty) {
+                          unsavedCallbackRef.current = () => openClientFromCloud(p.cloudId);
+                          setShowUnsaved(true);
+                        } else {
+                          openClientFromCloud(p.cloudId);
+                        }
+                      } else {
+                        handleLoad();
+                      }
+                    }} style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ fontSize: 13, fontWeight: isActive ? 700 : 500, color: isActive ? "#93c5fd" : "#e2e8f0", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
                         {p.empresa || "Sin nombre"}
                       </div>
