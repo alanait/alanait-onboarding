@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { listClients, searchClients, deleteClient, importFromFile } from "../lib/clientService.js";
 import { isSupabaseConfigured } from "../lib/supabase.js";
+import { getUserName } from "../lib/auth.js";
 
 const C = {
   navy: "#0d1f3c", blue: "#1d4ed8", blueLight: "#eff6ff",
@@ -8,7 +9,7 @@ const C = {
   border: "#e2e8f0", textLight: "#94a3b8",
 };
 
-export default function Dashboard({ onOpenClient, onNewClient, onImportFile }) {
+export default function Dashboard({ onOpenClient, onNewClient, onImportFile, session, onSignOut }) {
   const [clients, setClients] = useState([]);
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
@@ -106,6 +107,14 @@ export default function Dashboard({ onOpenClient, onNewClient, onImportFile }) {
             }}>
               + Nuevo Cliente
             </button>
+            {session && (
+              <div style={{ display: "flex", alignItems: "center", gap: 8, marginLeft: 8, paddingLeft: 8, borderLeft: "1px solid rgba(255,255,255,0.2)" }}>
+                <span style={{ fontSize: 12, color: "#93c5fd" }}>👤 {getUserName(session)}</span>
+                <button onClick={onSignOut} style={{ background: "rgba(255,255,255,0.08)", color: "#94a3b8", border: "none", padding: "6px 10px", borderRadius: 6, fontSize: 11, cursor: "pointer" }}>
+                  Salir
+                </button>
+              </div>
+            )}
           </div>
         </div>
       </div>

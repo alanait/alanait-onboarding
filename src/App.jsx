@@ -1,7 +1,9 @@
 import React, { useState, useEffect, useCallback } from "react";
 import Dashboard from "./components/Dashboard.jsx";
 import VersionHistory from "./components/VersionHistory.jsx";
+import LoginPage from "./components/LoginPage.jsx";
 import { isSupabaseConfigured } from "./lib/supabase.js";
+import { getSession, onAuthChange, signOut, getUserName } from "./lib/auth.js";
 import { saveClient as saveToCloud, loadClient, exportToFile } from "./lib/clientService.js";
 
 const SECTIONS = [
@@ -752,6 +754,16 @@ function PrintView({ clientData, sectionEnabled, formData, instanceCounts, secti
 
 // ── Main Component ───────────────────────────────────────────────────────────
 export default function App() {
+  const [session, setSession] = useState(null);
+  const [authLoading, setAuthLoading] = useState(isSupabaseConfigured());
+
+  useEffect(() => {
+    if (!isSupabaseConfigured()) return;
+    getSession().then(s => { setSession(s); setAuthLoading(false); });
+    const sub = onAuthChange(s => { setSession(s); setAuthLoading(false); });
+    return () => sub?.unsubscribe();
+  }, []);
+
   const [view, setView] = useState(isSupabaseConfigured() ? 'dashboard' : 'editor');
   const [currentClientId, setCurrentClientId] = useState(null);
   const [saving, setSaving] = useState(false);
@@ -1000,12 +1012,30 @@ export default function App() {
     { id: "responsable", label: "Responsable ALANA IT", placeholder: "Nombre técnico" },
   ];
 
+  // Auth guard - show login if Supabase is configured but no session
+  if (isSupabaseConfigured() && authLoading) {
+    return (
+      <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "#0d1f3c", color: "#fff", fontFamily: "'Segoe UI', system-ui, sans-serif" }}>
+        <div style={{ textAlign: "center" }}>
+          <div style={{ fontSize: 32, marginBottom: 12 }}>⏳</div>
+          <div>Cargando...</div>
+        </div>
+      </div>
+    );
+  }
+
+  if (isSupabaseConfigured() && !session) {
+    return <LoginPage onLogin={s => { setSession(s); setView('dashboard'); }} />;
+  }
+
   // Dashboard view
   if (view === 'dashboard') {
     return (
       <Dashboard
         onOpenClient={openClientFromCloud}
         onNewClient={doNewProject}
+        session={session}
+        onSignOut={async () => { await signOut(); setSession(null); }}
       />
     );
   }
@@ -1121,6 +1151,14 @@ export default function App() {
               <button onClick={handlePrint} style={{ background: C.blue, color: "#fff", border: "none", padding: "9px 18px", borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", gap: 6 }}>
                 {exporting ? "⏳ Generando..." : "📄 Exportar PDF"}
               </button>
+              {session && (
+                <div style={{ display: "flex", alignItems: "center", gap: 8, marginLeft: 8, paddingLeft: 8, borderLeft: "1px solid rgba(255,255,255,0.2)" }}>
+                  <span style={{ fontSize: 12, color: "#93c5fd" }}>👤 {getUserName(session)}</span>
+                  <button onClick={async () => { await signOut(); setSession(null); }} style={{ background: "rgba(255,255,255,0.08)", color: "#94a3b8", border: "none", padding: "6px 10px", borderRadius: 6, fontSize: 11, cursor: "pointer" }}>
+                    Salir
+                  </button>
+                </div>
+              )}
             </div>
           </div>
           <div style={{ height: 3, background: "rgba(255,255,255,0.1)" }}>
