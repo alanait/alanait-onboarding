@@ -2,7 +2,7 @@
 
 Herramienta web para realizar auditorias tecnicas de onboarding a nuevos clientes IT. Permite recopilar de forma estructurada toda la informacion sobre la infraestructura tecnologica de una empresa durante la primera visita.
 
-**App en produccion:** [https://alanait-onboarding.vercel.app](https://alanait-onboarding-o4qp5ols3-alanaits-projects.vercel.app)
+**App en produccion:** [https://alanait-onboarding.vercel.app](https://alanait-onboarding.vercel.app)
 
 ## Para que sirve
 

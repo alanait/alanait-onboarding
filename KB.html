@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>KB - ALANA IT Onboarding Tecnico</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; color: #1e293b; line-height: 1.7; background: #f8fafc; }
+  .container { max-width: 900px; margin: 0 auto; padding: 40px 24px; }
+  h1 { font-size: 28px; color: #0d1f3c; margin-bottom: 8px; }
+  h1 span { color: #1d4ed8; }
+  .subtitle { color: #64748b; font-size: 14px; margin-bottom: 32px; }
+  h2 { font-size: 20px; color: #0d1f3c; margin: 36px 0 16px; padding-bottom: 8px; border-bottom: 2px solid #e2e8f0; }
+  h3 { font-size: 16px; color: #1d4ed8; margin: 24px 0 10px; }
+  p { margin-bottom: 12px; font-size: 14px; }
+  ul, ol { margin: 8px 0 16px 24px; font-size: 14px; }
+  li { margin-bottom: 6px; }
+  table { width: 100%; border-collapse: collapse; margin: 12px 0 20px; font-size: 13px; }
+  th { background: #0d1f3c; color: #fff; padding: 10px 14px; text-align: left; font-weight: 600; font-size: 12px; text-transform: uppercase; letter-spacing: 0.04em; }
+  td { padding: 10px 14px; border-bottom: 1px solid #e2e8f0; }
+  tr:nth-child(even) td { background: #f8fafc; }
+  tr:hover td { background: #eff6ff; }
+  code { background: #1e293b; color: #e2e8f0; padding: 2px 7px; border-radius: 4px; font-size: 13px; font-family: 'Cascadia Code', 'Consolas', monospace; }
+  pre { background: #1e293b; color: #e2e8f0; padding: 16px 20px; border-radius: 8px; margin: 12px 0 20px; overflow-x: auto; font-size: 13px; line-height: 1.6; font-family: 'Cascadia Code', 'Consolas', monospace; }
+  .note { background: #eff6ff; border-left: 4px solid #1d4ed8; padding: 12px 16px; border-radius: 0 8px 8px 0; margin: 12px 0 20px; font-size: 13px; color: #1e40af; }
+  .warning { background: #fef3c7; border-left: 4px solid #f59e0b; padding: 12px 16px; border-radius: 0 8px 8px 0; margin: 12px 0 20px; font-size: 13px; color: #92400e; }
+  .card { background: #fff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 20px 24px; margin: 16px 0; box-shadow: 0 1px 4px rgba(0,0,0,0.04); }
+  a { color: #1d4ed8; text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  .badge { display: inline-block; background: #1d4ed8; color: #fff; padding: 2px 10px; border-radius: 10px; font-size: 11px; font-weight: 700; margin-right: 6px; }
+  .toc { background: #fff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 20px 24px; margin: 20px 0 32px; }
+  .toc-title { font-weight: 700; color: #0d1f3c; margin-bottom: 10px; font-size: 15px; }
+  .toc ol { margin: 0 0 0 20px; }
+  .toc li { margin-bottom: 4px; font-size: 14px; }
+  .toc a { color: #1d4ed8; }
+  strong { color: #0d1f3c; }
+</style>
+</head>
+<body>
+<div class="container">
+
+<h1><span>ALANA IT</span> Onboarding Tecnico</h1>
+<p class="subtitle">Base de Conocimiento (KB) &mdash; Ultima actualizacion: Marzo 2026</p>
+
+<!-- INDICE -->
+<div class="toc">
+  <div class="toc-title">Indice</div>
+  <ol>
+    <li><a href="#que-es">Que es ALANA IT Onboarding Tecnico</a></li>
+    <li><a href="#acceso">Acceso a la aplicacion</a></li>
+    <li><a href="#uso">Guia de uso</a></li>
+    <li><a href="#arquitectura">Arquitectura tecnica</a></li>
+    <li><a href="#bbdd">Base de datos</a></li>
+    <li><a href="#desarrollo">Desarrollo local</a></li>
+    <li><a href="#despliegue">Despliegue</a></li>
+    <li><a href="#servicios">Repositorios y servicios</a></li>
+    <li><a href="#problemas">Resolucion de problemas</a></li>
+  </ol>
+</div>
+
+<!-- 1. QUE ES -->
+<h2 id="que-es">1. Que es ALANA IT Onboarding Tecnico</h2>
+<p>Herramienta web interna para que los tecnicos de ALANA IT documenten de forma estructurada las auditorias de infraestructura IT de los clientes.</p>
+<p>Permite registrar informacion detallada en <strong>13 secciones de infraestructura</strong>, capturar imagenes, guardar en la nube, exportar informes PDF y mantener un historial de versiones.</p>
+
+<h3>Secciones de infraestructura</h3>
+<table>
+  <thead><tr><th>#</th><th>Seccion</th><th>Descripcion</th></tr></thead>
+  <tbody>
+    <tr><td>1</td><td>Red</td><td>Routers, switches, firewall, ISP, VLANs</td></tr>
+    <tr><td>2</td><td>Servidores</td><td>Fisicos, virtuales, cloud, roles, SO</td></tr>
+    <tr><td>3</td><td>Ordenadores / PCs</td><td>Equipos de trabajo, dominio, gestion</td></tr>
+    <tr><td>4</td><td>Backup</td><td>Software, destino, frecuencia, retencion</td></tr>
+    <tr><td>5</td><td>Email</td><td>Plataforma de correo, dominio, seguridad</td></tr>
+    <tr><td>6</td><td>Antivirus</td><td>Solucion de seguridad, consola central</td></tr>
+    <tr><td>7</td><td>WiFi</td><td>Puntos de acceso, SSID, gestion</td></tr>
+    <tr><td>8</td><td>VPN</td><td>Tipo, usuarios, proveedor</td></tr>
+    <tr><td>9</td><td>SAI / UPS</td><td>Proteccion electrica</td></tr>
+    <tr><td>10</td><td>Almacenamiento</td><td>NAS, SAN, almacenamiento compartido</td></tr>
+    <tr><td>11</td><td>Telefonia</td><td>Centralita, VoIP, lineas</td></tr>
+    <tr><td>12</td><td>Impresion</td><td>Impresoras, multifuncionales, gestion</td></tr>
+    <tr><td>13</td><td>ERP / Aplicaciones</td><td>Software de negocio, licencias</td></tr>
+  </tbody>
+</table>
+
+<p>Cada seccion soporta:</p>
+<ul>
+  <li>Multiples instancias (ej: 3 servidores distintos)</li>
+  <li>Diversos tipos de campos: texto, seleccion, radio, checkboxes, IP, CIDR</li>
+  <li>Captura de imagenes (pegar desde portapapeles o arrastrar)</li>
+  <li>Notas adicionales</li>
+</ul>
+
+<!-- 2. ACCESO -->
+<h2 id="acceso">2. Acceso a la aplicacion</h2>
+
+<h3>URL de produccion</h3>
+<div class="card">
+  <strong>https://alanait-onboarding.vercel.app</strong>
+</div>
+
+<h3>Registro de usuario</h3>
+<ol>
+  <li>Ir a la URL de la aplicacion</li>
+  <li>Pulsar <strong>"Registrate"</strong></li>
+  <li>Introducir un email con dominio <strong>@alanait.com</strong> (obligatorio)</li>
+  <li>Establecer una contrasena (minimo 6 caracteres)</li>
+  <li>Revisar el correo y confirmar el email mediante el enlace recibido</li>
+  <li>Una vez confirmado, iniciar sesion con email y contrasena</li>
+</ol>
+<div class="note"><strong>Nota:</strong> Solo se permiten emails con dominio @alanait.com. Si no recibes el email de confirmacion, revisa la carpeta de spam.</div>
+
+<h3>Inicio de sesion</h3>
+<ol>
+  <li>Ir a la URL de la aplicacion</li>
+  <li>Introducir email y contrasena</li>
+  <li>Pulsar <strong>"Iniciar Sesion"</strong></li>
+</ol>
+
+<!-- 3. GUIA DE USO -->
+<h2 id="uso">3. Guia de uso</h2>
+
+<h3>3.1 Dashboard (Panel principal)</h3>
+<p>Al iniciar sesion se accede al Dashboard, que muestra:</p>
+<ul>
+  <li>Lista de todos los clientes registrados</li>
+  <li>Barra de busqueda para filtrar clientes</li>
+  <li>Boton <strong>"Nuevo Cliente"</strong> para crear uno</li>
+  <li>Boton para <strong>importar</strong> archivos <code>.alanait</code> (formato de backup)</li>
+</ul>
+
+<h3>3.2 Crear un nuevo cliente</h3>
+<ol>
+  <li>Desde el Dashboard, pulsar <strong>"Nuevo Cliente"</strong></li>
+  <li>Rellenar los datos generales: empresa, sector, trabajadores, sedes, contacto, etc.</li>
+  <li>Activar las secciones de infraestructura que apliquen al cliente</li>
+  <li>Rellenar los campos de cada seccion activada</li>
+</ol>
+
+<h3>3.3 Rellenar secciones</h3>
+<ul>
+  <li><strong>Activar/desactivar:</strong> Cada seccion se activa con un toggle. Solo las secciones activas se incluyen en el informe.</li>
+  <li><strong>Multiples instancias:</strong> En secciones como Servidores o Red, se pueden anadir multiples instancias (ej: "Servidor 1", "Servidor 2").</li>
+  <li><strong>Tipos de campo:</strong> Texto libre, selectores, radio buttons, checkboxes, campos IP y CIDR.</li>
+  <li><strong>Campos condicionales:</strong> Algunos campos solo aparecen si se selecciona una opcion determinada.</li>
+</ul>
+
+<h3>3.4 Captura de imagenes</h3>
+<ul>
+  <li><strong>Pegar desde portapapeles:</strong> Hacer captura de pantalla y pegar (Ctrl+V) en la zona de imagen</li>
+  <li><strong>Arrastrar y soltar:</strong> Arrastrar un archivo de imagen sobre la zona</li>
+</ul>
+
+<h3>3.5 Guardar datos</h3>
+<ul>
+  <li>Los datos se guardan en la nube (Supabase) al pulsar el boton de guardar</li>
+  <li>Cada guardado crea automaticamente una <strong>version</strong> en el historial</li>
+  <li>No es necesario exportar archivos locales (aunque se puede hacer como backup)</li>
+</ul>
+
+<h3>3.6 Historial de versiones</h3>
+<ul>
+  <li>Accesible desde el editor pulsando el boton <strong>"Historial"</strong></li>
+  <li>Muestra todas las versiones anteriores con fecha y responsable</li>
+  <li>Permite <strong>restaurar</strong> cualquier version anterior</li>
+</ul>
+
+<h3>3.7 Exportar PDF</h3>
+<ul>
+  <li>Desde el editor, pulsar <strong>"Exportar PDF"</strong></li>
+  <li>Se abre el dialogo de impresion &mdash; seleccionar "Guardar como PDF"</li>
+  <li>Incluye solo las secciones activadas</li>
+</ul>
+
+<h3>3.8 Exportar/Importar archivos .alanait</h3>
+<ul>
+  <li><strong>Exportar:</strong> Genera un archivo <code>.alanait</code> (JSON) como backup local</li>
+  <li><strong>Importar:</strong> Desde el Dashboard, se puede importar un archivo <code>.alanait</code></li>
+</ul>
+
+<!-- 4. ARQUITECTURA -->
+<h2 id="arquitectura">4. Arquitectura tecnica</h2>
+
+<table>
+  <thead><tr><th>Componente</th><th>Tecnologia</th></tr></thead>
+  <tbody>
+    <tr><td>Frontend</td><td>React 18 + Vite 5</td></tr>
+    <tr><td>Base de datos</td><td>Supabase (PostgreSQL)</td></tr>
+    <tr><td>Almacenamiento de imagenes</td><td>Supabase Storage</td></tr>
+    <tr><td>Autenticacion</td><td>Supabase Auth (email + password)</td></tr>
+    <tr><td>Hosting</td><td>Vercel (auto-deploy desde GitHub)</td></tr>
+  </tbody>
+</table>
+
+<h3>Estructura del proyecto</h3>
+<pre>src/
+  App.jsx                    # Componente principal (vista de editor)
+  components/
+    Dashboard.jsx            # Panel de clientes
+    LoginPage.jsx            # Pagina de autenticacion
+    VersionHistory.jsx       # Modal de historial de versiones
+  lib/
+    supabase.js              # Cliente de Supabase
+    auth.js                  # Funciones de autenticacion
+    clientService.js         # Operaciones CRUD de clientes
+supabase-setup.sql           # Script de creacion de la base de datos
+vercel.json                  # Configuracion de despliegue
+.env.local                   # Variables de entorno (NO se sube a Git)</pre>
+
+<!-- 5. BASE DE DATOS -->
+<h2 id="bbdd">5. Base de datos</h2>
+
+<h3>Tabla <code>clients</code></h3>
+<table>
+  <thead><tr><th>Columna</th><th>Tipo</th><th>Descripcion</th></tr></thead>
+  <tbody>
+    <tr><td>id</td><td>UUID</td><td>Clave primaria</td></tr>
+    <tr><td>empresa</td><td>TEXT</td><td>Nombre de la empresa</td></tr>
+    <tr><td>sector</td><td>TEXT</td><td>Sector de actividad</td></tr>
+    <tr><td>trabajadores</td><td>TEXT</td><td>Numero de trabajadores</td></tr>
+    <tr><td>sedes</td><td>TEXT</td><td>Numero de sedes</td></tr>
+    <tr><td>contacto</td><td>TEXT</td><td>Persona de contacto</td></tr>
+    <tr><td>telefono</td><td>TEXT</td><td>Telefono</td></tr>
+    <tr><td>email</td><td>TEXT</td><td>Email de contacto</td></tr>
+    <tr><td>web</td><td>TEXT</td><td>Sitio web</td></tr>
+    <tr><td>direccion</td><td>TEXT</td><td>Direccion</td></tr>
+    <tr><td>fecha</td><td>TEXT</td><td>Fecha de la auditoria</td></tr>
+    <tr><td>responsable</td><td>TEXT</td><td>Tecnico responsable</td></tr>
+    <tr><td>section_enabled</td><td>JSONB</td><td>Secciones activadas</td></tr>
+    <tr><td>form_data</td><td>JSONB</td><td>Todos los datos del formulario</td></tr>
+    <tr><td>instance_counts</td><td>JSONB</td><td>Instancias por seccion</td></tr>
+    <tr><td>created_at</td><td>TIMESTAMPTZ</td><td>Fecha de creacion</td></tr>
+    <tr><td>updated_at</td><td>TIMESTAMPTZ</td><td>Ultima modificacion (auto)</td></tr>
+  </tbody>
+</table>
+
+<h3>Tabla <code>client_versions</code></h3>
+<table>
+  <thead><tr><th>Columna</th><th>Tipo</th><th>Descripcion</th></tr></thead>
+  <tbody>
+    <tr><td>id</td><td>UUID</td><td>Clave primaria</td></tr>
+    <tr><td>client_id</td><td>UUID</td><td>FK a clients</td></tr>
+    <tr><td>version</td><td>INTEGER</td><td>Numero de version</td></tr>
+    <tr><td>snapshot</td><td>JSONB</td><td>Snapshot completo del estado</td></tr>
+    <tr><td>changed_by</td><td>TEXT</td><td>Usuario que realizo el cambio</td></tr>
+    <tr><td>created_at</td><td>TIMESTAMPTZ</td><td>Fecha de la version</td></tr>
+  </tbody>
+</table>
+
+<h3>Tabla <code>client_images</code></h3>
+<table>
+  <thead><tr><th>Columna</th><th>Tipo</th><th>Descripcion</th></tr></thead>
+  <tbody>
+    <tr><td>id</td><td>UUID</td><td>Clave primaria</td></tr>
+    <tr><td>client_id</td><td>UUID</td><td>FK a clients</td></tr>
+    <tr><td>section_id</td><td>TEXT</td><td>Seccion de la imagen</td></tr>
+    <tr><td>storage_path</td><td>TEXT</td><td>Ruta en Supabase Storage</td></tr>
+    <tr><td>caption</td><td>TEXT</td><td>Descripcion</td></tr>
+    <tr><td>file_name</td><td>TEXT</td><td>Nombre del archivo</td></tr>
+    <tr><td>sort_order</td><td>INTEGER</td><td>Orden</td></tr>
+  </tbody>
+</table>
+
+<!-- 6. DESARROLLO LOCAL -->
+<h2 id="desarrollo">6. Desarrollo local</h2>
+
+<h3>Requisitos</h3>
+<ul>
+  <li>Node.js 18 o superior</li>
+  <li>npm</li>
+  <li>Git</li>
+</ul>
+
+<h3>Pasos</h3>
+<ol>
+  <li><strong>Clonar el repositorio:</strong><br>
+    <pre>git clone https://github.com/alanait/alanait-onboarding.git
+cd alanait-onboarding</pre>
+  </li>
+  <li><strong>Instalar dependencias:</strong><br>
+    <pre>npm install</pre>
+  </li>
+  <li><strong>Configurar variables de entorno:</strong><br>
+    Crear archivo <code>.env.local</code> en la raiz:
+    <pre>VITE_SUPABASE_URL=https://tu-proyecto.supabase.co
+VITE_SUPABASE_ANON_KEY=eyJ...tu-anon-key...</pre>
+  </li>
+  <li><strong>Iniciar servidor de desarrollo:</strong><br>
+    <pre>npm run dev</pre>
+    Se abrira en <code>http://localhost:3000</code>
+  </li>
+</ol>
+
+<h3>Scripts disponibles</h3>
+<table>
+  <thead><tr><th>Comando</th><th>Descripcion</th></tr></thead>
+  <tbody>
+    <tr><td><code>npm run dev</code></td><td>Servidor de desarrollo (Vite)</td></tr>
+    <tr><td><code>npm run build</code></td><td>Build de produccion en /build</td></tr>
+    <tr><td><code>npm run preview</code></td><td>Previsualizar build</td></tr>
+  </tbody>
+</table>
+
+<!-- 7. DESPLIEGUE -->
+<h2 id="despliegue">7. Despliegue</h2>
+
+<p>La aplicacion esta conectada a Vercel con <strong>auto-deploy</strong> desde la rama <code>main</code>.</p>
+
+<h3>Flujo de despliegue</h3>
+<ol>
+  <li>Hacer cambios en el codigo</li>
+  <li>Commit y push a la rama <code>main</code></li>
+  <li>Vercel detecta el push y despliega automaticamente</li>
+  <li>La nueva version esta disponible en pocos minutos</li>
+</ol>
+
+<div class="warning"><strong>Importante:</strong> Si se cambian las credenciales de Supabase, hay que actualizar las variables tanto en <code>.env.local</code> (local) como en Vercel (produccion) y redesplegar.</div>
+
+<!-- 8. SERVICIOS -->
+<h2 id="servicios">8. Repositorios y servicios</h2>
+
+<table>
+  <thead><tr><th>Servicio</th><th>URL</th></tr></thead>
+  <tbody>
+    <tr><td>Repositorio GitHub</td><td><a href="https://github.com/alanait/alanait-onboarding">github.com/alanait/alanait-onboarding</a></td></tr>
+    <tr><td>App en produccion</td><td>URL de Vercel (ver Dashboard de Vercel)</td></tr>
+    <tr><td>Supabase Dashboard</td><td><a href="https://supabase.com/dashboard">supabase.com/dashboard</a></td></tr>
+    <tr><td>Vercel Dashboard</td><td><a href="https://vercel.com">vercel.com</a></td></tr>
+  </tbody>
+</table>
+
+<!-- 9. PROBLEMAS -->
+<h2 id="problemas">9. Resolucion de problemas</h2>
+
+<div class="card">
+  <h3>No puedo registrarme</h3>
+  <ul>
+    <li>Solo se permiten emails <strong>@alanait.com</strong></li>
+    <li>Si no llega el email de confirmacion, revisar carpeta de spam</li>
+    <li>La contrasena debe tener minimo 6 caracteres</li>
+  </ul>
+</div>
+
+<div class="card">
+  <h3>No puedo iniciar sesion</h3>
+  <ul>
+    <li>Verificar que el email se ha confirmado</li>
+    <li>Comprobar que la contrasena es correcta</li>
+    <li>Verificar conexion a Internet</li>
+  </ul>
+</div>
+
+<div class="card">
+  <h3>Los datos no se guardan</h3>
+  <ul>
+    <li>Verificar conexion a Internet</li>
+    <li>Abrir consola del navegador (F12) y buscar errores</li>
+    <li>Comprobar que las variables de entorno son correctas</li>
+  </ul>
+</div>
+
+<div class="card">
+  <h3>Las imagenes no se cargan</h3>
+  <ul>
+    <li>Verificar que el bucket <code>client-images</code> existe en Supabase Storage</li>
+    <li>Intentar con imagenes mas pequenas</li>
+    <li>Formatos aceptados: PNG, JPG, GIF</li>
+  </ul>
+</div>
+
+<div class="card">
+  <h3>Restaurar una version anterior</h3>
+  <ol>
+    <li>Abrir el cliente en el editor</li>
+    <li>Pulsar el boton "Historial"</li>
+    <li>Seleccionar la version deseada</li>
+    <li>Pulsar "Restaurar"</li>
+  </ol>
+</div>
+
+<hr style="margin: 40px 0; border: none; border-top: 2px solid #e2e8f0;">
+<p style="text-align: center; color: #94a3b8; font-size: 13px;">ALANA IT Onboarding Tecnico &mdash; Base de Conocimiento &mdash; 2026</p>
+
+</div>
+</body>
+</html>
