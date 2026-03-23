@@ -632,10 +632,14 @@ function buildPrintHTML(clientData, sectionEnabled, formData, instanceCounts, se
     </div>`;
   }
 
-  // Otras capturas
+  // Datos adicionales
+  const otherNotes = formData["__other_notes__"] || "";
   const otras = sectionImages["__other__"] || [];
-  if (otras.length > 0) {
-    body += `<div style="margin-top:20px;"><h2 style="${h2S}">🗂️ Otros Datos / Capturas</h2>`;
+  if (otherNotes || otras.length > 0) {
+    body += `<div style="margin-top:20px;"><h2 style="${h2S}">📝 Datos adicionales</h2>`;
+    if (otherNotes) {
+      body += `<div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:6px;padding:12px;margin-bottom:12px;font-size:12px;white-space:pre-wrap;">${otherNotes}</div>`;
+    }
     otras.forEach(img => {
       body += `<div style="margin-bottom:12px;border:1px solid #e2e8f0;border-radius:6px;overflow:hidden;page-break-inside:avoid;">
         <img src="${img.src}" style="max-width:100%;height:auto;display:block;" />
@@ -781,10 +785,13 @@ function PrintView({ clientData, sectionEnabled, formData, instanceCounts, secti
         </div>
       )}
 
-      {/* Otras capturas */}
-      {(sectionImages["__other__"] || []).length > 0 && (
+      {/* Datos adicionales */}
+      {((formData["__other_notes__"] || "") || (sectionImages["__other__"] || []).length > 0) && (
         <div style={{ marginTop: 20, pageBreakInside: "avoid" }}>
-          <h2 style={h2Style}>🗂️ Otros Datos / Capturas</h2>
+          <h2 style={h2Style}>📝 Datos adicionales</h2>
+          {formData["__other_notes__"] && (
+            <div style={{ background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: 6, padding: 12, marginBottom: 12, fontSize: 12, whiteSpace: "pre-wrap" }}>{formData["__other_notes__"]}</div>
+          )}
           {(sectionImages["__other__"] || []).map((img, i) => (
             <div key={i} style={{ marginBottom: 12, border: "1px solid #e2e8f0", borderRadius: 6, overflow: "hidden", pageBreakInside: "avoid" }}>
               <img src={img.src} alt={img.caption || ""} style={{ maxWidth: "100%", height: "auto", display: "block" }} />
@@ -1478,17 +1485,27 @@ export default function App() {
             );
           })}
 
-          {/* Otras capturas */}
+          {/* Datos adicionales */}
           <div style={{ background: "#fff", borderRadius: 10, border: `1px solid ${C.border}`, marginBottom: 14, overflow: "hidden", boxShadow: "0 1px 4px rgba(0,0,0,0.05)" }}>
             <div style={{ padding: "14px 20px", background: C.grayLight, borderBottom: `1px solid ${C.border}`, display: "flex", alignItems: "center", gap: 10 }}>
-              <span style={{ fontSize: 20 }}>🗂️</span>
+              <span style={{ fontSize: 20 }}>📝</span>
               <div>
-                <div style={{ fontWeight: 700, fontSize: 15, color: C.navy }}>Otras capturas</div>
-                <div style={{ fontSize: 12, color: C.textLight, marginTop: 2 }}>Datos adicionales e imágenes que no encajan en ninguna sección específica</div>
+                <div style={{ fontWeight: 700, fontSize: 15, color: C.navy }}>Datos adicionales</div>
+                <div style={{ fontSize: 12, color: C.textLight, marginTop: 2 }}>Notas, observaciones e imágenes que no encajan en ninguna sección específica</div>
               </div>
             </div>
             <div style={{ padding: "20px" }}>
-              <ImageZone sectionId="__other__" images={sectionImages["__other__"] || []} addImage={addImage} removeImage={removeImage} updateCaption={updateCaption} />
+              <label style={{ fontWeight: 600, fontSize: 13, color: C.text, display: "block", marginBottom: 6 }}>Notas adicionales</label>
+              <textarea
+                value={formData["__other_notes__"] || ""}
+                onChange={e => setFormData(prev => ({ ...prev, "__other_notes__": e.target.value }))}
+                placeholder="Escribe aquí cualquier dato adicional, observación o información relevante que no encaje en las secciones anteriores..."
+                style={{ width: "100%", minHeight: 150, padding: 12, borderRadius: 8, border: `1px solid ${C.border}`, fontSize: 14, fontFamily: "inherit", resize: "vertical", boxSizing: "border-box" }}
+              />
+              <div style={{ marginTop: 16 }}>
+                <label style={{ fontWeight: 600, fontSize: 13, color: C.text, display: "block", marginBottom: 6 }}>Capturas adicionales</label>
+                <ImageZone sectionId="__other__" images={sectionImages["__other__"] || []} addImage={addImage} removeImage={removeImage} updateCaption={updateCaption} />
+              </div>
             </div>
           </div>
 
