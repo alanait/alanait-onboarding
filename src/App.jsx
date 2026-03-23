@@ -218,20 +218,6 @@ const SECTIONS = [
     ]
   },
   {
-    id: "otros_dispositivos", label: "Otros dispositivos / Periféricos", icon: "🔌",
-    question: "¿Dispone de otros dispositivos o periféricos especiales?",
-    multi: true, multiLabel: "Dispositivo",
-    fields: [
-      { id: "tipo", label: "Tipo de dispositivo", type: "select", options: ["Lector de tarjetas", "Terminal de firma", "PDA / Terminal móvil", "Escáner de códigos", "TPV", "Cámara de seguridad", "Control de acceso", "Control de presencia", "Sensor IoT", "Otro"] },
-      { id: "marca", label: "Marca / Modelo", type: "text" },
-      { id: "cantidad", label: "Cantidad", type: "number" },
-      { id: "ubicacion", label: "Ubicación", type: "text", placeholder: "Ej: Recepción, Almacén..." },
-      { id: "conectividad", label: "Conectividad", type: "checks", options: ["USB", "Red Ethernet", "WiFi", "Bluetooth", "Serie/RS232", "Otro"] },
-      { id: "software", label: "Software asociado", type: "text", placeholder: "Ej: app de gestión, driver especial..." },
-      { id: "notas", label: "Notas", type: "textarea" },
-    ]
-  },
-  {
     id: "erp", label: "Aplicaciones / ERP / Licencias", icon: "📊",
     question: "¿Dispone de ERP, CRM u otras aplicaciones críticas?",
     multi: true, multiLabel: "Aplicación",
@@ -260,6 +246,20 @@ const SECTIONS = [
       { id: "coste", label: "Coste", type: "text", placeholder: "Ej: 12,50€/usuario/mes" },
       { id: "partner", label: "Partner / Distribuidor", type: "text" },
       { id: "contrato", label: "Contrato asociado", type: "text", placeholder: "Nº contrato o referencia" },
+      { id: "notas", label: "Notas", type: "textarea" },
+    ]
+  },
+  {
+    id: "otros_dispositivos", label: "Otros dispositivos / Periféricos", icon: "🔌",
+    question: "¿Dispone de otros dispositivos o periféricos especiales?",
+    multi: true, multiLabel: "Dispositivo",
+    fields: [
+      { id: "tipo", label: "Tipo de dispositivo", type: "select", options: ["Lector de tarjetas", "Terminal de firma", "PDA / Terminal móvil", "Escáner de códigos", "TPV", "Cámara de seguridad", "Control de acceso", "Control de presencia", "Sensor IoT", "Otro"] },
+      { id: "marca", label: "Marca / Modelo", type: "text" },
+      { id: "cantidad", label: "Cantidad", type: "number" },
+      { id: "ubicacion", label: "Ubicación", type: "text", placeholder: "Ej: Recepción, Almacén..." },
+      { id: "conectividad", label: "Conectividad", type: "checks", options: ["USB", "Red Ethernet", "WiFi", "Bluetooth", "Serie/RS232", "Otro"] },
+      { id: "software", label: "Software asociado", type: "text", placeholder: "Ej: app de gestión, driver especial..." },
       { id: "notas", label: "Notas", type: "textarea" },
     ]
   },
@@ -635,7 +635,7 @@ function buildPrintHTML(clientData, sectionEnabled, formData, instanceCounts, se
   // Otras capturas
   const otras = sectionImages["__other__"] || [];
   if (otras.length > 0) {
-    body += `<div style="margin-top:20px;"><h2 style="${h2S}">🗂️ Otras capturas</h2>`;
+    body += `<div style="margin-top:20px;"><h2 style="${h2S}">🗂️ Otros Datos / Capturas</h2>`;
     otras.forEach(img => {
       body += `<div style="margin-bottom:12px;border:1px solid #e2e8f0;border-radius:6px;overflow:hidden;page-break-inside:avoid;">
         <img src="${img.src}" style="max-width:100%;height:auto;display:block;" />
@@ -784,7 +784,7 @@ function PrintView({ clientData, sectionEnabled, formData, instanceCounts, secti
       {/* Otras capturas */}
       {(sectionImages["__other__"] || []).length > 0 && (
         <div style={{ marginTop: 20, pageBreakInside: "avoid" }}>
-          <h2 style={h2Style}>🗂️ Otras capturas</h2>
+          <h2 style={h2Style}>🗂️ Otros Datos / Capturas</h2>
           {(sectionImages["__other__"] || []).map((img, i) => (
             <div key={i} style={{ marginBottom: 12, border: "1px solid #e2e8f0", borderRadius: 6, overflow: "hidden", pageBreakInside: "avoid" }}>
               <img src={img.src} alt={img.caption || ""} style={{ maxWidth: "100%", height: "auto", display: "block" }} />
@@ -1484,7 +1484,7 @@ export default function App() {
               <span style={{ fontSize: 20 }}>🗂️</span>
               <div>
                 <div style={{ fontWeight: 700, fontSize: 15, color: C.navy }}>Otras capturas</div>
-                <div style={{ fontSize: 12, color: C.textLight, marginTop: 2 }}>Imágenes que no encajan en ninguna sección específica</div>
+                <div style={{ fontSize: 12, color: C.textLight, marginTop: 2 }}>Datos adicionales e imágenes que no encajan en ninguna sección específica</div>
               </div>
             </div>
             <div style={{ padding: "20px" }}>
