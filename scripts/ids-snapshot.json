@@ -91,10 +91,9 @@
   "red.firewall_soporte": {
     "type": "select",
     "options": [
-      "En garantía / con soporte",
-      "Fuera de soporte",
-      "EOL anunciado",
-      "No verificado"
+      "En soporte",
+      "Fuera de soporte (EOL)",
+      "No revisado"
     ]
   },
   "red.firewall_gestion": {
@@ -218,6 +217,10 @@
     "type": "text",
     "options": null
   },
+  "servidores.ip": {
+    "type": "ip",
+    "options": null
+  },
   "servidores.tipo": {
     "type": "select",
     "options": [
@@ -230,9 +233,109 @@
     "type": "text",
     "options": null
   },
+  "servidores.serial": {
+    "type": "text",
+    "options": null
+  },
+  "servidores.roles": {
+    "type": "checks",
+    "options": [
+      "Domain Controller",
+      "File Server",
+      "App Server",
+      "ERP/CRM",
+      "Print Server",
+      "Backup Server",
+      "Hypervisor",
+      "Web Server",
+      "Base de datos",
+      "Otro",
+      "DNS",
+      "DHCP",
+      "Terminal Server (RDS)"
+    ]
+  },
+  "servidores.ram": {
+    "type": "text",
+    "options": null
+  },
+  "servidores.almacenamiento": {
+    "type": "text",
+    "options": null
+  },
+  "servidores.raid_estado": {
+    "type": "select",
+    "options": [
+      "Óptimo",
+      "Degradado (disco en fallo)",
+      "En reconstrucción",
+      "Sin RAID (disco único)",
+      "No aplica",
+      "No revisado"
+    ]
+  },
+  "servidores.garantia": {
+    "type": "text",
+    "options": null
+  },
+  "servidores.hw_soporte": {
+    "type": "select",
+    "options": [
+      "En garantía",
+      "Fuera de garantía",
+      "No aplica",
+      "No revisado"
+    ]
+  },
+  "servidores.firmware_estado": {
+    "type": "select",
+    "options": [
+      "Al día",
+      "Parches pendientes",
+      "Muy desactualizado",
+      "No revisado"
+    ]
+  },
+  "servidores.oob_tipo": {
+    "type": "select",
+    "options": [
+      "iLO (HPE)",
+      "iDRAC (Dell)",
+      "IPMI / BMC genérico",
+      "XClarity (Lenovo)",
+      "Otro",
+      "No tiene",
+      "No revisado"
+    ]
+  },
   "servidores.so": {
     "type": "text",
     "options": null
+  },
+  "servidores.so_soporte": {
+    "type": "select",
+    "options": [
+      "En soporte",
+      "Fuera de soporte (EOL)",
+      "No revisado"
+    ]
+  },
+  "servidores.so_parcheo": {
+    "type": "select",
+    "options": [
+      "Al día",
+      "Parches pendientes",
+      "Muy desactualizado",
+      "No revisado"
+    ]
+  },
+  "servidores.so_licencia_titular": {
+    "type": "radio",
+    "options": [
+      "A nombre del cliente",
+      "A nombre del proveedor anterior",
+      "No revisado"
+    ]
   },
   "servidores.hipervisor": {
     "type": "select",
@@ -272,38 +375,38 @@
     "type": "text",
     "options": null
   },
-  "servidores.roles": {
-    "type": "checks",
+  "servidores.snapshots": {
+    "type": "select",
     "options": [
-      "Domain Controller",
-      "File Server",
-      "App Server",
-      "ERP/CRM",
-      "Print Server",
-      "Backup Server",
-      "Hypervisor",
-      "Web Server",
-      "Base de datos",
-      "Otro"
+      "Sin snapshots",
+      "1-2 snapshots recientes",
+      "Snapshots antiguos acumulados",
+      "No revisado"
     ]
-  },
-  "servidores.ram": {
-    "type": "text",
-    "options": null
-  },
-  "servidores.almacenamiento": {
-    "type": "text",
-    "options": null
-  },
-  "servidores.garantia": {
-    "type": "text",
-    "options": null
   },
   "servidores.dominio": {
     "type": "radio",
     "options": [
       "Sí",
       "No"
+    ]
+  },
+  "servidores.dominio_cuentas": {
+    "type": "select",
+    "options": [
+      "Revisado, correcto",
+      "Revisado, con hallazgos",
+      "Pendiente de revisar",
+      "No aplica"
+    ]
+  },
+  "servidores.gpos_revisadas": {
+    "type": "select",
+    "options": [
+      "Revisado, correcto",
+      "Revisado, con hallazgos",
+      "Pendiente de revisar",
+      "No aplica"
     ]
   },
   "servidores.acceso_remoto": {
@@ -315,6 +418,27 @@
       "Ninguno"
     ]
   },
+  "servidores.herramientas_acceso": {
+    "type": "checks",
+    "options": [
+      "RDP",
+      "TeamViewer",
+      "AnyDesk",
+      "VNC",
+      "VPN corporativa",
+      "RMM del proveedor anterior",
+      "Ninguna"
+    ]
+  },
+  "servidores.accesos_heredados": {
+    "type": "radio",
+    "options": [
+      "Revocados",
+      "Pendiente de revocar",
+      "No existían",
+      "No revisado"
+    ]
+  },
   "servidores.notas": {
     "type": "textarea",
     "options": null
@@ -322,6 +446,20 @@
   "pcs.cantidad": {
     "type": "number",
     "options": null
+  },
+  "pcs.portatiles_num": {
+    "type": "number",
+    "options": null
+  },
+  "pcs.antiguedad": {
+    "type": "select",
+    "options": [
+      "< 2 años",
+      "2–4 años",
+      "4–6 años",
+      "> 6 años",
+      "Mixto"
+    ]
   },
   "pcs.so": {
     "type": "select",
@@ -331,6 +469,44 @@
       "macOS",
       "Linux",
       "Mixto"
+    ]
+  },
+  "pcs.so_soporte": {
+    "type": "select",
+    "options": [
+      "En soporte",
+      "Mixto",
+      "Fuera de soporte (EOL)",
+      "No revisado"
+    ]
+  },
+  "pcs.parcheo_gestion": {
+    "type": "select",
+    "options": [
+      "Centralizada por RMM",
+      "WSUS / Intune / GPO",
+      "Windows Update automático sin control",
+      "Manual por el usuario",
+      "Sin gestión",
+      "No revisado"
+    ]
+  },
+  "pcs.parcheo_terceros": {
+    "type": "select",
+    "options": [
+      "Centralizada por RMM",
+      "Automática de cada aplicación",
+      "Manual",
+      "Sin gestión",
+      "No revisado"
+    ]
+  },
+  "pcs.software_licencias": {
+    "type": "select",
+    "options": [
+      "Todo con licencia",
+      "Hay software sin licencia",
+      "No revisado"
     ]
   },
   "pcs.dominio": {
@@ -352,6 +528,25 @@
     "type": "text",
     "options": null
   },
+  "pcs.rmm_agente": {
+    "type": "select",
+    "options": [
+      "Sí, en todos",
+      "Sí, parcialmente",
+      "No",
+      "No revisado"
+    ]
+  },
+  "pcs.rmm_producto": {
+    "type": "select",
+    "options": [
+      "NinjaOne",
+      "Acronis",
+      "Otro",
+      "Ninguno",
+      "No revisado"
+    ]
+  },
   "pcs.moviles": {
     "type": "radio",
     "options": [
@@ -366,14 +561,51 @@
       "No"
     ]
   },
-  "pcs.antiguedad": {
+  "pcs.admin_local": {
     "type": "select",
     "options": [
-      "< 2 años",
-      "2–4 años",
-      "4–6 años",
-      "> 6 años",
-      "Mixto"
+      "Ninguno es administrador",
+      "Solo algunos usuarios",
+      "Todos son administradores",
+      "No revisado"
+    ]
+  },
+  "pcs.admin_local_password": {
+    "type": "select",
+    "options": [
+      "Única por equipo (LAPS o gestor)",
+      "La misma en todos los equipos",
+      "No revisado"
+    ]
+  },
+  "pcs.accesos_heredados": {
+    "type": "radio",
+    "options": [
+      "Revocados",
+      "Pendiente de revocar",
+      "No existían",
+      "No revisado"
+    ]
+  },
+  "pcs.cifrado_portatiles": {
+    "type": "select",
+    "options": [
+      "Activo en todos",
+      "Activo en algunos",
+      "No activo",
+      "No aplica",
+      "No revisado"
+    ]
+  },
+  "pcs.cifrado_claves": {
+    "type": "select",
+    "options": [
+      "En AD / Entra ID",
+      "En Intune",
+      "En gestor de contraseñas del MSP",
+      "En el propio equipo o en papel",
+      "No se custodian",
+      "No revisado"
     ]
   },
   "pcs.notas": {
@@ -395,6 +627,10 @@
       "Otro"
     ]
   },
+  "backup.consola_url": {
+    "type": "text",
+    "options": null
+  },
   "backup.consola_acronis": {
     "type": "text",
     "options": null
@@ -407,15 +643,25 @@
     "type": "text",
     "options": null
   },
-  "backup.destino": {
+  "backup.consola_accesos_heredados": {
+    "type": "radio",
+    "options": [
+      "Revocados",
+      "Pendiente de revocar",
+      "No existían",
+      "No revisado"
+    ]
+  },
+  "backup.backup_cobertura": {
     "type": "checks",
     "options": [
-      "NAS local",
-      "Disco externo",
-      "Cloud (Azure/S3/Jotelulu)",
-      "Acronis Cloud",
-      "Cinta",
-      "Otro"
+      "Servidores (SO completo / VM)",
+      "Datos y ficheros compartidos",
+      "Bases de datos / ERP",
+      "Correo (Exchange / M365 / Google)",
+      "SharePoint / OneDrive / Teams",
+      "PCs de usuario",
+      "Configuración de red (firewall / switches)"
     ]
   },
   "backup.frecuencia": {
@@ -437,9 +683,59 @@
       "Mixto"
     ]
   },
+  "backup.retencion_rango": {
+    "type": "select",
+    "options": [
+      "Menos de 7 días",
+      "7 a 14 días",
+      "15 a 30 días",
+      "1 a 3 meses",
+      "3 a 12 meses",
+      "Más de 12 meses",
+      "Sin retención definida",
+      "No revisado"
+    ]
+  },
   "backup.retencion": {
     "type": "text",
     "options": null
+  },
+  "backup.destino": {
+    "type": "checks",
+    "options": [
+      "NAS local",
+      "Disco externo",
+      "Cloud (Azure/S3/Jotelulu)",
+      "Acronis Cloud",
+      "Cinta",
+      "Otro"
+    ]
+  },
+  "backup.offsite": {
+    "type": "radio",
+    "options": [
+      "Sí",
+      "No"
+    ]
+  },
+  "backup.ultimo_job": {
+    "type": "select",
+    "options": [
+      "Correctas",
+      "Con avisos",
+      "Con errores",
+      "Sin ejecutar desde hace días",
+      "No revisado"
+    ]
+  },
+  "backup.backup_alertas": {
+    "type": "select",
+    "options": [
+      "Configuradas y se revisan",
+      "Se envían pero nadie las revisa",
+      "No hay alertas configuradas",
+      "No revisado"
+    ]
   },
   "backup.pruebas": {
     "type": "radio",
@@ -453,11 +749,23 @@
     "type": "text",
     "options": null
   },
-  "backup.offsite": {
-    "type": "radio",
+  "backup.prueba_resultado": {
+    "type": "select",
     "options": [
-      "Sí",
-      "No"
+      "Correcta",
+      "Correcta con incidencias",
+      "Fallida",
+      "No se ha podido probar",
+      "No revisado"
+    ]
+  },
+  "backup.inmutabilidad": {
+    "type": "select",
+    "options": [
+      "Sí, copias inmutables (WORM / object lock)",
+      "Solo protección anti-ransomware del software",
+      "No",
+      "No revisado"
     ]
   },
   "backup.backup_endpoints": {
@@ -485,6 +793,76 @@
     "type": "text",
     "options": null
   },
+  "backup.repo_dedicado": {
+    "type": "radio",
+    "options": [
+      "Sí",
+      "No (solo cloud)",
+      "No revisado"
+    ]
+  },
+  "backup.repo_marca_modelo": {
+    "type": "text",
+    "options": null
+  },
+  "backup.repo_serial": {
+    "type": "text",
+    "options": null
+  },
+  "backup.repo_garantia": {
+    "type": "text",
+    "options": null
+  },
+  "backup.repo_capacidad": {
+    "type": "text",
+    "options": null
+  },
+  "backup.repo_parcheo": {
+    "type": "select",
+    "options": [
+      "Al día",
+      "Parches pendientes",
+      "Muy desactualizado",
+      "No revisado"
+    ]
+  },
+  "backup.repo_expuesto": {
+    "type": "select",
+    "options": [
+      "No, solo LAN",
+      "Sí, únicamente por VPN",
+      "Sí, publicado directamente",
+      "No revisado"
+    ]
+  },
+  "backup.repo_mfa": {
+    "type": "radio",
+    "options": [
+      "Sí",
+      "No",
+      "No revisado"
+    ]
+  },
+  "backup.repo_accesos_heredados": {
+    "type": "radio",
+    "options": [
+      "Revocados",
+      "Pendiente de revocar",
+      "No existían",
+      "No revisado"
+    ]
+  },
+  "backup.repo_seguridad": {
+    "type": "checks",
+    "options": [
+      "Cifrado de datos en reposo",
+      "Snapshots inmutables / bloqueo de borrado",
+      "VLAN o red dedicada para backup",
+      "Antivirus del NAS activo",
+      "Papelera / retención de borrados",
+      "Registro de accesos activo"
+    ]
+  },
   "backup.notas": {
     "type": "textarea",
     "options": null
@@ -503,6 +881,10 @@
     "type": "text",
     "options": null
   },
+  "email.tenant_nombre": {
+    "type": "text",
+    "options": null
+  },
   "email.buzones": {
     "type": "number",
     "options": null
@@ -510,6 +892,83 @@
   "email.plan": {
     "type": "text",
     "options": null
+  },
+  "email.plan_m365": {
+    "type": "select",
+    "options": [
+      "Business Basic",
+      "Business Standard",
+      "Business Premium",
+      "Microsoft 365 E3",
+      "Microsoft 365 E5",
+      "Office 365 E1",
+      "Office 365 E3",
+      "Exchange Online Plan 1",
+      "Exchange Online Plan 2",
+      "Mixto / varios planes",
+      "No revisado"
+    ]
+  },
+  "email.admins_revisados": {
+    "type": "select",
+    "options": [
+      "Revisado, correcto",
+      "Revisado, con hallazgos",
+      "Pendiente de revisar",
+      "No aplica"
+    ]
+  },
+  "email.admins_heredados": {
+    "type": "radio",
+    "options": [
+      "Revocados",
+      "Pendiente de revocar",
+      "No existían",
+      "No revisado"
+    ]
+  },
+  "email.usuarios_inactivos": {
+    "type": "select",
+    "options": [
+      "Revisado, correcto",
+      "Revisado, con hallazgos",
+      "Pendiente de revisar",
+      "No aplica"
+    ]
+  },
+  "email.licencias_revisadas": {
+    "type": "select",
+    "options": [
+      "Revisado, correcto",
+      "Revisado, con hallazgos",
+      "Pendiente de revisar",
+      "No aplica"
+    ]
+  },
+  "email.mfa": {
+    "type": "radio",
+    "options": [
+      "Sí",
+      "No",
+      "Parcialmente"
+    ]
+  },
+  "email.mfa_admins": {
+    "type": "radio",
+    "options": [
+      "Sí",
+      "No",
+      "No revisado"
+    ]
+  },
+  "email.conditional_access": {
+    "type": "select",
+    "options": [
+      "Configurado",
+      "Solo valores predeterminados de seguridad",
+      "Sin políticas",
+      "No revisado"
+    ]
   },
   "email.antispam": {
     "type": "radio",
@@ -522,19 +981,60 @@
     "type": "text",
     "options": null
   },
-  "email.mfa": {
+  "email.spf": {
+    "type": "select",
+    "options": [
+      "Correcto",
+      "Existe pero incompleto o erróneo",
+      "No existe",
+      "No revisado"
+    ]
+  },
+  "email.dkim": {
+    "type": "select",
+    "options": [
+      "Configurado y firmando",
+      "Configurado pero inactivo",
+      "No existe",
+      "No revisado"
+    ]
+  },
+  "email.dmarc": {
+    "type": "select",
+    "options": [
+      "p=reject",
+      "p=quarantine",
+      "p=none (solo monitorización)",
+      "No existe",
+      "No revisado"
+    ]
+  },
+  "email.backup_correo": {
     "type": "radio",
     "options": [
       "Sí",
       "No",
-      "Parcialmente"
+      "No revisado"
     ]
+  },
+  "email.backup_correo_solucion": {
+    "type": "text",
+    "options": null
   },
   "email.archivado": {
     "type": "radio",
     "options": [
       "Sí",
       "No"
+    ]
+  },
+  "email.comparticion_externa": {
+    "type": "select",
+    "options": [
+      "Bloqueada (solo usuarios internos)",
+      "Permitida solo con usuarios autenticados",
+      "Enlaces anónimos permitidos",
+      "No revisado"
     ]
   },
   "email.notas": {
@@ -555,13 +1055,6 @@
       "No sabe"
     ]
   },
-  "antivirus.consola": {
-    "type": "radio",
-    "options": [
-      "Sí",
-      "No"
-    ]
-  },
   "antivirus.licencias": {
     "type": "number",
     "options": null
@@ -570,11 +1063,71 @@
     "type": "text",
     "options": null
   },
+  "antivirus.licencias_estado": {
+    "type": "select",
+    "options": [
+      "Vigente",
+      "Caducada",
+      "En periodo de prueba",
+      "No revisado"
+    ]
+  },
+  "antivirus.cobertura": {
+    "type": "select",
+    "options": [
+      "Todos los equipos",
+      "La mayoría, con excepciones",
+      "Solo algunos equipos",
+      "No revisado"
+    ]
+  },
   "antivirus.servidores_av": {
     "type": "radio",
     "options": [
       "Sí",
       "No"
+    ]
+  },
+  "antivirus.funciones": {
+    "type": "checks",
+    "options": [
+      "Antimalware",
+      "Anti-ransomware",
+      "Firewall del endpoint",
+      "Control de dispositivos USB",
+      "Filtrado web",
+      "Control de aplicaciones",
+      "DLP"
+    ]
+  },
+  "antivirus.consola": {
+    "type": "radio",
+    "options": [
+      "Sí",
+      "No"
+    ]
+  },
+  "antivirus.consola_url": {
+    "type": "text",
+    "options": null
+  },
+  "antivirus.consola_acceso": {
+    "type": "select",
+    "options": [
+      "El cliente",
+      "El proveedor anterior",
+      "Ambos",
+      "Nadie / credenciales perdidas",
+      "No revisado"
+    ]
+  },
+  "antivirus.alertas_monitorizadas": {
+    "type": "select",
+    "options": [
+      "Proveedor / SOC (MDR)",
+      "El cliente",
+      "Nadie",
+      "No revisado"
     ]
   },
   "antivirus.notas": {
@@ -585,11 +1138,42 @@
     "type": "text",
     "options": null
   },
+  "wifi.cifrado": {
+    "type": "select",
+    "options": [
+      "WPA3",
+      "WPA2-Enterprise (802.1X)",
+      "WPA2-PSK",
+      "WPA/WPA2 mixto",
+      "WEP",
+      "Abierta (sin contraseña)",
+      "No revisado"
+    ]
+  },
   "wifi.invitados": {
     "type": "radio",
     "options": [
       "Sí",
       "No"
+    ]
+  },
+  "wifi.invitados_aislado": {
+    "type": "select",
+    "options": [
+      "VLAN aislada, sin acceso a la LAN",
+      "Separada solo por SSID, misma red",
+      "Con acceso a la LAN",
+      "No hay red de invitados",
+      "No revisado"
+    ]
+  },
+  "wifi.password_heredada": {
+    "type": "radio",
+    "options": [
+      "Cambiadas",
+      "Pendiente de cambiar",
+      "No aplica",
+      "No revisado"
     ]
   },
   "wifi.controlador": {
@@ -608,12 +1192,29 @@
     "type": "number",
     "options": null
   },
+  "wifi.aps_soporte": {
+    "type": "select",
+    "options": [
+      "En soporte",
+      "Fuera de soporte (EOL)",
+      "No revisado"
+    ]
+  },
   "wifi.cobertura": {
     "type": "radio",
     "options": [
       "Sí",
       "No",
       "Parcial"
+    ]
+  },
+  "wifi.accesos_heredados": {
+    "type": "radio",
+    "options": [
+      "Revocados",
+      "Pendiente de revocar",
+      "No existían",
+      "No revisado"
     ]
   },
   "wifi.notas": {
@@ -849,10 +1450,11 @@
     ]
   },
   "sai.sai_firmware": {
-    "type": "radio",
+    "type": "select",
     "options": [
-      "Actualizado",
-      "Pendiente de actualizar",
+      "Al día",
+      "Parches pendientes",
+      "Muy desactualizado",
       "No revisado"
     ]
   },
@@ -971,6 +1573,14 @@
       "Básica"
     ]
   },
+  "almacenamiento.es_destino_backup": {
+    "type": "radio",
+    "options": [
+      "Sí",
+      "No",
+      "No revisado"
+    ]
+  },
   "almacenamiento.notas": {
     "type": "textarea",
     "options": null
@@ -1027,6 +1637,15 @@
   "telefonia.moviles_num": {
     "type": "number",
     "options": null
+  },
+  "telefonia.centralita_acceso": {
+    "type": "select",
+    "options": [
+      "Sí, credenciales en poder del cliente o ALANA",
+      "Sí, pero las tiene el proveedor anterior",
+      "No hay acceso",
+      "No revisado"
+    ]
   },
   "telefonia.notas": {
     "type": "textarea",
@@ -1085,6 +1704,10 @@
     "type": "text",
     "options": null
   },
+  "impresion.contrato_vencimiento": {
+    "type": "text",
+    "options": null
+  },
   "impresion.notas": {
     "type": "textarea",
     "options": null
@@ -1140,9 +1763,25 @@
     "type": "text",
     "options": null
   },
+  "erp.soporte_contacto": {
+    "type": "text",
+    "options": null
+  },
   "erp.notas": {
     "type": "textarea",
     "options": null
+  },
+  "licenciamiento.tipo_servicio": {
+    "type": "select",
+    "options": [
+      "Licencia de software",
+      "Contrato de mantenimiento",
+      "Dominio",
+      "Hosting web",
+      "Certificado SSL",
+      "Servicio cloud",
+      "Otro"
+    ]
   },
   "licenciamiento.proveedor": {
     "type": "text",
@@ -1168,14 +1807,6 @@
     "type": "number",
     "options": null
   },
-  "licenciamiento.fecha_renovacion": {
-    "type": "text",
-    "options": null
-  },
-  "licenciamiento.coste": {
-    "type": "text",
-    "options": null
-  },
   "licenciamiento.partner": {
     "type": "text",
     "options": null
@@ -1183,6 +1814,88 @@
   "licenciamiento.contrato": {
     "type": "text",
     "options": null
+  },
+  "licenciamiento.titularidad": {
+    "type": "radio",
+    "options": [
+      "A nombre del cliente",
+      "A nombre del proveedor anterior",
+      "No revisado"
+    ]
+  },
+  "licenciamiento.fecha_renovacion": {
+    "type": "text",
+    "options": null
+  },
+  "licenciamiento.renovacion_automatica": {
+    "type": "radio",
+    "options": [
+      "Sí",
+      "No",
+      "No revisado"
+    ]
+  },
+  "licenciamiento.coste": {
+    "type": "text",
+    "options": null
+  },
+  "licenciamiento.acceso_panel": {
+    "type": "select",
+    "options": [
+      "Sí, credenciales en poder del cliente o ALANA",
+      "Sí, pero las tiene el proveedor anterior",
+      "No hay acceso",
+      "No revisado"
+    ]
+  },
+  "licenciamiento.dominio_dns_gestion": {
+    "type": "select",
+    "options": [
+      "En el propio registrador",
+      "Cloudflare u otro DNS externo",
+      "En el hosting web",
+      "Servidor DNS propio",
+      "No revisado"
+    ]
+  },
+  "licenciamiento.ssl_estado": {
+    "type": "select",
+    "options": [
+      "Vigente (más de 60 días)",
+      "Caduca en menos de 60 días",
+      "Caducado",
+      "Autofirmado / no válido",
+      "No revisado"
+    ]
+  },
+  "licenciamiento.cloud_plataforma": {
+    "type": "select",
+    "options": [
+      "Microsoft Azure",
+      "Amazon AWS",
+      "Google Cloud",
+      "Dropbox",
+      "Jotelulu",
+      "Otro"
+    ]
+  },
+  "licenciamiento.cloud_mfa": {
+    "type": "radio",
+    "options": [
+      "Sí",
+      "No",
+      "Parcialmente",
+      "No revisado"
+    ]
+  },
+  "licenciamiento.cloud_cuentas_heredadas": {
+    "type": "radio",
+    "options": [
+      "Revocados",
+      "Pendiente de revocar",
+      "No existían",
+      "No revisado"
+    ]
   },
   "licenciamiento.notas": {
     "type": "textarea",
