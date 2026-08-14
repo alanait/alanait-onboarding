@@ -8,7 +8,7 @@
 
 ALANA IT Onboarding Tecnico es una herramienta web interna desarrollada para que los tecnicos de ALANA IT puedan documentar de forma estructurada las auditorias de infraestructura IT de los clientes.
 
-La aplicacion permite registrar informacion detallada en **13 secciones de infraestructura**, capturar imagenes, guardar en la nube, exportar informes PDF y mantener un historial de versiones de cada cliente.
+La aplicacion permite registrar informacion detallada en **15 secciones de infraestructura**, capturar imagenes, guardar en la nube, exportar informes PDF y mantener un historial de versiones de cada cliente.
 
 ### Secciones de infraestructura
 
@@ -27,11 +27,13 @@ La aplicacion permite registrar informacion detallada en **13 secciones de infra
 | 11 | Telefonia | Centralita, VoIP, lineas |
 | 12 | Impresion | Impresoras, multifuncionales, gestion |
 | 13 | ERP / Aplicaciones | Software de negocio, licencias |
+| 14 | Licenciamiento y contratos | Licencias, renovaciones, costes, partner |
+| 15 | Otros dispositivos | TPV, control de acceso, camaras, IoT, perifericos |
 
 Cada seccion soporta:
 - Multiples instancias (ej: 3 servidores distintos)
 - Diversos tipos de campos: texto, seleccion, radio, checkboxes, IP, CIDR
-- Captura de imagenes (pegar desde portapapeles o arrastrar)
+- Captura de imagenes (pegar desde portapapeles o seleccionar del explorador)
 - Notas adicionales
 
 ---
@@ -99,7 +101,7 @@ Al iniciar sesion se accede al Dashboard, que muestra:
 
 Cada seccion permite adjuntar imagenes:
 - **Pegar desde portapapeles**: Hacer captura de pantalla y pegar (Ctrl+V) en la zona de imagen
-- **Arrastrar y soltar**: Arrastrar un archivo de imagen sobre la zona
+- **Explorador**: Boton para seleccionar uno o varios archivos de imagen
 
 Las imagenes se almacenan en Supabase Storage (bucket `client-images`).
 

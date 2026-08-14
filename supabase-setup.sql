@@ -20,6 +20,7 @@ CREATE TABLE clients (
   section_enabled JSONB NOT NULL DEFAULT '{}',
   form_data       JSONB NOT NULL DEFAULT '{}',
   instance_counts JSONB NOT NULL DEFAULT '{}',
+  created_by      TEXT DEFAULT '',
   created_at      TIMESTAMPTZ NOT NULL DEFAULT now(),
   updated_at      TIMESTAMPTZ NOT NULL DEFAULT now()
 );
@@ -65,15 +66,39 @@ CREATE TRIGGER clients_updated_at
   FOR EACH ROW
   EXECUTE FUNCTION update_updated_at();
 
--- 5. Row Level Security (permisivo - herramienta interna)
+-- 5. Row Level Security
+--
+-- IMPORTANTE: solo el rol "authenticated". El rol "anon" NO debe tener acceso:
+-- la anon key va incrustada en el bundle publico de Vercel, asi que cualquier
+-- politica con USING (true) sin restringir el rol expone los datos a internet.
 ALTER TABLE clients ENABLE ROW LEVEL SECURITY;
 ALTER TABLE client_versions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE client_images ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "Allow all on clients" ON clients FOR ALL USING (true) WITH CHECK (true);
-CREATE POLICY "Allow all on client_versions" ON client_versions FOR ALL USING (true) WITH CHECK (true);
-CREATE POLICY "Allow all on client_images" ON client_images FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "Authenticated full access on clients"
+  ON clients FOR ALL TO authenticated USING (true) WITH CHECK (true);
+CREATE POLICY "Authenticated full access on client_versions"
+  ON client_versions FOR ALL TO authenticated USING (true) WITH CHECK (true);
+CREATE POLICY "Authenticated full access on client_images"
+  ON client_images FOR ALL TO authenticated USING (true) WITH CHECK (true);
 
--- 6. Storage bucket (ejecutar manualmente en Storage > New Bucket)
+-- 6. Storage bucket (crear en Storage > New Bucket)
 -- Nombre: client-images
--- Public: true (para poder mostrar las imagenes)
+-- Public: FALSE
+--
+-- Un bucket publico permite listar y descargar las capturas sin iniciar sesion,
+-- y esas capturas contienen credenciales y datos sensibles de los clientes.
+-- Con el bucket privado hay que servir las imagenes con URLs firmadas
+-- (createSignedUrl) en vez de getPublicUrl.
+
+CREATE POLICY "Authenticated read client-images"
+  ON storage.objects FOR SELECT TO authenticated
+  USING (bucket_id = 'client-images');
+
+CREATE POLICY "Authenticated write client-images"
+  ON storage.objects FOR INSERT TO authenticated
+  WITH CHECK (bucket_id = 'client-images');
+
+CREATE POLICY "Authenticated delete client-images"
+  ON storage.objects FOR DELETE TO authenticated
+  USING (bucket_id = 'client-images');

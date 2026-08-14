@@ -10,7 +10,7 @@ Cuando un proveedor de servicios IT (MSP) incorpora un nuevo cliente, necesita d
 
 ## Secciones de auditoria
 
-La app cubre 13 areas de infraestructura IT:
+La app cubre 15 areas de infraestructura IT:
 
 | Seccion | Que se documenta |
 |---|---|
@@ -27,6 +27,11 @@ La app cubre 13 areas de infraestructura IT:
 | Telefonia | VoIP, centralita, extensiones, moviles |
 | Impresion | Impresoras, IPs, consumibles, mantenimiento |
 | Aplicaciones / ERP | ERP, CRM, licencias, soporte, alojamiento |
+| Licenciamiento y contratos | Producto, tipo de licencia, renovacion, coste, partner |
+| Otros dispositivos | TPV, control de acceso/presencia, camaras, IoT, perifericos |
+
+Ademas hay una seccion final de **Datos adicionales** con notas libres y capturas
+que no encajan en ninguna de las anteriores.
 
 ## Funcionalidades
 

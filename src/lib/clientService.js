@@ -1,14 +1,6 @@
 import { supabase, isSupabaseConfigured } from './supabase.js';
 
 // Get current user email
-function getCurrentUserEmail() {
-  try {
-    const session = supabase?.auth?.session?.() || null;
-    // For newer supabase-js versions
-    return supabase?.auth?.getUser?.()?.then(r => r.data?.user?.email) || '';
-  } catch { return ''; }
-}
-
 async function getUserEmail() {
   try {
     const { data } = await supabase.auth.getUser();
@@ -83,8 +75,10 @@ export async function saveClient(id, { clientData, sectionEnabled, formData, ins
   let clientId = id;
 
   if (clientId) {
-    // Create version snapshot BEFORE updating
-    await createVersionSnapshot(clientId, clientData.responsable || '');
+    // Create version snapshot BEFORE updating.
+    // La autoria es el usuario autenticado, no el campo de texto "Responsable"
+    // del formulario (que es el tecnico asignado al cliente, no quien edita).
+    await createVersionSnapshot(clientId, await getUserEmail() || clientData.responsable || '');
 
     const { error } = await supabase.from('clients').update(row).eq('id', clientId);
     if (error) throw error;
