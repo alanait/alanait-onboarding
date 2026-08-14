@@ -7,7 +7,7 @@ import { getSession, onAuthChange, signOut, getUserName } from "./lib/auth.js";
 import { saveClient as saveToCloud, loadClient, exportToFile, searchClients } from "./lib/clientService.js";
 import { SECTIONS } from "./sections.js";
 import { C, inp } from "./theme.js";
-import { Field, SiNoToggle, ImageZone } from "./components/fields.jsx";
+import { SiNoToggle, ImageZone, SectionFields } from "./components/fields.jsx";
 import { buildPrintFragment } from "./print/buildPrintHTML.js";
 
 // ── Print View ──────────────────────────────────────────────────────────────
@@ -669,13 +669,7 @@ export default function App() {
                               }} style={{ background: "transparent", border: "none", color: "#ef4444", cursor: "pointer", fontSize: 12, padding: "2px 6px", fontWeight: 500 }}>✕ Eliminar</button>
                             </div>
                           )}
-                          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0 20px" }}>
-                            {section.fields.map(f => (
-                              <div key={f.id} style={f.type === "textarea" || f.type === "checks" ? { gridColumn: "1 / -1" } : {}}>
-                                <Field section={section} field={f} instanceIdx={i} getVal={getVal} setVal={setVal} />
-                              </div>
-                            ))}
-                          </div>
+                          <SectionFields section={section} instanceIdx={i} getVal={getVal} setVal={setVal} />
                         </div>
                       ))}
                       <button onClick={() => { addInstance(section.id); setIsDirty(true); }} style={{ marginTop: 8, padding: "7px 16px", border: `1.5px dashed ${C.blue}`, background: C.blueLight, color: C.blue, borderRadius: 7, fontSize: 13, fontWeight: 600, cursor: "pointer" }}>

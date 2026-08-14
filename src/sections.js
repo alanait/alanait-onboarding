@@ -11,25 +11,51 @@
 
 export const SECTIONS = [
   {
-    id: "red", label: "Red (Routers, Switches, Firewall)", icon: "🌐",
-    question: "¿Dispone de infraestructura de red gestionada?",
+    id: "red", label: "Internet y Red (Router, Switches, Firewall)", icon: "🌐",
+    question: "¿Dispone de conexión a internet e infraestructura de red gestionada?",
     multi: true, multiLabel: "Red",
     fields: [
-      { id: "isp", label: "Proveedor de Internet (ISP)", type: "text" },
-      { id: "conexion_tipo", label: "Tipo de conexión", type: "select", options: ["Fibra", "ADSL", "Cable", "4G/5G backup", "MPLS", "Otro"] },
-      { id: "conexion_vel", label: "Velocidad contratada", type: "text", placeholder: "Ej: 600/300 Mbps" },
-      { id: "linea_backup", label: "¿Línea de backup/failover?", type: "radio", options: ["Sí", "No"] },
-      { id: "router_marca", label: "Marca/Modelo Router", type: "text" },
-      { id: "firewall", label: "¿Dispone de Firewall dedicado?", type: "radio", options: ["Sí", "No"] },
-      { id: "firewall_marca", label: "Marca/Modelo Firewall", type: "text", dep: { field: "firewall", value: "Sí" } },
-      { id: "firewall_gestion", label: "Gestión del Firewall", type: "select", options: ["Autogestionado", "Gestionado por proveedor", "Sin gestión activa"], dep: { field: "firewall", value: "Sí" } },
-      { id: "switches_num", label: "Número de switches", type: "number" },
-      { id: "switches_tipo", label: "Tipo de switches", type: "select", options: ["Todos gestionados", "Mixto", "Todos no gestionados"] },
-      { id: "vlans", label: "¿Segmentación por VLANs?", type: "radio", options: ["Sí", "No"] },
-      { id: "monitorizacion", label: "¿Monitorización de red activa?", type: "radio", options: ["Sí", "No"] },
-      { id: "ip_gateway", label: "IP Gateway / Router", type: "ip", placeholder: "Ej: 192.168.1.1" },
-      { id: "ip_rango", label: "Rango / Máscara de red", type: "cidr", placeholder: "Ej: 192.168.1.0/24" },
-      { id: "notas", label: "Notas adicionales", type: "textarea" },
+      // ── Conexión a Internet ──────────────────────────────────────────────
+      { id: "isp", label: "Proveedor de Internet (ISP)", type: "text", group: "Conexión a Internet" },
+      { id: "isp_contrato", label: "Nº de contrato con el operador", type: "text", placeholder: "Ej: 900123456", group: "Conexión a Internet" },
+      { id: "isp_soporte", label: "Contacto de soporte del operador", type: "text", placeholder: "Ej: 900 104 871 / empresas@operador.es", group: "Conexión a Internet" },
+      { id: "isp_fecha_renovacion", label: "Renovación / fin de permanencia", type: "text", group: "Conexión a Internet" },
+      { id: "conexion_tipo", label: "Tipo de conexión", type: "select", options: ["Fibra", "ADSL", "Cable", "4G/5G backup", "MPLS", "Otro"], group: "Conexión a Internet" },
+      { id: "conexion_vel", label: "Velocidad contratada", type: "text", placeholder: "Ej: 600/300 Mbps", group: "Conexión a Internet" },
+      { id: "vel_real", label: "Velocidad real medida (speedtest)", type: "text", placeholder: "Ej: 520/290 Mbps", group: "Conexión a Internet" },
+      { id: "ip_publica_tipo", label: "IP pública", type: "radio", options: ["Fija", "Dinámica", "No revisado"], group: "Conexión a Internet" },
+      { id: "ddns", label: "¿DDNS configurado?", type: "radio", options: ["Sí", "No", "No necesario"], dep: { field: "ip_publica_tipo", value: "Dinámica" }, group: "Conexión a Internet" },
+      { id: "linea_backup", label: "¿Línea de backup/failover?", type: "radio", options: ["Sí", "No"], group: "Conexión a Internet" },
+
+      // ── Router y Firewall perimetral ─────────────────────────────────────
+      { id: "router_marca", label: "Marca/Modelo Router", type: "text", group: "Router y Firewall perimetral" },
+      { id: "firewall", label: "¿Dispone de Firewall dedicado?", type: "radio", options: ["Sí", "No"], group: "Router y Firewall perimetral" },
+      { id: "firewall_marca", label: "Marca/Modelo Firewall", type: "text", dep: { field: "firewall", value: "Sí" }, group: "Router y Firewall perimetral" },
+      { id: "firewall_serial", label: "Nº de serie del firewall", type: "text", dep: { field: "firewall", value: "Sí" }, group: "Router y Firewall perimetral" },
+      { id: "firewall_firmware", label: "Versión de firmware", type: "text", placeholder: "Ej: FortiOS 7.4.3", dep: { field: "firewall", value: "Sí" }, group: "Router y Firewall perimetral" },
+      { id: "firewall_firmware_ok", label: "¿Firmware actualizado?", type: "radio", options: ["Sí", "No", "No revisado"], dep: { field: "firewall", value: "Sí" }, group: "Router y Firewall perimetral" },
+      { id: "firewall_soporte", label: "Garantía / soporte del fabricante", type: "select", options: ["En garantía / con soporte", "Fuera de soporte", "EOL anunciado", "No verificado"], dep: { field: "firewall", value: "Sí" }, group: "Router y Firewall perimetral" },
+      { id: "firewall_gestion", label: "Gestión del Firewall", type: "select", options: ["Autogestionado", "Gestionado por proveedor", "Sin gestión activa"], dep: { field: "firewall", value: "Sí" }, group: "Router y Firewall perimetral" },
+      { id: "accesos_heredados", label: "Accesos del proveedor anterior (router/firewall)", type: "radio", options: ["Revocados", "Pendiente de revocar", "No existían", "No revisado"], group: "Router y Firewall perimetral" },
+      { id: "nat_reglas", label: "Reglas NAT / port-forwarding activas", type: "radio", options: ["Documentadas", "Existen sin documentar", "No hay", "No revisado"], group: "Router y Firewall perimetral" },
+      { id: "rdp_expuesto", label: "¿RDP (3389) u otros puertos de riesgo expuestos a internet?", type: "radio", options: ["Sí", "No", "No revisado"], group: "Router y Firewall perimetral" },
+      { id: "vpns_auditadas", label: "VPNs configuradas (site-to-site / acceso remoto)", type: "radio", options: ["Auditadas", "Pendiente de auditar", "No hay VPNs"], group: "Router y Firewall perimetral" },
+      { id: "utm", label: "¿UTM / filtrado web / IDS activo?", type: "radio", options: ["Sí", "No", "No revisado"], group: "Router y Firewall perimetral" },
+
+      // ── Switching y LAN ──────────────────────────────────────────────────
+      { id: "switches_num", label: "Número de switches", type: "number", group: "Switching y LAN" },
+      { id: "switches_marca", label: "Marca/Modelo de switches", type: "text", placeholder: "Ej: Aruba 1930, TP-Link SG3428", group: "Switching y LAN" },
+      { id: "switches_tipo", label: "Tipo de switches (¿gestionados?)", type: "select", options: ["Todos gestionados", "Mixto", "Todos no gestionados"], group: "Switching y LAN" },
+      { id: "vlans", label: "¿Segmentación por VLANs?", type: "radio", options: ["Sí", "No"], group: "Switching y LAN" },
+      { id: "vlans_detalle", label: "VLANs y finalidad de cada una", type: "text", placeholder: "Ej: VLAN10 usuarios, VLAN20 servidores, VLAN30 invitados", dep: { field: "vlans", value: "Sí" }, group: "Switching y LAN" },
+      { id: "ip_gateway", label: "IP Gateway / Router", type: "ip", placeholder: "Ej: 192.168.1.1", group: "Switching y LAN" },
+      { id: "ip_rango", label: "Rango / Máscara de red", type: "cidr", placeholder: "Ej: 192.168.1.0/24", group: "Switching y LAN" },
+
+      // ── Servicios de red ─────────────────────────────────────────────────
+      { id: "dhcp_servidor", label: "¿Quién ofrece el DHCP?", type: "select", options: ["Router/Firewall", "Servidor Windows (AD/DHCP)", "Switch L3", "Otro dispositivo", "No hay DHCP (IPs estáticas)", "No revisado"], group: "Servicios de red" },
+      { id: "dns_tipo", label: "DNS configurado en firewall/red", type: "select", options: ["DNS del ISP", "Públicos (8.8.8.8 / 1.1.1.1)", "Interno (AD/Windows)", "Mixto", "Otro"], group: "Servicios de red" },
+      { id: "monitorizacion", label: "¿Monitorización de red activa?", type: "radio", options: ["Sí", "No"], group: "Servicios de red" },
+      { id: "notas", label: "Notas adicionales", type: "textarea", group: "Servicios de red" },
     ]
   },
   {
@@ -154,17 +180,56 @@ export const SECTIONS = [
     ]
   },
   {
-    id: "sai", label: "SAI / UPS", icon: "🔋",
-    question: "¿Dispone de SAI/UPS?",
-    multi: true, multiLabel: "SAI/UPS",
+    // Esta seccion era "SAI / UPS". Se amplia al armario de comunicaciones
+    // completo (rack, sala, cableado, alimentacion y SAI) conservando el id
+    // "sai" y los ids de sus 7 campos originales, para no perder lo ya
+    // documentado. La pregunta se amplia para que un "si" antiguo siga siendo
+    // valido.
+    id: "sai", label: "Armario de telecomunicaciones", icon: "🧰",
+    question: "¿Dispone de armario de comunicaciones, rack o SAI?",
+    multi: true, multiLabel: "Armario",
     fields: [
-      { id: "marca", label: "Marca / Modelo", type: "text", placeholder: "Ej: APC, Eaton…" },
-      { id: "cantidad", label: "Número de SAIs", type: "number" },
-      { id: "protegidos", label: "Equipos protegidos", type: "checks", options: ["Servidores", "Switches core", "Router/Firewall", "PCs críticos", "NAS/Almacenamiento"] },
-      { id: "autonomia", label: "Autonomía estimada", type: "text", placeholder: "Ej: 15 min" },
-      { id: "baterias", label: "¿Baterías revisadas recientemente?", type: "radio", options: ["Sí", "No", "No se sabe"] },
-      { id: "monitorizado", label: "¿SAI monitorizado (SNMP/software)?", type: "radio", options: ["Sí", "No"] },
-      { id: "notas", label: "Notas adicionales", type: "textarea" },
+      // ── Armario / Rack ───────────────────────────────────────────────────
+      { id: "rack_tipo", label: "Tipo de armario", type: "select", options: ["Rack de pie 19\"", "Rack mural", "Semi-rack", "Sin armario (equipos sueltos)", "No revisado"], group: "Armario / Rack" },
+      { id: "rack_us", label: "Tamaño del rack (U)", type: "text", placeholder: "Ej: 42U", group: "Armario / Rack" },
+      { id: "rack_ocupacion", label: "U ocupadas / libres", type: "text", placeholder: "Ej: 18 ocupadas / 24 libres", group: "Armario / Rack" },
+      { id: "rack_estado", label: "Estado del armario (puertas, bandejas, montaje)", type: "select", options: ["Bueno", "Aceptable", "Deficiente", "No revisado"], group: "Armario / Rack" },
+      { id: "rack_cerrado", label: "¿Armario cerrado con llave?", type: "radio", options: ["Con llave", "Sin llave", "Abierto / sin puertas", "No revisado"], group: "Armario / Rack" },
+
+      // ── Sala y climatización ─────────────────────────────────────────────
+      { id: "sala_ubicacion", label: "Ubicación de la sala / armario", type: "text", placeholder: "Ej: Planta 1, junto a recepción", group: "Sala y climatización" },
+      { id: "sala_tipo", label: "Tipo de espacio", type: "select", options: ["Sala técnica dedicada", "Despacho u oficina", "Almacén", "Zona de paso", "Otro"], group: "Sala y climatización" },
+      { id: "ventilacion", label: "Ventilación / climatización", type: "select", options: ["Aire acondicionado dedicado", "AA de la oficina", "Ventiladores en el rack", "Ventilación natural", "Ninguna", "No revisado"], group: "Sala y climatización" },
+      { id: "acceso_restringido", label: "¿Acceso físico restringido?", type: "radio", options: ["Sí", "No", "No revisado"], group: "Sala y climatización" },
+
+      // ── Cableado ─────────────────────────────────────────────────────────
+      { id: "cableado_estado", label: "Estado del cableado estructurado", type: "select", options: ["Bueno y documentado", "Bueno, sin documentación", "Con puntos problemáticos", "Deficiente", "No revisado"], group: "Cableado" },
+      { id: "cableado_categoria", label: "Categoría del cableado", type: "select", options: ["Cat 5e", "Cat 6", "Cat 6A", "Cat 7", "Mixto cobre", "Fibra + cobre", "No revisado"], group: "Cableado" },
+      { id: "patch_panel", label: "¿Dispone de patch panel?", type: "radio", options: ["Sí, etiquetado", "Sí, sin etiquetar", "No hay", "No revisado"], group: "Cableado" },
+      { id: "tomas_red", label: "Nº de tomas de red / puntos", type: "text", placeholder: "Ej: 24 tomas, 18 en uso", group: "Cableado" },
+      { id: "etiquetado", label: "¿Cableado y equipos etiquetados?", type: "radio", options: ["Sí", "Parcial", "No", "No revisado"], group: "Cableado" },
+
+      // ── Alimentación eléctrica ───────────────────────────────────────────
+      { id: "pdu_tipo", label: "Distribución eléctrica", type: "select", options: ["PDU de rack", "Regletas schuko", "PDU + regletas schuko", "Ninguna", "No revisado"], group: "Alimentación eléctrica" },
+      { id: "pdu_gestionable", label: "¿PDU gestionable / monitorizable?", type: "radio", options: ["Sí", "No", "No aplica"], group: "Alimentación eléctrica" },
+      { id: "circuito_dedicado", label: "¿Circuito eléctrico dedicado para el rack?", type: "radio", options: ["Dedicado", "Compartido", "No revisado"], group: "Alimentación eléctrica" },
+      { id: "tomas_electricas", label: "Tomas eléctricas libres", type: "text", placeholder: "Ej: 8 tomas, 2 libres", group: "Alimentación eléctrica" },
+
+      // ── SAI / UPS (campos historicos, ids intocables) ────────────────────
+      { id: "sai_existe", label: "¿Dispone de SAI/UPS?", type: "radio", options: ["Sí", "No", "No revisado"], group: "SAI / UPS" },
+      { id: "marca", label: "Marca / Modelo del SAI", type: "text", placeholder: "Ej: APC, Eaton…", group: "SAI / UPS" },
+      { id: "sai_serial", label: "Nº de serie del SAI", type: "text", group: "SAI / UPS" },
+      { id: "cantidad", label: "Número de SAIs", type: "number", group: "SAI / UPS" },
+      { id: "protegidos", label: "Equipos protegidos", type: "checks", options: ["Servidores", "Switches core", "Router/Firewall", "PCs críticos", "NAS/Almacenamiento"], group: "SAI / UPS" },
+      { id: "autonomia", label: "Autonomía estimada", type: "text", placeholder: "Ej: 15 min", group: "SAI / UPS" },
+      { id: "sai_garantia", label: "Garantía del SAI hasta", type: "text", group: "SAI / UPS" },
+      { id: "baterias", label: "¿Baterías revisadas recientemente?", type: "radio", options: ["Sí", "No", "No se sabe"], group: "SAI / UPS" },
+      { id: "sai_firmware", label: "Firmware del SAI", type: "radio", options: ["Actualizado", "Pendiente de actualizar", "No revisado"], group: "SAI / UPS" },
+      { id: "sai_gestion", label: "Acceso remoto / gestión del SAI", type: "select", options: ["Tarjeta de red SNMP", "USB / serie a servidor", "Sin acceso remoto", "No revisado"], group: "SAI / UPS" },
+      { id: "monitorizado", label: "¿SAI monitorizado (SNMP/software)?", type: "radio", options: ["Sí", "No"], group: "SAI / UPS" },
+      { id: "sai_apagado", label: "¿Apagado ordenado configurado?", type: "radio", options: ["Sí", "No", "No revisado"], group: "SAI / UPS" },
+
+      { id: "notas", label: "Notas adicionales", type: "textarea", group: "Notas" },
     ]
   },
   {

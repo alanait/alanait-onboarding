@@ -242,4 +242,88 @@ function ImageZone({ sectionId, images, addImage, removeImage, updateCaption }) 
   );
 }
 
-export { CidrField, Field, SiNoToggle, ImageZone };
+// ── Campos de una instancia de seccion ──────────────────────────────────────
+// Si los campos declaran `group`, se pintan agrupados en acordeones plegables
+// con un contador de relleno. Si no lo declaran (el resto de secciones), se
+// pintan en la rejilla de siempre y no cambia nada.
+
+/** Rejilla de dos columnas; textarea y checks ocupan el ancho completo. */
+function Rejilla({ section, campos, instanceIdx, getVal, setVal }) {
+  return (
+    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0 20px" }}>
+      {campos.map(f => (
+        <div key={f.id} style={f.type === "textarea" || f.type === "checks" ? { gridColumn: "1 / -1" } : {}}>
+          <Field section={section} field={f} instanceIdx={instanceIdx} getVal={getVal} setVal={setVal} />
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function Grupo({ section, titulo, campos, instanceIdx, getVal, setVal }) {
+  const [abierto, setAbierto] = useState(true);
+
+  // Un campo condicional que no se cumple no cuenta: si no se ve, no se puede rellenar.
+  const visibles = campos.filter(f => !f.dep || getVal(section.id, f.dep.field, instanceIdx) === f.dep.value);
+  const rellenos = visibles.filter(f => {
+    const v = getVal(section.id, f.id, instanceIdx);
+    return Array.isArray(v) ? v.length > 0 : v !== "" && v !== undefined;
+  }).length;
+  const completo = visibles.length > 0 && rellenos === visibles.length;
+
+  return (
+    <div style={{ marginBottom: 18 }}>
+      <button
+        onClick={() => setAbierto(a => !a)}
+        aria-expanded={abierto}
+        style={{
+          width: "100%", display: "flex", alignItems: "center", gap: 8,
+          background: "transparent", border: "none", cursor: "pointer",
+          padding: "0 0 6px", marginBottom: 12,
+          borderBottom: `1px solid ${C.blueBorder}`,
+          fontSize: 12, fontWeight: 700, color: C.blue,
+          textTransform: "uppercase", letterSpacing: "0.08em",
+          fontFamily: "inherit", textAlign: "left",
+        }}
+      >
+        <span style={{ display: "inline-block", transform: abierto ? "rotate(90deg)" : "none", transition: "transform 0.15s", fontSize: 10 }}>▶</span>
+        <span style={{ flex: 1 }}>{titulo}</span>
+        <span style={{
+          fontSize: 11, fontWeight: 600, letterSpacing: 0,
+          color: completo ? C.green : C.textLight,
+          fontVariantNumeric: "tabular-nums",
+        }}>
+          {rellenos}/{visibles.length}
+        </span>
+      </button>
+      {abierto && <Rejilla section={section} campos={campos} instanceIdx={instanceIdx} getVal={getVal} setVal={setVal} />}
+    </div>
+  );
+}
+
+function SectionFields({ section, instanceIdx, getVal, setVal }) {
+  // Agrupar preservando el orden de aparicion del esquema
+  const orden = [];
+  const porGrupo = new Map();
+  for (const f of section.fields) {
+    const g = f.group || "";
+    if (!porGrupo.has(g)) { porGrupo.set(g, []); orden.push(g); }
+    porGrupo.get(g).push(f);
+  }
+
+  if (orden.length === 1 && orden[0] === "") {
+    return <Rejilla section={section} campos={section.fields} instanceIdx={instanceIdx} getVal={getVal} setVal={setVal} />;
+  }
+
+  return (
+    <>
+      {orden.map(titulo => (
+        titulo === ""
+          ? <Rejilla key="__sin_grupo__" section={section} campos={porGrupo.get(titulo)} instanceIdx={instanceIdx} getVal={getVal} setVal={setVal} />
+          : <Grupo key={titulo} section={section} titulo={titulo} campos={porGrupo.get(titulo)} instanceIdx={instanceIdx} getVal={getVal} setVal={setVal} />
+      ))}
+    </>
+  );
+}
+
+export { CidrField, Field, SiNoToggle, ImageZone, SectionFields };
