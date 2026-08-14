@@ -271,6 +271,10 @@ function Grupo({ section, titulo, campos, instanceIdx, getVal, setVal }) {
   }).length;
   const completo = visibles.length > 0 && rellenos === visibles.length;
 
+  // Un grupo cuyos campos son todos condicionales y ninguno se cumple no pinta
+  // nada: sin esto quedaria una cabecera de acordeon vacia con un "0/0".
+  if (visibles.length === 0) return null;
+
   return (
     <div style={{ marginBottom: 18 }}>
       <button

@@ -26,12 +26,21 @@ import { SECTIONS } from '../src/sections.js';
 const AQUI = dirname(fileURLToPath(import.meta.url));
 const SNAPSHOT = join(AQUI, 'ids-snapshot.json');
 
-/** Aplana el esquema a { "seccion.campo": "tipo" } */
+/**
+ * Aplana el esquema a { "seccion.campo": { type, options } }.
+ *
+ * Las options se vigilan igual que los ids: el valor que se guarda en la base
+ * de datos ES la cadena de la opcion, asi que reescribir "Sí" como "Si" deja
+ * huerfano el dato de todos los clientes que ya la eligieron.
+ */
 function esquemaActual() {
   const plano = {};
   for (const seccion of SECTIONS) {
     for (const campo of seccion.fields) {
-      plano[`${seccion.id}.${campo.id}`] = campo.type;
+      plano[`${seccion.id}.${campo.id}`] = {
+        type: campo.type,
+        options: campo.options ?? null,
+      };
     }
   }
   return plano;
@@ -58,18 +67,30 @@ try {
 
 const desaparecidos = [];
 const cambiados = [];
+const opcionesPerdidas = [];
 
-for (const [clave, tipo] of Object.entries(guardado)) {
+for (const [clave, antes] of Object.entries(guardado)) {
   if (!(clave in actual)) {
     desaparecidos.push(clave);
-  } else if (actual[clave] !== tipo) {
-    cambiados.push(`${clave}: ${tipo} -> ${actual[clave]}`);
+    continue;
+  }
+  const ahora = actual[clave];
+  if (ahora.type !== antes.type) {
+    cambiados.push(`${clave}: ${antes.type} -> ${ahora.type}`);
+  }
+  // Anadir opciones al final es seguro; perderlas o reescribirlas no.
+  if (antes.options) {
+    const vigentes = new Set(ahora.options ?? []);
+    const perdidas = antes.options.filter(o => !vigentes.has(o));
+    if (perdidas.length) {
+      opcionesPerdidas.push(`${clave}: ${perdidas.map(o => `"${o}"`).join(', ')}`);
+    }
   }
 }
 
 const nuevos = Object.keys(actual).filter(k => !(k in guardado));
 
-if (desaparecidos.length === 0 && cambiados.length === 0) {
+if (desaparecidos.length === 0 && cambiados.length === 0 && opcionesPerdidas.length === 0) {
   const extra = nuevos.length ? ` (+${nuevos.length} campo${nuevos.length > 1 ? 's' : ''} nuevo${nuevos.length > 1 ? 's' : ''})` : '';
   console.log(`Contrato de ids OK: ${Object.keys(guardado).length} campos preservados${extra}.`);
   process.exit(0);
@@ -87,6 +108,13 @@ if (cambiados.length) {
   console.error(`  Campos que han cambiado de tipo (${cambiados.length}):`);
   for (const c of cambiados) console.error(`    - ${c}`);
   console.error('');
+}
+
+if (opcionesPerdidas.length) {
+  console.error(`  Opciones eliminadas o reescritas (${opcionesPerdidas.length}):`);
+  for (const c of opcionesPerdidas) console.error(`    - ${c}`);
+  console.error('  El valor guardado es la cadena de la opcion: si se reescribe,');
+  console.error('  el dato de quien la eligio deja de corresponder con nada.\n');
 }
 
 console.error(

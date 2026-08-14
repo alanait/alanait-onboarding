@@ -1,196 +1,1237 @@
 {
-  "red.isp": "text",
-  "red.isp_contrato": "text",
-  "red.isp_soporte": "text",
-  "red.isp_fecha_renovacion": "text",
-  "red.conexion_tipo": "select",
-  "red.conexion_vel": "text",
-  "red.vel_real": "text",
-  "red.ip_publica_tipo": "radio",
-  "red.ddns": "radio",
-  "red.linea_backup": "radio",
-  "red.router_marca": "text",
-  "red.firewall": "radio",
-  "red.firewall_marca": "text",
-  "red.firewall_serial": "text",
-  "red.firewall_firmware": "text",
-  "red.firewall_firmware_ok": "radio",
-  "red.firewall_soporte": "select",
-  "red.firewall_gestion": "select",
-  "red.accesos_heredados": "radio",
-  "red.nat_reglas": "radio",
-  "red.rdp_expuesto": "radio",
-  "red.vpns_auditadas": "radio",
-  "red.utm": "radio",
-  "red.switches_num": "number",
-  "red.switches_marca": "text",
-  "red.switches_tipo": "select",
-  "red.vlans": "radio",
-  "red.vlans_detalle": "text",
-  "red.ip_gateway": "ip",
-  "red.ip_rango": "cidr",
-  "red.dhcp_servidor": "select",
-  "red.dns_tipo": "select",
-  "red.monitorizacion": "radio",
-  "red.notas": "textarea",
-  "servidores.nombre": "text",
-  "servidores.tipo": "select",
-  "servidores.marca": "text",
-  "servidores.so": "text",
-  "servidores.hipervisor": "select",
-  "servidores.version_hipervisor": "text",
-  "servidores.host_fisico": "text",
-  "servidores.cluster": "radio",
-  "servidores.nombre_cluster": "text",
-  "servidores.lic_hipervisor": "text",
-  "servidores.almacenamiento_compartido": "text",
-  "servidores.roles": "checks",
-  "servidores.ram": "text",
-  "servidores.almacenamiento": "text",
-  "servidores.garantia": "text",
-  "servidores.dominio": "radio",
-  "servidores.acceso_remoto": "select",
-  "servidores.notas": "textarea",
-  "pcs.cantidad": "number",
-  "pcs.so": "select",
-  "pcs.dominio": "radio",
-  "pcs.gestion_central": "radio",
-  "pcs.gestion_tipo": "text",
-  "pcs.moviles": "radio",
-  "pcs.moviles_mdm": "radio",
-  "pcs.antiguedad": "select",
-  "pcs.notas": "textarea",
-  "backup.software": "select",
-  "backup.consola_acronis": "text",
-  "backup.agentes_acronis": "number",
-  "backup.plan_proteccion": "text",
-  "backup.destino": "checks",
-  "backup.frecuencia": "select",
-  "backup.tipo": "select",
-  "backup.retencion": "text",
-  "backup.pruebas": "radio",
-  "backup.pruebas_freq": "text",
-  "backup.offsite": "radio",
-  "backup.backup_endpoints": "radio",
-  "backup.herramienta_endpoints": "text",
-  "backup.que_respalda": "checks",
-  "backup.destino_endpoints": "text",
-  "backup.notas": "textarea",
-  "email.proveedor": "select",
-  "email.dominio": "text",
-  "email.buzones": "number",
-  "email.plan": "text",
-  "email.antispam": "radio",
-  "email.antispam_cual": "text",
-  "email.mfa": "radio",
-  "email.archivado": "radio",
-  "email.notas": "textarea",
-  "antivirus.solucion": "text",
-  "antivirus.tipo": "select",
-  "antivirus.consola": "radio",
-  "antivirus.licencias": "number",
-  "antivirus.vencimiento": "text",
-  "antivirus.servidores_av": "radio",
-  "antivirus.notas": "textarea",
-  "wifi.ssids": "text",
-  "wifi.invitados": "radio",
-  "wifi.controlador": "select",
-  "wifi.marca": "text",
-  "wifi.cantidad": "number",
-  "wifi.cobertura": "radio",
-  "wifi.notas": "textarea",
-  "vpn.tipo": "select",
-  "vpn.solucion": "text",
-  "vpn.usuarios": "number",
-  "vpn.mfa": "radio",
-  "vpn.uso": "checks",
-  "vpn.notas": "textarea",
-  "sai.rack_tipo": "select",
-  "sai.rack_us": "text",
-  "sai.rack_ocupacion": "text",
-  "sai.rack_estado": "select",
-  "sai.rack_cerrado": "radio",
-  "sai.sala_ubicacion": "text",
-  "sai.sala_tipo": "select",
-  "sai.ventilacion": "select",
-  "sai.acceso_restringido": "radio",
-  "sai.cableado_estado": "select",
-  "sai.cableado_categoria": "select",
-  "sai.patch_panel": "radio",
-  "sai.tomas_red": "text",
-  "sai.etiquetado": "radio",
-  "sai.pdu_tipo": "select",
-  "sai.pdu_gestionable": "radio",
-  "sai.circuito_dedicado": "radio",
-  "sai.tomas_electricas": "text",
-  "sai.sai_existe": "radio",
-  "sai.marca": "text",
-  "sai.sai_serial": "text",
-  "sai.cantidad": "number",
-  "sai.protegidos": "checks",
-  "sai.autonomia": "text",
-  "sai.sai_garantia": "text",
-  "sai.baterias": "radio",
-  "sai.sai_firmware": "radio",
-  "sai.sai_gestion": "select",
-  "sai.monitorizado": "radio",
-  "sai.sai_apagado": "radio",
-  "sai.notas": "textarea",
-  "almacenamiento.tipo": "select",
-  "almacenamiento.proveedor": "text",
-  "almacenamiento.marca_modelo": "text",
-  "almacenamiento.capacidad": "text",
-  "almacenamiento.tipo_discos": "select",
-  "almacenamiento.protocolo": "select",
-  "almacenamiento.raid": "text",
-  "almacenamiento.conexion_hosts": "text",
-  "almacenamiento.ubicacion": "select",
-  "almacenamiento.acceso_remoto": "radio",
-  "almacenamiento.sincronizacion": "radio",
-  "almacenamiento.permisos": "radio",
-  "almacenamiento.notas": "textarea",
-  "telefonia.tipo": "select",
-  "telefonia.proveedor": "text",
-  "telefonia.extensiones": "number",
-  "telefonia.centralita": "radio",
-  "telefonia.centralita_tipo": "select",
-  "telefonia.grabacion": "radio",
-  "telefonia.moviles": "radio",
-  "telefonia.moviles_num": "number",
-  "telefonia.notas": "textarea",
-  "impresion.marca": "text",
-  "impresion.tipo": "select",
-  "impresion.conectividad": "select",
-  "impresion.ip": "ip",
-  "impresion.ip_wifi": "ip",
-  "impresion.ubicacion": "text",
-  "impresion.consumibles": "text",
-  "impresion.gestion": "radio",
-  "impresion.proveedor_gestion": "text",
-  "impresion.notas": "textarea",
-  "erp.nombre": "text",
-  "erp.tipo": "select",
-  "erp.proveedor": "text",
-  "erp.version": "text",
-  "erp.alojamiento": "select",
-  "erp.licencias": "number",
-  "erp.soporte": "radio",
-  "erp.partner": "text",
-  "erp.notas": "textarea",
-  "licenciamiento.proveedor": "text",
-  "licenciamiento.producto": "text",
-  "licenciamiento.tipo_licencia": "select",
-  "licenciamiento.cantidad": "number",
-  "licenciamiento.fecha_renovacion": "text",
-  "licenciamiento.coste": "text",
-  "licenciamiento.partner": "text",
-  "licenciamiento.contrato": "text",
-  "licenciamiento.notas": "textarea",
-  "otros_dispositivos.tipo": "select",
-  "otros_dispositivos.marca": "text",
-  "otros_dispositivos.cantidad": "number",
-  "otros_dispositivos.ubicacion": "text",
-  "otros_dispositivos.conectividad": "checks",
-  "otros_dispositivos.software": "text",
-  "otros_dispositivos.notas": "textarea"
+  "red.isp": {
+    "type": "text",
+    "options": null
+  },
+  "red.isp_contrato": {
+    "type": "text",
+    "options": null
+  },
+  "red.isp_soporte": {
+    "type": "text",
+    "options": null
+  },
+  "red.isp_fecha_renovacion": {
+    "type": "text",
+    "options": null
+  },
+  "red.conexion_tipo": {
+    "type": "select",
+    "options": [
+      "Fibra",
+      "ADSL",
+      "Cable",
+      "4G/5G backup",
+      "MPLS",
+      "Otro"
+    ]
+  },
+  "red.conexion_vel": {
+    "type": "text",
+    "options": null
+  },
+  "red.vel_real": {
+    "type": "text",
+    "options": null
+  },
+  "red.ip_publica_tipo": {
+    "type": "radio",
+    "options": [
+      "Fija",
+      "Dinámica",
+      "No revisado"
+    ]
+  },
+  "red.ddns": {
+    "type": "radio",
+    "options": [
+      "Sí",
+      "No",
+      "No necesario"
+    ]
+  },
+  "red.linea_backup": {
+    "type": "radio",
+    "options": [
+      "Sí",
+      "No"
+    ]
+  },
+  "red.router_marca": {
+    "type": "text",
+    "options": null
+  },
+  "red.firewall": {
+    "type": "radio",
+    "options": [
+      "Sí",
+      "No"
+    ]
+  },
+  "red.firewall_marca": {
+    "type": "text",
+    "options": null
+  },
+  "red.firewall_serial": {
+    "type": "text",
+    "options": null
+  },
+  "red.firewall_firmware": {
+    "type": "text",
+    "options": null
+  },
+  "red.firewall_firmware_ok": {
+    "type": "radio",
+    "options": [
+      "Sí",
+      "No",
+      "No revisado"
+    ]
+  },
+  "red.firewall_soporte": {
+    "type": "select",
+    "options": [
+      "En garantía / con soporte",
+      "Fuera de soporte",
+      "EOL anunciado",
+      "No verificado"
+    ]
+  },
+  "red.firewall_gestion": {
+    "type": "select",
+    "options": [
+      "Autogestionado",
+      "Gestionado por proveedor",
+      "Sin gestión activa"
+    ]
+  },
+  "red.accesos_heredados": {
+    "type": "radio",
+    "options": [
+      "Revocados",
+      "Pendiente de revocar",
+      "No existían",
+      "No revisado"
+    ]
+  },
+  "red.nat_reglas": {
+    "type": "radio",
+    "options": [
+      "Documentadas",
+      "Existen sin documentar",
+      "No hay",
+      "No revisado"
+    ]
+  },
+  "red.rdp_expuesto": {
+    "type": "radio",
+    "options": [
+      "Sí",
+      "No",
+      "No revisado"
+    ]
+  },
+  "red.vpns_auditadas": {
+    "type": "radio",
+    "options": [
+      "Auditadas",
+      "Pendiente de auditar",
+      "No hay VPNs"
+    ]
+  },
+  "red.utm": {
+    "type": "radio",
+    "options": [
+      "Sí",
+      "No",
+      "No revisado"
+    ]
+  },
+  "red.switches_num": {
+    "type": "number",
+    "options": null
+  },
+  "red.switches_marca": {
+    "type": "text",
+    "options": null
+  },
+  "red.switches_tipo": {
+    "type": "select",
+    "options": [
+      "Todos gestionados",
+      "Mixto",
+      "Todos no gestionados"
+    ]
+  },
+  "red.vlans": {
+    "type": "radio",
+    "options": [
+      "Sí",
+      "No"
+    ]
+  },
+  "red.vlans_detalle": {
+    "type": "text",
+    "options": null
+  },
+  "red.ip_gateway": {
+    "type": "ip",
+    "options": null
+  },
+  "red.ip_rango": {
+    "type": "cidr",
+    "options": null
+  },
+  "red.dhcp_servidor": {
+    "type": "select",
+    "options": [
+      "Router/Firewall",
+      "Servidor Windows (AD/DHCP)",
+      "Switch L3",
+      "Otro dispositivo",
+      "No hay DHCP (IPs estáticas)",
+      "No revisado"
+    ]
+  },
+  "red.dns_tipo": {
+    "type": "select",
+    "options": [
+      "DNS del ISP",
+      "Públicos (8.8.8.8 / 1.1.1.1)",
+      "Interno (AD/Windows)",
+      "Mixto",
+      "Otro"
+    ]
+  },
+  "red.monitorizacion": {
+    "type": "radio",
+    "options": [
+      "Sí",
+      "No"
+    ]
+  },
+  "red.notas": {
+    "type": "textarea",
+    "options": null
+  },
+  "servidores.nombre": {
+    "type": "text",
+    "options": null
+  },
+  "servidores.tipo": {
+    "type": "select",
+    "options": [
+      "Físico",
+      "Virtual",
+      "Cloud"
+    ]
+  },
+  "servidores.marca": {
+    "type": "text",
+    "options": null
+  },
+  "servidores.so": {
+    "type": "text",
+    "options": null
+  },
+  "servidores.hipervisor": {
+    "type": "select",
+    "options": [
+      "VMware ESXi",
+      "Hyper-V",
+      "Proxmox",
+      "KVM",
+      "Citrix XenServer",
+      "Otro"
+    ]
+  },
+  "servidores.version_hipervisor": {
+    "type": "text",
+    "options": null
+  },
+  "servidores.host_fisico": {
+    "type": "text",
+    "options": null
+  },
+  "servidores.cluster": {
+    "type": "radio",
+    "options": [
+      "Sí",
+      "No"
+    ]
+  },
+  "servidores.nombre_cluster": {
+    "type": "text",
+    "options": null
+  },
+  "servidores.lic_hipervisor": {
+    "type": "text",
+    "options": null
+  },
+  "servidores.almacenamiento_compartido": {
+    "type": "text",
+    "options": null
+  },
+  "servidores.roles": {
+    "type": "checks",
+    "options": [
+      "Domain Controller",
+      "File Server",
+      "App Server",
+      "ERP/CRM",
+      "Print Server",
+      "Backup Server",
+      "Hypervisor",
+      "Web Server",
+      "Base de datos",
+      "Otro"
+    ]
+  },
+  "servidores.ram": {
+    "type": "text",
+    "options": null
+  },
+  "servidores.almacenamiento": {
+    "type": "text",
+    "options": null
+  },
+  "servidores.garantia": {
+    "type": "text",
+    "options": null
+  },
+  "servidores.dominio": {
+    "type": "radio",
+    "options": [
+      "Sí",
+      "No"
+    ]
+  },
+  "servidores.acceso_remoto": {
+    "type": "select",
+    "options": [
+      "RDP",
+      "SSH",
+      "Ambos",
+      "Ninguno"
+    ]
+  },
+  "servidores.notas": {
+    "type": "textarea",
+    "options": null
+  },
+  "pcs.cantidad": {
+    "type": "number",
+    "options": null
+  },
+  "pcs.so": {
+    "type": "select",
+    "options": [
+      "Windows 11",
+      "Windows 10",
+      "macOS",
+      "Linux",
+      "Mixto"
+    ]
+  },
+  "pcs.dominio": {
+    "type": "radio",
+    "options": [
+      "Sí",
+      "No",
+      "Mixto"
+    ]
+  },
+  "pcs.gestion_central": {
+    "type": "radio",
+    "options": [
+      "Sí",
+      "No"
+    ]
+  },
+  "pcs.gestion_tipo": {
+    "type": "text",
+    "options": null
+  },
+  "pcs.moviles": {
+    "type": "radio",
+    "options": [
+      "Sí",
+      "No"
+    ]
+  },
+  "pcs.moviles_mdm": {
+    "type": "radio",
+    "options": [
+      "Sí",
+      "No"
+    ]
+  },
+  "pcs.antiguedad": {
+    "type": "select",
+    "options": [
+      "< 2 años",
+      "2–4 años",
+      "4–6 años",
+      "> 6 años",
+      "Mixto"
+    ]
+  },
+  "pcs.notas": {
+    "type": "textarea",
+    "options": null
+  },
+  "backup.software": {
+    "type": "select",
+    "options": [
+      "Veeam",
+      "Acronis",
+      "Nakivo",
+      "Commvault",
+      "Windows Server Backup",
+      "Datto",
+      "Cobian",
+      "Duplicati",
+      "Veritas Backup Exec",
+      "Otro"
+    ]
+  },
+  "backup.consola_acronis": {
+    "type": "text",
+    "options": null
+  },
+  "backup.agentes_acronis": {
+    "type": "number",
+    "options": null
+  },
+  "backup.plan_proteccion": {
+    "type": "text",
+    "options": null
+  },
+  "backup.destino": {
+    "type": "checks",
+    "options": [
+      "NAS local",
+      "Disco externo",
+      "Cloud (Azure/S3/Jotelulu)",
+      "Acronis Cloud",
+      "Cinta",
+      "Otro"
+    ]
+  },
+  "backup.frecuencia": {
+    "type": "select",
+    "options": [
+      "Continuo",
+      "Diario",
+      "Semanal",
+      "Mensual",
+      "Sin política definida"
+    ]
+  },
+  "backup.tipo": {
+    "type": "select",
+    "options": [
+      "Completo",
+      "Incremental",
+      "Diferencial",
+      "Mixto"
+    ]
+  },
+  "backup.retencion": {
+    "type": "text",
+    "options": null
+  },
+  "backup.pruebas": {
+    "type": "radio",
+    "options": [
+      "Sí",
+      "No",
+      "Nunca"
+    ]
+  },
+  "backup.pruebas_freq": {
+    "type": "text",
+    "options": null
+  },
+  "backup.offsite": {
+    "type": "radio",
+    "options": [
+      "Sí",
+      "No"
+    ]
+  },
+  "backup.backup_endpoints": {
+    "type": "radio",
+    "options": [
+      "Sí",
+      "No"
+    ]
+  },
+  "backup.herramienta_endpoints": {
+    "type": "text",
+    "options": null
+  },
+  "backup.que_respalda": {
+    "type": "checks",
+    "options": [
+      "Documentos",
+      "Escritorio",
+      "Perfiles de usuario",
+      "AppData",
+      "Disco completo"
+    ]
+  },
+  "backup.destino_endpoints": {
+    "type": "text",
+    "options": null
+  },
+  "backup.notas": {
+    "type": "textarea",
+    "options": null
+  },
+  "email.proveedor": {
+    "type": "select",
+    "options": [
+      "Microsoft 365",
+      "Google Workspace",
+      "Exchange On-Premise",
+      "Hosting externo",
+      "Otro"
+    ]
+  },
+  "email.dominio": {
+    "type": "text",
+    "options": null
+  },
+  "email.buzones": {
+    "type": "number",
+    "options": null
+  },
+  "email.plan": {
+    "type": "text",
+    "options": null
+  },
+  "email.antispam": {
+    "type": "radio",
+    "options": [
+      "Sí",
+      "No"
+    ]
+  },
+  "email.antispam_cual": {
+    "type": "text",
+    "options": null
+  },
+  "email.mfa": {
+    "type": "radio",
+    "options": [
+      "Sí",
+      "No",
+      "Parcialmente"
+    ]
+  },
+  "email.archivado": {
+    "type": "radio",
+    "options": [
+      "Sí",
+      "No"
+    ]
+  },
+  "email.notas": {
+    "type": "textarea",
+    "options": null
+  },
+  "antivirus.solucion": {
+    "type": "text",
+    "options": null
+  },
+  "antivirus.tipo": {
+    "type": "select",
+    "options": [
+      "Antivirus básico",
+      "EDR",
+      "XDR",
+      "MDR gestionado",
+      "No sabe"
+    ]
+  },
+  "antivirus.consola": {
+    "type": "radio",
+    "options": [
+      "Sí",
+      "No"
+    ]
+  },
+  "antivirus.licencias": {
+    "type": "number",
+    "options": null
+  },
+  "antivirus.vencimiento": {
+    "type": "text",
+    "options": null
+  },
+  "antivirus.servidores_av": {
+    "type": "radio",
+    "options": [
+      "Sí",
+      "No"
+    ]
+  },
+  "antivirus.notas": {
+    "type": "textarea",
+    "options": null
+  },
+  "wifi.ssids": {
+    "type": "text",
+    "options": null
+  },
+  "wifi.invitados": {
+    "type": "radio",
+    "options": [
+      "Sí",
+      "No"
+    ]
+  },
+  "wifi.controlador": {
+    "type": "select",
+    "options": [
+      "Sí (cloud)",
+      "Sí (local)",
+      "No, APs autónomos"
+    ]
+  },
+  "wifi.marca": {
+    "type": "text",
+    "options": null
+  },
+  "wifi.cantidad": {
+    "type": "number",
+    "options": null
+  },
+  "wifi.cobertura": {
+    "type": "radio",
+    "options": [
+      "Sí",
+      "No",
+      "Parcial"
+    ]
+  },
+  "wifi.notas": {
+    "type": "textarea",
+    "options": null
+  },
+  "vpn.tipo": {
+    "type": "select",
+    "options": [
+      "SSL/TLS",
+      "IPsec Site-to-Site",
+      "IPsec Client-to-Site",
+      "OpenVPN",
+      "WireGuard",
+      "Otro"
+    ]
+  },
+  "vpn.solucion": {
+    "type": "text",
+    "options": null
+  },
+  "vpn.usuarios": {
+    "type": "number",
+    "options": null
+  },
+  "vpn.mfa": {
+    "type": "radio",
+    "options": [
+      "Sí",
+      "No"
+    ]
+  },
+  "vpn.uso": {
+    "type": "checks",
+    "options": [
+      "Teletrabajo",
+      "Conexión entre sedes",
+      "Proveedores externos",
+      "Otro"
+    ]
+  },
+  "vpn.notas": {
+    "type": "textarea",
+    "options": null
+  },
+  "sai.rack_tipo": {
+    "type": "select",
+    "options": [
+      "Rack de pie 19\"",
+      "Rack mural",
+      "Semi-rack",
+      "Sin armario (equipos sueltos)",
+      "No revisado"
+    ]
+  },
+  "sai.rack_us": {
+    "type": "text",
+    "options": null
+  },
+  "sai.rack_ocupacion": {
+    "type": "text",
+    "options": null
+  },
+  "sai.rack_estado": {
+    "type": "select",
+    "options": [
+      "Bueno",
+      "Aceptable",
+      "Deficiente",
+      "No revisado"
+    ]
+  },
+  "sai.rack_cerrado": {
+    "type": "radio",
+    "options": [
+      "Con llave",
+      "Sin llave",
+      "Abierto / sin puertas",
+      "No revisado"
+    ]
+  },
+  "sai.sala_ubicacion": {
+    "type": "text",
+    "options": null
+  },
+  "sai.sala_tipo": {
+    "type": "select",
+    "options": [
+      "Sala técnica dedicada",
+      "Despacho u oficina",
+      "Almacén",
+      "Zona de paso",
+      "Otro"
+    ]
+  },
+  "sai.ventilacion": {
+    "type": "select",
+    "options": [
+      "Aire acondicionado dedicado",
+      "AA de la oficina",
+      "Ventiladores en el rack",
+      "Ventilación natural",
+      "Ninguna",
+      "No revisado"
+    ]
+  },
+  "sai.acceso_restringido": {
+    "type": "radio",
+    "options": [
+      "Sí",
+      "No",
+      "No revisado"
+    ]
+  },
+  "sai.cableado_estado": {
+    "type": "select",
+    "options": [
+      "Bueno y documentado",
+      "Bueno, sin documentación",
+      "Con puntos problemáticos",
+      "Deficiente",
+      "No revisado"
+    ]
+  },
+  "sai.cableado_categoria": {
+    "type": "select",
+    "options": [
+      "Cat 5e",
+      "Cat 6",
+      "Cat 6A",
+      "Cat 7",
+      "Mixto cobre",
+      "Fibra + cobre",
+      "No revisado"
+    ]
+  },
+  "sai.patch_panel": {
+    "type": "radio",
+    "options": [
+      "Sí, etiquetado",
+      "Sí, sin etiquetar",
+      "No hay",
+      "No revisado"
+    ]
+  },
+  "sai.tomas_red": {
+    "type": "text",
+    "options": null
+  },
+  "sai.etiquetado": {
+    "type": "radio",
+    "options": [
+      "Sí",
+      "Parcial",
+      "No",
+      "No revisado"
+    ]
+  },
+  "sai.pdu_tipo": {
+    "type": "select",
+    "options": [
+      "PDU de rack",
+      "Regletas schuko",
+      "PDU + regletas schuko",
+      "Ninguna",
+      "No revisado"
+    ]
+  },
+  "sai.pdu_gestionable": {
+    "type": "radio",
+    "options": [
+      "Sí",
+      "No",
+      "No aplica"
+    ]
+  },
+  "sai.circuito_dedicado": {
+    "type": "radio",
+    "options": [
+      "Dedicado",
+      "Compartido",
+      "No revisado"
+    ]
+  },
+  "sai.tomas_electricas": {
+    "type": "text",
+    "options": null
+  },
+  "sai.sai_existe": {
+    "type": "radio",
+    "options": [
+      "Sí",
+      "No",
+      "No revisado"
+    ]
+  },
+  "sai.marca": {
+    "type": "text",
+    "options": null
+  },
+  "sai.sai_serial": {
+    "type": "text",
+    "options": null
+  },
+  "sai.cantidad": {
+    "type": "number",
+    "options": null
+  },
+  "sai.protegidos": {
+    "type": "checks",
+    "options": [
+      "Servidores",
+      "Switches core",
+      "Router/Firewall",
+      "PCs críticos",
+      "NAS/Almacenamiento"
+    ]
+  },
+  "sai.autonomia": {
+    "type": "text",
+    "options": null
+  },
+  "sai.sai_garantia": {
+    "type": "text",
+    "options": null
+  },
+  "sai.baterias": {
+    "type": "radio",
+    "options": [
+      "Sí",
+      "No",
+      "No se sabe"
+    ]
+  },
+  "sai.sai_firmware": {
+    "type": "radio",
+    "options": [
+      "Actualizado",
+      "Pendiente de actualizar",
+      "No revisado"
+    ]
+  },
+  "sai.sai_gestion": {
+    "type": "select",
+    "options": [
+      "Tarjeta de red SNMP",
+      "USB / serie a servidor",
+      "Sin acceso remoto",
+      "No revisado"
+    ]
+  },
+  "sai.monitorizado": {
+    "type": "radio",
+    "options": [
+      "Sí",
+      "No"
+    ]
+  },
+  "sai.sai_apagado": {
+    "type": "radio",
+    "options": [
+      "Sí",
+      "No",
+      "No revisado"
+    ]
+  },
+  "sai.notas": {
+    "type": "textarea",
+    "options": null
+  },
+  "almacenamiento.tipo": {
+    "type": "select",
+    "options": [
+      "NAS local",
+      "NAS Enterprise",
+      "SAN",
+      "DAS",
+      "Servidor de ficheros",
+      "SharePoint / OneDrive",
+      "Google Drive",
+      "Dropbox",
+      "S3 / Azure Blob",
+      "Mixto",
+      "Otro"
+    ]
+  },
+  "almacenamiento.proveedor": {
+    "type": "text",
+    "options": null
+  },
+  "almacenamiento.marca_modelo": {
+    "type": "text",
+    "options": null
+  },
+  "almacenamiento.capacidad": {
+    "type": "text",
+    "options": null
+  },
+  "almacenamiento.tipo_discos": {
+    "type": "select",
+    "options": [
+      "SSD",
+      "HDD",
+      "SAS",
+      "Mixto",
+      "N/A"
+    ]
+  },
+  "almacenamiento.protocolo": {
+    "type": "select",
+    "options": [
+      "iSCSI",
+      "Fibre Channel",
+      "NFS",
+      "SMB/CIFS",
+      "Otro",
+      "N/A"
+    ]
+  },
+  "almacenamiento.raid": {
+    "type": "text",
+    "options": null
+  },
+  "almacenamiento.conexion_hosts": {
+    "type": "text",
+    "options": null
+  },
+  "almacenamiento.ubicacion": {
+    "type": "select",
+    "options": [
+      "On-premise",
+      "Cloud",
+      "Híbrido"
+    ]
+  },
+  "almacenamiento.acceso_remoto": {
+    "type": "radio",
+    "options": [
+      "Sí",
+      "No"
+    ]
+  },
+  "almacenamiento.sincronizacion": {
+    "type": "radio",
+    "options": [
+      "Sí",
+      "No"
+    ]
+  },
+  "almacenamiento.permisos": {
+    "type": "radio",
+    "options": [
+      "Sí",
+      "No",
+      "Básica"
+    ]
+  },
+  "almacenamiento.notas": {
+    "type": "textarea",
+    "options": null
+  },
+  "telefonia.tipo": {
+    "type": "select",
+    "options": [
+      "Telefonía fija tradicional",
+      "VoIP / IP",
+      "Central virtual (cloud)",
+      "Móviles corporativos",
+      "Microsoft Teams Phone",
+      "Mixto",
+      "Otro"
+    ]
+  },
+  "telefonia.proveedor": {
+    "type": "text",
+    "options": null
+  },
+  "telefonia.extensiones": {
+    "type": "number",
+    "options": null
+  },
+  "telefonia.centralita": {
+    "type": "radio",
+    "options": [
+      "Sí",
+      "No"
+    ]
+  },
+  "telefonia.centralita_tipo": {
+    "type": "select",
+    "options": [
+      "Física",
+      "Virtual / Cloud",
+      "Teams Phone"
+    ]
+  },
+  "telefonia.grabacion": {
+    "type": "radio",
+    "options": [
+      "Sí",
+      "No"
+    ]
+  },
+  "telefonia.moviles": {
+    "type": "radio",
+    "options": [
+      "Sí",
+      "No"
+    ]
+  },
+  "telefonia.moviles_num": {
+    "type": "number",
+    "options": null
+  },
+  "telefonia.notas": {
+    "type": "textarea",
+    "options": null
+  },
+  "impresion.marca": {
+    "type": "text",
+    "options": null
+  },
+  "impresion.tipo": {
+    "type": "select",
+    "options": [
+      "Láser B/N",
+      "Láser Color",
+      "Inkjet",
+      "Multifunción",
+      "Plotter",
+      "Térmica",
+      "Otro"
+    ]
+  },
+  "impresion.conectividad": {
+    "type": "select",
+    "options": [
+      "Red (cable)",
+      "WiFi",
+      "USB",
+      "Bluetooth",
+      "Mixto"
+    ]
+  },
+  "impresion.ip": {
+    "type": "ip",
+    "options": null
+  },
+  "impresion.ip_wifi": {
+    "type": "ip",
+    "options": null
+  },
+  "impresion.ubicacion": {
+    "type": "text",
+    "options": null
+  },
+  "impresion.consumibles": {
+    "type": "text",
+    "options": null
+  },
+  "impresion.gestion": {
+    "type": "radio",
+    "options": [
+      "Sí",
+      "No"
+    ]
+  },
+  "impresion.proveedor_gestion": {
+    "type": "text",
+    "options": null
+  },
+  "impresion.notas": {
+    "type": "textarea",
+    "options": null
+  },
+  "erp.nombre": {
+    "type": "text",
+    "options": null
+  },
+  "erp.tipo": {
+    "type": "select",
+    "options": [
+      "ERP",
+      "CRM",
+      "Contabilidad",
+      "Gestión documental",
+      "Ofimática",
+      "CAD/CAM",
+      "Facturación",
+      "RRHH",
+      "Otro"
+    ]
+  },
+  "erp.proveedor": {
+    "type": "text",
+    "options": null
+  },
+  "erp.version": {
+    "type": "text",
+    "options": null
+  },
+  "erp.alojamiento": {
+    "type": "select",
+    "options": [
+      "On-Premise",
+      "Cloud/SaaS",
+      "Servidor propio",
+      "Infraestructura proveedor"
+    ]
+  },
+  "erp.licencias": {
+    "type": "number",
+    "options": null
+  },
+  "erp.soporte": {
+    "type": "radio",
+    "options": [
+      "Sí",
+      "No",
+      "No sabe"
+    ]
+  },
+  "erp.partner": {
+    "type": "text",
+    "options": null
+  },
+  "erp.notas": {
+    "type": "textarea",
+    "options": null
+  },
+  "licenciamiento.proveedor": {
+    "type": "text",
+    "options": null
+  },
+  "licenciamiento.producto": {
+    "type": "text",
+    "options": null
+  },
+  "licenciamiento.tipo_licencia": {
+    "type": "select",
+    "options": [
+      "Suscripción mensual",
+      "Suscripción anual",
+      "Perpetua",
+      "OEM",
+      "Por volumen",
+      "Freemium",
+      "Otro"
+    ]
+  },
+  "licenciamiento.cantidad": {
+    "type": "number",
+    "options": null
+  },
+  "licenciamiento.fecha_renovacion": {
+    "type": "text",
+    "options": null
+  },
+  "licenciamiento.coste": {
+    "type": "text",
+    "options": null
+  },
+  "licenciamiento.partner": {
+    "type": "text",
+    "options": null
+  },
+  "licenciamiento.contrato": {
+    "type": "text",
+    "options": null
+  },
+  "licenciamiento.notas": {
+    "type": "textarea",
+    "options": null
+  },
+  "otros_dispositivos.tipo": {
+    "type": "select",
+    "options": [
+      "Lector de tarjetas",
+      "Terminal de firma",
+      "PDA / Terminal móvil",
+      "Escáner de códigos",
+      "TPV",
+      "Cámara de seguridad",
+      "Control de acceso",
+      "Control de presencia",
+      "Sensor IoT",
+      "Otro"
+    ]
+  },
+  "otros_dispositivos.marca": {
+    "type": "text",
+    "options": null
+  },
+  "otros_dispositivos.cantidad": {
+    "type": "number",
+    "options": null
+  },
+  "otros_dispositivos.ubicacion": {
+    "type": "text",
+    "options": null
+  },
+  "otros_dispositivos.conectividad": {
+    "type": "checks",
+    "options": [
+      "USB",
+      "Red Ethernet",
+      "WiFi",
+      "Bluetooth",
+      "Serie/RS232",
+      "Otro"
+    ]
+  },
+  "otros_dispositivos.software": {
+    "type": "text",
+    "options": null
+  },
+  "otros_dispositivos.notas": {
+    "type": "textarea",
+    "options": null
+  }
 }
