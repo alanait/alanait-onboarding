@@ -40,6 +40,8 @@ export function buildPrintFragment(clientData, sectionEnabled, formData, instanc
   const tdL = `padding:6px 10px;border:1px solid #e2e8f0;font-size:12px;font-weight:600;width:38%;background:#f8fafc;color:#374151;vertical-align:top;`;
   const tdV = `padding:6px 10px;border:1px solid #e2e8f0;font-size:12px;color:#1e293b;`;
   const h2S = `font-size:13px;font-weight:700;color:#0d1f3c;background:#eff6ff;padding:7px 10px;border-left:4px solid #1d4ed8;margin:0 0 8px 0;`;
+  // Cabecera de grupo de campos dentro de la tabla de una seccion
+  const tdG = `padding:5px 10px;border:1px solid #e2e8f0;font-size:10px;font-weight:700;color:#1d4ed8;background:#eff6ff;text-transform:uppercase;letter-spacing:0.06em;`;
 
   let body = "";
 
@@ -93,11 +95,26 @@ export function buildPrintFragment(clientData, sectionEnabled, formData, instanc
     let tables = "";
 
     const makeRows = (idx) => {
-      let rows = "";
+      // Agrupa por `group` preservando el orden del esquema. Un grupo sin
+      // ningun campo relleno no imprime ni su cabecera.
+      const orden = [];
+      const porGrupo = new Map();
       section.fields.forEach(f => {
         const v = getVal(section.id, f.id, idx);
         if (!v || v === "" || (Array.isArray(v) && v.length === 0)) return;
-        rows += `<tr><td style="${tdL}">${esc(f.label)}</td><td style="${tdV}">${esc(Array.isArray(v) ? v.join(", ") : v)}</td></tr>`;
+        const g = f.group || "";
+        if (!porGrupo.has(g)) { porGrupo.set(g, []); orden.push(g); }
+        porGrupo.get(g).push(
+          `<tr><td style="${tdL}">${esc(f.label)}</td><td style="${tdV}">${esc(Array.isArray(v) ? v.join(", ") : v)}</td></tr>`
+        );
+      });
+
+      let rows = "";
+      orden.forEach(g => {
+        if (g !== "") {
+          rows += `<tr><td colspan="2" style="${tdG}">${esc(g)}</td></tr>`;
+        }
+        rows += porGrupo.get(g).join("");
       });
       return rows;
     };
