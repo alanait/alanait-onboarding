@@ -30,6 +30,12 @@ export const C = {
   text: "#333333", textLight: "#868686",
 };
 
+// Familia tipografica. alanait.com usa Centra No2 en peso 300 para titulares y
+// 400 para texto; aqui se usa Jost, su equivalente libre mas cercano, con la
+// misma disciplina: nada de negritas de 700 u 800, que es lo que hacia que la
+// aplicacion pareciera de plantilla.
+export const FUENTE = "Jost, 'Segoe UI', system-ui, -apple-system, sans-serif";
+
 export const inp = {
   width: "100%", padding: "8px 11px", border: `1px solid ${C.border}`,
   borderRadius: "6px", fontSize: "13px", color: C.text, background: "#fff",

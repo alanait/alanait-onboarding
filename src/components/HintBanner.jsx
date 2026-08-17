@@ -36,7 +36,7 @@ export default function HintBanner({ hint, estado, onEstado }) {
 
       <div style={{ flex: 1, minWidth: 0 }}>
         <span style={{
-          fontSize: 10, fontWeight: 700, letterSpacing: "0.06em",
+          fontSize: 10, fontWeight: 500, letterSpacing: "0.06em",
           textTransform: "uppercase", color: c.texto, marginRight: 7,
         }}>
           {meta.etiqueta}

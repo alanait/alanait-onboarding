@@ -35,7 +35,7 @@ function Field({ section, field, instanceIdx, getVal, setVal }) {
 
   return (
     <div style={{ marginBottom: "14px" }}>
-      <label style={{ display: "block", fontSize: "12px", fontWeight: "600", color: C.gray, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "5px" }}>
+      <label style={{ display: "block", fontSize: "12px", fontWeight: "500", color: C.gray, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "5px" }}>
         {field.label}
       </label>
       {field.type === "ip" ? (
@@ -115,7 +115,7 @@ function SiNoToggle({ value, onChange }) {
         const lightBg = isSi ? C.greenLight : C.redLight;
         return (
           <button key={opt} onClick={() => onChange(opt)} style={{
-            padding: "7px 20px", borderRadius: "6px", fontSize: "14px", fontWeight: "700",
+            padding: "7px 20px", borderRadius: "6px", fontSize: "14px", fontWeight: "500",
             cursor: "pointer", border: `2px solid ${sel ? color : C.border}`,
             background: sel ? lightBg : "#fff", color: sel ? color : C.textLight,
             transition: "all 0.15s", letterSpacing: "0.05em",
@@ -166,7 +166,7 @@ function ImageZone({ sectionId, images, addImage, removeImage, updateCaption }) 
 
   return (
     <div style={{ marginTop: 20, borderTop: `1px dashed #cbd5e1`, paddingTop: 16 }}>
-      <div style={{ fontSize: 12, fontWeight: 700, color: C.gray, textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: 10, display: "flex", alignItems: "center", gap: 6 }}>
+      <div style={{ fontSize: 12, fontWeight: 500, color: C.gray, textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: 10, display: "flex", alignItems: "center", gap: 6 }}>
         <span>📷</span> Capturas de pantalla
       </div>
       <div style={{ display: "flex", gap: 8, marginBottom: 4 }}>
@@ -180,7 +180,7 @@ function ImageZone({ sectionId, images, addImage, removeImage, updateCaption }) 
         onMouseEnter={e => { e.currentTarget.style.borderColor = C.blue; e.currentTarget.style.color = C.blue; }}
         onMouseLeave={e => { e.currentTarget.style.borderColor = C.border; e.currentTarget.style.color = C.gray; }}>
           <span style={{ fontSize: 22 }}>📁</span>
-          <span style={{ fontWeight: 600 }}>Explorador</span>
+          <span style={{ fontWeight: 500 }}>Explorador</span>
           <span style={{ fontSize: 11, color: "#94a3b8" }}>Haz clic</span>
         </button>
         <input ref={fileInputRef} type="file" multiple accept="image/*" style={{ display: "none" }}
@@ -196,7 +196,7 @@ function ImageZone({ sectionId, images, addImage, removeImage, updateCaption }) 
           onMouseEnter={e => { e.currentTarget.style.borderColor = C.blue; e.currentTarget.style.color = C.blue; }}
           onMouseLeave={e => { e.currentTarget.style.borderColor = C.border; e.currentTarget.style.color = C.gray; }}>
             <span style={{ fontSize: 22 }}>📋</span>
-            <span style={{ fontWeight: 600 }}>Pegar</span>
+            <span style={{ fontWeight: 500 }}>Pegar</span>
             <span style={{ fontSize: 11, color: "#94a3b8" }}>Portapapeles</span>
           </button>
           {/* Hidden focusable for Ctrl+V fallback */}
@@ -308,7 +308,7 @@ function Grupo({ section, titulo, campos, instanceIdx, getVal, setVal, hints, ge
           background: "transparent", border: "none", cursor: "pointer",
           padding: "0 0 6px", marginBottom: 12,
           borderBottom: `1px solid ${C.blueBorder}`,
-          fontSize: 12, fontWeight: 700, color: C.blue,
+          fontSize: 12, fontWeight: 500, color: C.blue,
           textTransform: "uppercase", letterSpacing: "0.08em",
           fontFamily: "inherit", textAlign: "left",
         }}
@@ -316,7 +316,7 @@ function Grupo({ section, titulo, campos, instanceIdx, getVal, setVal, hints, ge
         <span style={{ display: "inline-block", transform: abierto ? "rotate(90deg)" : "none", transition: "transform 0.15s", fontSize: 10 }}>▶</span>
         <span style={{ flex: 1 }}>{titulo}</span>
         <span style={{
-          fontSize: 11, fontWeight: 600, letterSpacing: 0,
+          fontSize: 11, fontWeight: 500, letterSpacing: 0,
           color: completo ? C.green : C.textLight,
           fontVariantNumeric: "tabular-nums",
         }}>

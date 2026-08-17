@@ -6,7 +6,7 @@ import { isSupabaseConfigured } from "./lib/supabase.js";
 import { getSession, onAuthChange, signOut, getUserName } from "./lib/auth.js";
 import { saveClient as saveToCloud, loadClient, exportToFile, searchClients } from "./lib/clientService.js";
 import { SECTIONS } from "./sections.js";
-import { C, inp } from "./theme.js";
+import { C, inp, FUENTE } from "./theme.js";
 import { SiNoToggle, ImageZone, SectionFields } from "./components/fields.jsx";
 import { buildPrintFragment } from "./print/buildPrintHTML.js";
 import { hintsVisibles, claveHint, TIPOS_HINT } from "./hints.js";
@@ -175,7 +175,7 @@ export default function App() {
       container.style.width = '190mm';
       container.style.padding = '0';
       container.style.background = '#fff';
-      container.style.fontFamily = "'Segoe UI', system-ui, sans-serif";
+      container.style.fontFamily = FUENTE;
       document.body.appendChild(container);
 
       const nombre = clientData.empresa ? clientData.empresa.replace(/[^a-zA-Z0-9áéíóúñÁÉÍÓÚÑ ]/g, "_") : "onboarding";
@@ -387,7 +387,7 @@ export default function App() {
   // Auth guard - show login if Supabase is configured but no session
   if (isSupabaseConfigured() && authLoading) {
     return (
-      <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: C.navy, color: "#fff", fontFamily: "'Segoe UI', system-ui, sans-serif" }}>
+      <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: C.navy, color: "#fff", fontFamily: FUENTE }}>
         <div style={{ textAlign: "center" }}>
           <div style={{ fontSize: 32, marginBottom: 12 }}>⏳</div>
           <div>Cargando...</div>
@@ -447,7 +447,7 @@ export default function App() {
         <div style={{ position: "fixed", inset: 0, zIndex: 99999, background: "rgba(0,0,0,0.6)", display: "flex", alignItems: "center", justifyContent: "center" }}>
           <div style={{ background: "#fff", borderRadius: 12, padding: "28px 32px", width: 380, boxShadow: "0 20px 60px rgba(0,0,0,0.3)" }}>
             <div style={{ fontSize: 20, marginBottom: 8 }}>💾</div>
-            <div style={{ fontWeight: 700, fontSize: 16, color: C.navy, marginBottom: 8 }}>Cambios sin guardar</div>
+            <div style={{ fontWeight: 500, fontSize: 16, color: C.navy, marginBottom: 8 }}>Cambios sin guardar</div>
             <div style={{ fontSize: 14, color: "#64748b", marginBottom: 24 }}>
               El proyecto actual tiene cambios sin guardar. ¿Qué quieres hacer?
             </div>
@@ -457,7 +457,7 @@ export default function App() {
                 setShowUnsaved(false);
                 if (unsavedCallbackRef.current) await unsavedCallbackRef.current();
                 unsavedCallbackRef.current = null;
-              }} style={{ padding: "10px", background: C.green, border: "none", borderRadius: 8, color: "#fff", fontSize: 14, fontWeight: 600, cursor: "pointer" }}>
+              }} style={{ padding: "10px", background: C.green, border: "none", borderRadius: 8, color: "#fff", fontSize: 14, fontWeight: 500, cursor: "pointer" }}>
                 💾 Guardar y continuar
               </button>
               <button onClick={async () => {
@@ -481,7 +481,7 @@ export default function App() {
           Antes se restaba una cabecera de 67px fijos, pero la cabecera envuelve
           en varias lineas segun el ancho, asi que el total superaba 100vh y
           aparecia una segunda barra de desplazamiento. */}
-      <div className="screen-only no-print" style={{ display: "flex", flexDirection: "column", height: "100vh", overflow: "hidden", fontFamily: "'Segoe UI', system-ui, -apple-system, sans-serif" }}>
+      <div className="screen-only no-print" style={{ display: "flex", flexDirection: "column", height: "100vh", overflow: "hidden", fontFamily: FUENTE }}>
         {/* Header */}
         <div style={{ background: C.navy, color: "#fff", padding: "0 24px", flexShrink: 0, zIndex: 100, boxShadow: "0 2px 8px rgba(0,0,0,0.3)" }}>
           {/* Una sola fila de 46px. Antes la marca ocupaba tres lineas y los
@@ -489,6 +489,7 @@ export default function App() {
               Ahora los conmutadores y las acciones secundarias son solo icono
               con su titulo, y el texto se reserva para Guardar y Exportar. */}
           <div style={{ maxWidth: 1180, margin: "0 auto", display: "flex", alignItems: "center", gap: 8, height: 46 }}>
+            <button onClick={() => { setSidebarOpen(p => !p); loadRecent(); }} title="Proyectos recientes" aria-label="Proyectos recientes" style={btnIcono(sidebarOpen)}>🗂</button>
             {isSupabaseConfigured() && (
               <button onClick={() => {
                 if (isDirty) { unsavedCallbackRef.current = () => setView('dashboard'); setShowUnsaved(true); }
@@ -498,7 +499,7 @@ export default function App() {
 
             <div style={{ minWidth: 0, marginRight: 4 }}>
               <span style={{ fontSize: 10, letterSpacing: "0.14em", color: "#A9C6EA", textTransform: "uppercase", marginRight: 7 }}>Alana IT</span>
-              <span style={{ fontSize: 13.5, fontWeight: 700 }}>
+              <span style={{ fontSize: 13.5, fontWeight: 500 }}>
                 {currentFilePath ? currentFilePath.split("\\").pop().split("/").pop() : "Onboarding técnico"}
               </span>
               {isDirty && <span title="Cambios sin guardar" style={{ color: "#2FB6BA", marginLeft: 5, fontSize: 15 }}>•</span>}
@@ -507,13 +508,12 @@ export default function App() {
             <div style={{ flex: 1 }} />
 
             <span style={{ fontSize: 11.5, color: "#A9C6EA", whiteSpace: "nowrap" }}>
-              {answered}/{SECTIONS.length} · <b style={{ color: "#fff", fontWeight: 700 }}>{progress}%</b>
+              {answered}/{SECTIONS.length} · <b style={{ color: "#fff", fontWeight: 500 }}>{progress}%</b>
             </span>
 
             <span style={{ width: 1, height: 20, background: "rgba(255,255,255,0.18)", margin: "0 3px" }} />
 
             <button onClick={() => setRailOpen(p => !p)} title="Lista de secciones" aria-label="Lista de secciones" style={btnIcono(railOpen)}>☰</button>
-            <button onClick={() => { setSidebarOpen(p => !p); loadRecent(); }} title="Proyectos recientes" aria-label="Proyectos recientes" style={btnIcono(sidebarOpen)}>🗂</button>
             <button onClick={() => setInformeOpen(p => !p)} title="Informe en vivo" aria-label="Informe en vivo" style={btnIcono(informeOpen)}>▤</button>
             {isSupabaseConfigured() && currentClientId && (
               <button onClick={() => setShowVersionHistory(true)} title="Historial de versiones" aria-label="Historial de versiones" style={btnIcono(false)}>🕘</button>
@@ -522,14 +522,14 @@ export default function App() {
             <button onClick={handleSave} disabled={saving} style={{
               background: isDirty ? C.green : "rgba(255,255,255,0.12)", color: "#fff",
               border: `1px solid ${isDirty ? "#1FA0A4" : "rgba(255,255,255,0.2)"}`,
-              padding: "0 13px", height: 30, borderRadius: 7, fontSize: 12.5, fontWeight: 600,
+              padding: "0 13px", height: 30, borderRadius: 7, fontSize: 12.5, fontWeight: 500,
               cursor: "pointer", opacity: saving ? 0.6 : 1, whiteSpace: "nowrap", fontFamily: "inherit",
             }}>
               {saving ? "Guardando…" : "Guardar"}
             </button>
             <button onClick={handlePrint} disabled={exporting} style={{
               background: "#2FB6BA", color: "#fff", border: "none",
-              padding: "0 14px", height: 30, borderRadius: 7, fontSize: 12.5, fontWeight: 600,
+              padding: "0 14px", height: 30, borderRadius: 7, fontSize: 12.5, fontWeight: 500,
               cursor: "pointer", opacity: exporting ? 0.6 : 1, whiteSpace: "nowrap", fontFamily: "inherit",
             }}>
               {exporting ? "Generando…" : "PDF"}
@@ -618,7 +618,7 @@ export default function App() {
             )}
 
             {/* Recent projects list */}
-            <div style={{ fontSize: 10, fontWeight: 600, color: "#374151", textTransform: "uppercase", letterSpacing: "0.08em", padding: "0 6px", marginBottom: 4 }}>
+            <div style={{ fontSize: 10, fontWeight: 500, color: "#374151", textTransform: "uppercase", letterSpacing: "0.08em", padding: "0 6px", marginBottom: 4 }}>
               Recientes
             </div>
             <div style={{ overflowY: "auto", flex: 1 }}>
@@ -707,7 +707,7 @@ export default function App() {
                     if (currentFilePath === confirmDelete) handleNewProject();
                     setConfirmDelete(null);
                     loadRecent();
-                  }} style={{ flex: 1, padding: "5px", background: "#ef4444", border: "none", borderRadius: 5, color: "#fff", fontSize: 11, fontWeight: 600, cursor: "pointer" }}>
+                  }} style={{ flex: 1, padding: "5px", background: "#ef4444", border: "none", borderRadius: 5, color: "#fff", fontSize: 11, fontWeight: 500, cursor: "pointer" }}>
                     Eliminar
                   </button>
                   <button onClick={() => setConfirmDelete(null)} style={{ flex: 1, padding: "5px", background: "rgba(255,255,255,0.08)", border: "none", borderRadius: 5, color: "#94a3b8", fontSize: 11, cursor: "pointer" }}>
@@ -730,12 +730,12 @@ export default function App() {
           <div style={{ background: "#fff", borderRadius: 10, border: `1px solid ${C.border}`, marginBottom: 20, overflow: "hidden", boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
             <div style={{ background: C.navy, padding: "12px 20px", display: "flex", alignItems: "center", gap: 10 }}>
               <span style={{ fontSize: 18 }}>👤</span>
-              <span style={{ color: "#fff", fontWeight: 700, fontSize: 15 }}>Datos del Cliente</span>
+              <span style={{ color: "#fff", fontWeight: 500, fontSize: 15 }}>Datos del Cliente</span>
             </div>
             <div style={{ padding: "20px", display: "grid", gridTemplateColumns: "1fr 1fr", gap: "14px" }}>
               {clientFields.map(f => (
                 <div key={f.id} style={f.full ? { gridColumn: "1 / -1" } : {}}>
-                  <label style={{ display: "block", fontSize: 11, fontWeight: 600, color: C.gray, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 5 }}>{f.label}</label>
+                  <label style={{ display: "block", fontSize: 11, fontWeight: 500, color: C.gray, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 5 }}>{f.label}</label>
                   <input type={f.id === "fecha" ? "date" : "text"} value={clientData[f.id]} onChange={e => { const val = f.id === "telefono" ? e.target.value.replace(/[^0-9+\s\-()]/g, "") : e.target.value; setClientData(p => ({ ...p, [f.id]: val })); setIsDirty(true); }} placeholder={f.placeholder} style={inp} />
                 </div>
               ))}
@@ -752,11 +752,11 @@ export default function App() {
                   <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                     <span style={{ fontSize: 20 }}>{section.icon}</span>
                     <div>
-                      <div style={{ fontWeight: 700, fontSize: 15, color: C.navy, display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+                      <div style={{ fontWeight: 500, fontSize: 15, color: C.navy, display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
                         {section.label}
                         {pendientes > 0 && (
                           <span style={{
-                            fontSize: 11, fontWeight: 700, color: C.amber, background: C.amberLight,
+                            fontSize: 11, fontWeight: 500, color: C.amber, background: C.amberLight,
                             border: `1px solid ${C.amberBorder}`, borderRadius: 10, padding: "1px 8px",
                             whiteSpace: "nowrap",
                           }}>
@@ -776,7 +776,7 @@ export default function App() {
                       {Array.from({ length: getCount(section.id) }, (_, i) => (
                         <div key={i} style={{ marginBottom: getCount(section.id) > 1 ? 24 : 0, paddingBottom: getCount(section.id) > 1 ? 24 : 0, borderBottom: getCount(section.id) > 1 ? `1px dashed ${C.border}` : "none" }}>
                           {getCount(section.id) > 1 && (
-                            <div style={{ fontSize: 12, fontWeight: 700, color: C.blue, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 12, paddingBottom: 6, borderBottom: `1px solid ${C.blueBorder}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                            <div style={{ fontSize: 12, fontWeight: 500, color: C.blue, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 12, paddingBottom: 6, borderBottom: `1px solid ${C.blueBorder}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                               <span>{section.multiLabel} {i + 1}</span>
                               <button onClick={() => {
                                 setFormData(prev => {
@@ -794,7 +794,7 @@ export default function App() {
                           <SectionFields section={section} instanceIdx={i} getVal={getVal} setVal={setVal} getHint={getHint} setHint={setHint} />
                         </div>
                       ))}
-                      <button onClick={() => { addInstance(section.id); setIsDirty(true); }} style={{ marginTop: 8, padding: "7px 16px", border: `1.5px dashed ${C.blue}`, background: C.blueLight, color: C.blue, borderRadius: 7, fontSize: 13, fontWeight: 600, cursor: "pointer" }}>
+                      <button onClick={() => { addInstance(section.id); setIsDirty(true); }} style={{ marginTop: 8, padding: "7px 16px", border: `1.5px dashed ${C.blue}`, background: C.blueLight, color: C.blue, borderRadius: 7, fontSize: 13, fontWeight: 500, cursor: "pointer" }}>
                         + Añadir {section.multiLabel}
                       </button>
                       <ImageZone sectionId={section.id} images={sectionImages[section.id] || []} addImage={addImage} removeImage={removeImage} updateCaption={updateCaption} />
@@ -816,12 +816,12 @@ export default function App() {
             <div style={{ padding: "14px 20px", background: C.grayLight, borderBottom: `1px solid ${C.border}`, display: "flex", alignItems: "center", gap: 10 }}>
               <span style={{ fontSize: 20 }}>📝</span>
               <div>
-                <div style={{ fontWeight: 700, fontSize: 15, color: C.navy }}>Datos adicionales</div>
+                <div style={{ fontWeight: 500, fontSize: 15, color: C.navy }}>Datos adicionales</div>
                 <div style={{ fontSize: 12, color: C.textLight, marginTop: 2 }}>Notas, observaciones e imágenes que no encajan en ninguna sección específica</div>
               </div>
             </div>
             <div style={{ padding: "20px" }}>
-              <label style={{ fontWeight: 600, fontSize: 13, color: C.text, display: "block", marginBottom: 6 }}>Notas adicionales</label>
+              <label style={{ fontWeight: 500, fontSize: 13, color: C.text, display: "block", marginBottom: 6 }}>Notas adicionales</label>
               <textarea
                 value={formData["__other_notes__"] || ""}
                 onChange={e => { setFormData(prev => ({ ...prev, "__other_notes__": e.target.value })); setIsDirty(true); }}
@@ -829,7 +829,7 @@ export default function App() {
                 style={{ width: "100%", minHeight: 150, padding: 12, borderRadius: 8, border: `1px solid ${C.border}`, fontSize: 14, fontFamily: "inherit", resize: "vertical", boxSizing: "border-box" }}
               />
               <div style={{ marginTop: 16 }}>
-                <label style={{ fontWeight: 600, fontSize: 13, color: C.text, display: "block", marginBottom: 6 }}>Capturas adicionales</label>
+                <label style={{ fontWeight: 500, fontSize: 13, color: C.text, display: "block", marginBottom: 6 }}>Capturas adicionales</label>
                 <ImageZone sectionId="__other__" images={sectionImages["__other__"] || []} addImage={addImage} removeImage={removeImage} updateCaption={updateCaption} />
               </div>
             </div>
@@ -837,7 +837,7 @@ export default function App() {
 
           {/* Footer */}
           <div style={{ textAlign: "center", padding: "24px 0 8px" }}>
-            <button onClick={handlePrint}  style={{ background: C.navy, color: "#fff", border: "none", padding: "13px 36px", borderRadius: 10, fontSize: 15, fontWeight: 700, cursor: "pointer", boxShadow: "0 4px 14px rgba(13,31,60,0.3)", letterSpacing: "0.02em" }}>
+            <button onClick={handlePrint}  style={{ background: C.navy, color: "#fff", border: "none", padding: "13px 36px", borderRadius: 10, fontSize: 15, fontWeight: 500, cursor: "pointer", boxShadow: "0 4px 14px rgba(13,31,60,0.3)", letterSpacing: "0.02em" }}>
               {exporting ? "⏳ Generando..." : "📄 Generar PDF del informe"}
             </button>
             <div style={{ fontSize: 12, color: C.textLight, marginTop: 10 }}>

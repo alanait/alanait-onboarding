@@ -57,7 +57,7 @@ export default function Dashboard({ onOpenClient, onNewClient, onImportFile, ses
 
   if (!isSupabaseConfigured()) {
     return (
-      <div style={{ minHeight: "100vh", background: "#F9F9F9", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'Segoe UI', system-ui, sans-serif" }}>
+      <div style={{ minHeight: "100vh", background: "#F9F9F9", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: FUENTE }}>
         <div style={{ background: "#fff", borderRadius: 12, padding: 40, maxWidth: 500, textAlign: "center", boxShadow: "0 4px 20px rgba(0,0,0,0.08)" }}>
           <div style={{ fontSize: 48, marginBottom: 16 }}>⚙️</div>
           <h2 style={{ color: C.navy, marginBottom: 8 }}>Configurar Supabase</h2>
@@ -73,7 +73,7 @@ export default function Dashboard({ onOpenClient, onNewClient, onImportFile, ses
           </p>
           <button onClick={onNewClient} style={{
             marginTop: 20, padding: "12px 24px", background: C.blue, color: "#fff",
-            border: "none", borderRadius: 8, fontSize: 14, fontWeight: 600, cursor: "pointer",
+            border: "none", borderRadius: 8, fontSize: 14, fontWeight: 500, cursor: "pointer",
           }}>
             Usar sin cloud (modo local)
           </button>
@@ -83,19 +83,19 @@ export default function Dashboard({ onOpenClient, onNewClient, onImportFile, ses
   }
 
   return (
-    <div style={{ minHeight: "100vh", background: "#F9F9F9", fontFamily: "'Segoe UI', system-ui, sans-serif" }}>
+    <div style={{ minHeight: "100vh", background: "#F9F9F9", fontFamily: FUENTE }}>
       {/* Header */}
       <div style={{ background: C.navy, color: "#fff", padding: "0 24px", boxShadow: "0 2px 8px rgba(0,0,0,0.3)" }}>
         <div style={{ maxWidth: 1000, margin: "0 auto", display: "flex", justifyContent: "space-between", alignItems: "center", padding: "16px 0" }}>
           <div>
             <div style={{ fontSize: 11, letterSpacing: "0.12em", color: "#A9C6EA", textTransform: "uppercase", marginBottom: 2 }}>ALANA IT</div>
-            <div style={{ fontSize: 18, fontWeight: 700 }}>Panel de Clientes</div>
+            <div style={{ fontSize: 18, fontWeight: 500 }}>Panel de Clientes</div>
           </div>
           <div style={{ display: "flex", gap: 10 }}>
             <button onClick={() => fileRef.current?.click()} disabled={importing} style={{
               padding: "9px 16px", background: "rgba(255,255,255,0.12)", color: "#fff",
               border: "1px solid rgba(255,255,255,0.2)", borderRadius: 8, fontSize: 13,
-              fontWeight: 600, cursor: "pointer",
+              fontWeight: 500, cursor: "pointer",
             }}>
               {importing ? "⏳ Importando..." : "📂 Importar .alanait"}
             </button>
@@ -103,7 +103,7 @@ export default function Dashboard({ onOpenClient, onNewClient, onImportFile, ses
               onChange={e => { if (e.target.files[0]) handleImport(e.target.files[0]); e.target.value = ""; }} />
             <button onClick={onNewClient} style={{
               padding: "9px 18px", background: C.blue, color: "#fff",
-              border: "none", borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: "pointer",
+              border: "none", borderRadius: 8, fontSize: 13, fontWeight: 500, cursor: "pointer",
             }}>
               + Nuevo Cliente
             </button>
@@ -139,7 +139,7 @@ export default function Dashboard({ onOpenClient, onNewClient, onImportFile, ses
         {/* Stats */}
         <div style={{ display: "flex", gap: 12, marginBottom: 20 }}>
           <div style={{ background: "#fff", borderRadius: 10, padding: "16px 20px", flex: 1, border: `1px solid ${C.border}` }}>
-            <div style={{ fontSize: 24, fontWeight: 700, color: C.navy }}>{clients.length}</div>
+            <div style={{ fontSize: 24, fontWeight: 500, color: C.navy }}>{clients.length}</div>
             <div style={{ fontSize: 12, color: C.gray }}>Clientes registrados</div>
           </div>
         </div>
@@ -153,7 +153,7 @@ export default function Dashboard({ onOpenClient, onNewClient, onImportFile, ses
         ) : clients.length === 0 ? (
           <div style={{ textAlign: "center", padding: 60, background: "#fff", borderRadius: 12, border: `1px solid ${C.border}` }}>
             <div style={{ fontSize: 48, marginBottom: 12 }}>📋</div>
-            <div style={{ fontSize: 16, fontWeight: 600, color: C.navy, marginBottom: 8 }}>
+            <div style={{ fontSize: 16, fontWeight: 500, color: C.navy, marginBottom: 8 }}>
               {search ? "Sin resultados" : "Sin clientes aun"}
             </div>
             <div style={{ fontSize: 14, color: C.gray, marginBottom: 20 }}>
@@ -162,7 +162,7 @@ export default function Dashboard({ onOpenClient, onNewClient, onImportFile, ses
             {!search && (
               <button onClick={onNewClient} style={{
                 padding: "10px 24px", background: C.blue, color: "#fff",
-                border: "none", borderRadius: 8, fontSize: 14, fontWeight: 600, cursor: "pointer",
+                border: "none", borderRadius: 8, fontSize: 14, fontWeight: 500, cursor: "pointer",
               }}>
                 + Crear primer cliente
               </button>
@@ -174,7 +174,7 @@ export default function Dashboard({ onOpenClient, onNewClient, onImportFile, ses
               <thead>
                 <tr style={{ background: "#F9F9F9", borderBottom: `2px solid ${C.border}` }}>
                   {["Empresa", "Sector", "Contacto", "Responsable", "Creado por", "Fecha", ""].map((h, i) => (
-                    <th key={i} style={{ padding: "12px 16px", textAlign: "left", fontSize: 11, fontWeight: 700, color: C.gray, textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                    <th key={i} style={{ padding: "12px 16px", textAlign: "left", fontSize: 11, fontWeight: 500, color: C.gray, textTransform: "uppercase", letterSpacing: "0.05em" }}>
                       {h}
                     </th>
                   ))}
@@ -189,7 +189,7 @@ export default function Dashboard({ onOpenClient, onNewClient, onImportFile, ses
                     onMouseLeave={e => e.currentTarget.style.background = "transparent"}
                   >
                     <td style={{ padding: "14px 16px" }}>
-                      <div style={{ fontWeight: 700, color: C.navy, fontSize: 14 }}>{c.empresa || "Sin nombre"}</div>
+                      <div style={{ fontWeight: 500, color: C.navy, fontSize: 14 }}>{c.empresa || "Sin nombre"}</div>
                       <div style={{ fontSize: 12, color: C.textLight }}>{c.trabajadores ? `${c.trabajadores} trabajadores` : ""}</div>
                     </td>
                     <td style={{ padding: "14px 16px", fontSize: 13, color: "#4A4A4A" }}>{c.sector || "—"}</td>
@@ -206,7 +206,7 @@ export default function Dashboard({ onOpenClient, onNewClient, onImportFile, ses
                         <div style={{ display: "flex", gap: 4 }} onClick={e => e.stopPropagation()}>
                           <button onClick={() => handleDelete(c.id)} style={{
                             padding: "4px 10px", background: C.red, color: "#fff", border: "none",
-                            borderRadius: 5, fontSize: 11, fontWeight: 600, cursor: "pointer",
+                            borderRadius: 5, fontSize: 11, fontWeight: 500, cursor: "pointer",
                           }}>Eliminar</button>
                           <button onClick={() => setConfirmDeleteId(null)} style={{
                             padding: "4px 10px", background: "#F1F2F4", color: "#868686", border: "none",

@@ -64,7 +64,7 @@ function resumir({ sectionEnabled, getVal, getCount, getHint }) {
 function Cifra({ valor, etiqueta, color }) {
   return (
     <div style={{ flex: 1, minWidth: 0 }}>
-      <div style={{ fontSize: 22, fontWeight: 800, color, lineHeight: 1.1, fontVariantNumeric: "tabular-nums" }}>{valor}</div>
+      <div style={{ fontSize: 22, fontWeight: 500, color, lineHeight: 1.1, fontVariantNumeric: "tabular-nums" }}>{valor}</div>
       <div style={{ fontSize: 10.5, color: C.textLight, lineHeight: 1.3, marginTop: 2 }}>{etiqueta}</div>
     </div>
   );
@@ -75,7 +75,7 @@ export default function ReportPanel({ sectionEnabled, getVal, getCount, getHint,
   const seguridadAbiertos = r.abiertos.filter(h => h.tipo === "seguridad").length;
 
   const titulo = {
-    fontSize: 10, fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase",
+    fontSize: 10, fontWeight: 500, letterSpacing: "0.12em", textTransform: "uppercase",
     color: C.textLight, marginBottom: 9,
   };
 
@@ -104,12 +104,12 @@ export default function ReportPanel({ sectionEnabled, getVal, getCount, getHint,
         <>
           <div style={{ display: "flex", gap: 6, marginBottom: 10, flexWrap: "wrap" }}>
             {seguridadAbiertos > 0 && (
-              <span style={{ fontSize: 11, fontWeight: 700, color: C.red, background: C.redLight, border: `1px solid ${C.redBorder}`, borderRadius: 10, padding: "2px 9px" }}>
+              <span style={{ fontSize: 11, fontWeight: 500, color: C.red, background: C.redLight, border: `1px solid ${C.redBorder}`, borderRadius: 10, padding: "2px 9px" }}>
                 {seguridadAbiertos} de seguridad
               </span>
             )}
             {r.abiertos.length - seguridadAbiertos > 0 && (
-              <span style={{ fontSize: 11, fontWeight: 700, color: C.amber, background: C.amberLight, border: `1px solid ${C.amberBorder}`, borderRadius: 10, padding: "2px 9px" }}>
+              <span style={{ fontSize: 11, fontWeight: 500, color: C.amber, background: C.amberLight, border: `1px solid ${C.amberBorder}`, borderRadius: 10, padding: "2px 9px" }}>
                 {r.abiertos.length - seguridadAbiertos} de legado
               </span>
             )}
@@ -127,7 +127,7 @@ export default function ReportPanel({ sectionEnabled, getVal, getCount, getHint,
                     padding: "7px 10px", marginBottom: 5, fontFamily: "inherit",
                   }}
                 >
-                  <div style={{ fontSize: 9.5, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: col.c, marginBottom: 2 }}>
+                  <div style={{ fontSize: 9.5, fontWeight: 500, letterSpacing: "0.08em", textTransform: "uppercase", color: col.c, marginBottom: 2 }}>
                     {h.seccion}{h.instancia ? ` · ${h.instancia}` : ""}
                   </div>
                   <div style={{ fontSize: 11.5, color: C.text, lineHeight: 1.45 }}>

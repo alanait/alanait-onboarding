@@ -60,8 +60,8 @@ export default function LoginPage({ onLogin }) {
       <div style={styles.card}>
         {/* Logo / Header */}
         <div style={{ textAlign: "center", marginBottom: 24 }}>
-          <div style={{ fontSize: 11, letterSpacing: "0.15em", color: C.blue, textTransform: "uppercase", fontWeight: 700, marginBottom: 4 }}>ALANA IT</div>
-          <h1 style={{ fontSize: 22, fontWeight: 700, color: C.navy, margin: 0 }}>Onboarding Tecnico</h1>
+          <div style={{ fontSize: 11, letterSpacing: "0.15em", color: C.blue, textTransform: "uppercase", fontWeight: 500, marginBottom: 4 }}>ALANA IT</div>
+          <h1 style={{ fontSize: 22, fontWeight: 500, color: C.navy, margin: 0 }}>Onboarding Tecnico</h1>
           <p style={{ color: C.textLight, fontSize: 13, marginTop: 6 }}>
             {mode === "login" ? "Inicia sesion para continuar" : "Crea tu cuenta"}
           </p>
@@ -143,7 +143,7 @@ const styles = {
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
-    fontFamily: "'Segoe UI', system-ui, sans-serif",
+    fontFamily: FUENTE,
     padding: 16,
     boxSizing: "border-box",
   },
@@ -158,7 +158,7 @@ const styles = {
   label: {
     display: "block",
     fontSize: 12,
-    fontWeight: 600,
+    fontWeight: 500,
     color: "#4A4A4A",
     marginBottom: 5,
   },
@@ -179,7 +179,7 @@ const styles = {
     border: "none",
     borderRadius: 8,
     fontSize: 15,
-    fontWeight: 700,
+    fontWeight: 500,
     cursor: "pointer",
     marginTop: 4,
   },
@@ -188,7 +188,7 @@ const styles = {
     border: "none",
     color: "#2F56A3",
     cursor: "pointer",
-    fontWeight: 600,
+    fontWeight: 500,
     fontSize: 13,
     padding: 0,
     textDecoration: "underline",

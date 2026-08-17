@@ -5,12 +5,26 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <link rel="icon" href="/icon.ico" />
     <title>ALANA IT Onboarding</title>
+    <!--
+      alanait.com usa Centra No2 (Sharp Type), de pago y auto-alojada en su
+      WordPress. Hasta confirmar que la licencia cubre esta aplicacion se usa
+      Jost, una geometrica libre de la misma familia visual (ambas descienden de
+      la Futura). Si la licencia lo permite, basta con copiar los .ttf a
+      public/fonts y cambiar la familia en src/theme.js.
+    -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet" />
     <style>
       /* El margen de 8px que el navegador pone al body por defecto hacia que
          cualquier contenedor de 100vh desbordase 16px, y aparecia una segunda
          barra de desplazamiento junto a la del contenido. */
       html, body { margin: 0; padding: 0; }
       #root { min-height: 100vh; }
+      body { font-family: Jost, 'Segoe UI', system-ui, sans-serif; }
+      /* Los titulares de alanait.com van en peso ligero, no en negrita */
+      h1, h2, h3 { font-weight: 400; letter-spacing: -0.01em; }
+      input, select, textarea, button { font-family: inherit; }
     </style>
   </head>
   <body>

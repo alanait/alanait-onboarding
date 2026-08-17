@@ -19,7 +19,7 @@ export default function SectionRail({ abierto, sectionEnabled, avance, avisos, a
     }}>
       <div style={{ padding: "14px 10px 24px" }}>
         <div style={{
-          fontSize: 10, fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase",
+          fontSize: 10, fontWeight: 500, letterSpacing: "0.12em", textTransform: "uppercase",
           color: C.textLight, padding: "0 8px", marginBottom: 8,
         }}>
           Secciones
@@ -48,12 +48,19 @@ export default function SectionRail({ abierto, sectionEnabled, avance, avisos, a
               onMouseEnter={e => { if (!act) e.currentTarget.style.background = C.grayLight; }}
               onMouseLeave={e => { if (!act) e.currentTarget.style.background = "transparent"; }}
             >
-              {/* Estado: turquesa respondida, magenta sin servicio, hueco sin responder */}
-              <span style={{
-                width: 7, height: 7, borderRadius: "50%", flexShrink: 0,
-                background: est === "si" ? C.green : est === "no" ? C.red : "transparent",
-                border: est === undefined ? `1.5px solid ${C.border}` : "none",
-              }} />
+              {/* Icono de la seccion, con un punto de estado encima:
+                  turquesa respondida, magenta sin servicio, nada sin responder */}
+              <span style={{ position: "relative", flexShrink: 0, width: 18, height: 18, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <span style={{ fontSize: 14, lineHeight: 1, filter: est === "no" ? "grayscale(1)" : "none" }} aria-hidden="true">{s.icon}</span>
+                {est !== undefined && (
+                  <span style={{
+                    position: "absolute", right: -2, bottom: -1,
+                    width: 7, height: 7, borderRadius: "50%",
+                    background: est === "si" ? C.green : C.red,
+                    border: "1.5px solid #fff",
+                  }} />
+                )}
+              </span>
 
               <span style={{
                 flex: 1, minWidth: 0, fontSize: 12.5,
@@ -65,7 +72,7 @@ export default function SectionRail({ abierto, sectionEnabled, avance, avisos, a
 
               {n > 0 && (
                 <span style={{
-                  fontSize: 9.5, fontWeight: 700, color: "#fff", background: C.red,
+                  fontSize: 9.5, fontWeight: 500, color: "#fff", background: C.red,
                   borderRadius: 7, padding: "0 5px", flexShrink: 0, lineHeight: "14px",
                 }}>{n}</span>
               )}

@@ -35,7 +35,7 @@ export default function VersionHistory({ clientId, onRestore, onClose }) {
         {/* Header */}
         <div style={{ padding: "20px 24px 16px", borderBottom: `1px solid ${C.border}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <div>
-            <div style={{ fontWeight: 700, fontSize: 17, color: C.navy }}>📜 Historial de versiones</div>
+            <div style={{ fontWeight: 500, fontSize: 17, color: C.navy }}>📜 Historial de versiones</div>
             <div style={{ fontSize: 12, color: C.textLight, marginTop: 4 }}>Cada vez que guardas se crea una version</div>
           </div>
           <button onClick={onClose} style={{
@@ -70,10 +70,10 @@ export default function VersionHistory({ clientId, onRestore, onClose }) {
                   <div>
                     <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                       <span style={{
-                        background: C.blue, color: "#fff", fontSize: 11, fontWeight: 700,
+                        background: C.blue, color: "#fff", fontSize: 11, fontWeight: 500,
                         padding: "2px 8px", borderRadius: 10,
                       }}>v{v.version}</span>
-                      <span style={{ fontSize: 13, fontWeight: 600, color: C.navy }}>
+                      <span style={{ fontSize: 13, fontWeight: 500, color: C.navy }}>
                         {new Date(v.created_at).toLocaleDateString("es-ES", {
                           day: "2-digit", month: "short", year: "numeric",
                           hour: "2-digit", minute: "2-digit",
@@ -92,7 +92,7 @@ export default function VersionHistory({ clientId, onRestore, onClose }) {
                     style={{
                       padding: "6px 14px", background: C.blueLight, color: C.blue,
                       border: `1px solid ${C.blue}33`, borderRadius: 7, fontSize: 12,
-                      fontWeight: 600, cursor: "pointer", transition: "all 0.15s",
+                      fontWeight: 500, cursor: "pointer", transition: "all 0.15s",
                     }}
                     onMouseEnter={e => { e.currentTarget.style.background = C.blue; e.currentTarget.style.color = "#fff"; }}
                     onMouseLeave={e => { e.currentTarget.style.background = C.blueLight; e.currentTarget.style.color = C.blue; }}
