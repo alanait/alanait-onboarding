@@ -145,6 +145,7 @@ const styles = {
     justifyContent: "center",
     fontFamily: "'Segoe UI', system-ui, sans-serif",
     padding: 16,
+    boxSizing: "border-box",
   },
   card: {
     background: "#fff",

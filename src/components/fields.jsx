@@ -3,6 +3,8 @@
 
 import React, { useState } from "react";
 import { C, inp } from "../theme.js";
+import { hintsVisibles, claveHint } from "../hints.js";
+import HintBanner from "./HintBanner.jsx";
 
 function CidrField({ value, onChange, placeholder, style }) {
   const valid = !value || /^([0-9]{1,3}\.){3}[0-9]{1,3}(\/[0-9]{1,2})?$/.test(value);
@@ -247,20 +249,41 @@ function ImageZone({ sectionId, images, addImage, removeImage, updateCaption }) 
 // con un contador de relleno. Si no lo declaran (el resto de secciones), se
 // pintan en la rejilla de siempre y no cambia nada.
 
-/** Rejilla de dos columnas; textarea y checks ocupan el ancho completo. */
-function Rejilla({ section, campos, instanceIdx, getVal, setVal }) {
+/**
+ * Rejilla de dos columnas; textarea y checks ocupan el ancho completo.
+ * Los avisos anclados a un campo se pintan justo debajo, a ancho completo.
+ */
+function Rejilla({ section, campos, instanceIdx, getVal, setVal, hints = [], getHint, setHint }) {
+  const porAncla = new Map();
+  for (const h of hints) {
+    if (!h.anchor) continue;
+    if (!porAncla.has(h.anchor)) porAncla.set(h.anchor, []);
+    porAncla.get(h.anchor).push(h);
+  }
+
   return (
     <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0 20px" }}>
       {campos.map(f => (
-        <div key={f.id} style={f.type === "textarea" || f.type === "checks" ? { gridColumn: "1 / -1" } : {}}>
-          <Field section={section} field={f} instanceIdx={instanceIdx} getVal={getVal} setVal={setVal} />
-        </div>
+        <React.Fragment key={f.id}>
+          <div style={f.type === "textarea" || f.type === "checks" ? { gridColumn: "1 / -1" } : {}}>
+            <Field section={section} field={f} instanceIdx={instanceIdx} getVal={getVal} setVal={setVal} />
+          </div>
+          {(porAncla.get(f.id) || []).map(h => (
+            <div key={h.id} style={{ gridColumn: "1 / -1", marginTop: -4 }}>
+              <HintBanner
+                hint={h}
+                estado={getHint(h.id, instanceIdx)}
+                onEstado={v => setHint(h.id, instanceIdx, v)}
+              />
+            </div>
+          ))}
+        </React.Fragment>
       ))}
     </div>
   );
 }
 
-function Grupo({ section, titulo, campos, instanceIdx, getVal, setVal }) {
+function Grupo({ section, titulo, campos, instanceIdx, getVal, setVal, hints, getHint, setHint }) {
   const [abierto, setAbierto] = useState(true);
 
   // Un campo condicional que no se cumple no cuenta: si no se ve, no se puede rellenar.
@@ -300,12 +323,12 @@ function Grupo({ section, titulo, campos, instanceIdx, getVal, setVal }) {
           {rellenos}/{visibles.length}
         </span>
       </button>
-      {abierto && <Rejilla section={section} campos={campos} instanceIdx={instanceIdx} getVal={getVal} setVal={setVal} />}
+      {abierto && <Rejilla section={section} campos={campos} instanceIdx={instanceIdx} getVal={getVal} setVal={setVal} hints={hints} getHint={getHint} setHint={setHint} />}
     </div>
   );
 }
 
-function SectionFields({ section, instanceIdx, getVal, setVal }) {
+function SectionFields({ section, instanceIdx, getVal, setVal, getHint, setHint }) {
   // Agrupar preservando el orden de aparicion del esquema
   const orden = [];
   const porGrupo = new Map();
@@ -315,17 +338,38 @@ function SectionFields({ section, instanceIdx, getVal, setVal }) {
     porGrupo.get(g).push(f);
   }
 
+  const hints = hintsVisibles(section.id, id => getVal(section.id, id, instanceIdx));
+  const sueltos = hints.filter(h => !h.anchor);
+  const comun = { section, instanceIdx, getVal, setVal, hints, getHint, setHint };
+
+  const avisosSueltos = sueltos.length > 0 && (
+    <div style={{ marginTop: 4 }}>
+      {sueltos.map(h => (
+        <HintBanner
+          key={h.id}
+          hint={h}
+          estado={getHint(h.id, instanceIdx)}
+          onEstado={v => setHint(h.id, instanceIdx, v)}
+        />
+      ))}
+    </div>
+  );
+
   if (orden.length === 1 && orden[0] === "") {
-    return <Rejilla section={section} campos={section.fields} instanceIdx={instanceIdx} getVal={getVal} setVal={setVal} />;
+    return <>
+      <Rejilla {...comun} campos={section.fields} />
+      {avisosSueltos}
+    </>;
   }
 
   return (
     <>
       {orden.map(titulo => (
         titulo === ""
-          ? <Rejilla key="__sin_grupo__" section={section} campos={porGrupo.get(titulo)} instanceIdx={instanceIdx} getVal={getVal} setVal={setVal} />
-          : <Grupo key={titulo} section={section} titulo={titulo} campos={porGrupo.get(titulo)} instanceIdx={instanceIdx} getVal={getVal} setVal={setVal} />
+          ? <Rejilla key="__sin_grupo__" {...comun} campos={porGrupo.get(titulo)} />
+          : <Grupo key={titulo} {...comun} titulo={titulo} campos={porGrupo.get(titulo)} />
       ))}
+      {avisosSueltos}
     </>
   );
 }
