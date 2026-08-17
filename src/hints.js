@@ -94,6 +94,37 @@ export const HINTS = {
     },
   ],
   servidores: [
+    // ── Fin de soporte por version concreta ─────────────────────────────────
+    // Se disparan solos al elegir la version, sin que el tecnico tenga que
+    // saberse las fechas de fin de soporte de memoria.
+    {
+      id: "servidores_so_windows_server_eol",
+      tipo: "seguridad",
+      anchor: "so_windows_server",
+      when: { field: "so_windows_server", valueIn: ["Windows Server 2012 R2", "Windows Server 2012", "Windows Server 2008 R2", "Windows Server 2008", "Anterior a 2008"] },
+      texto: "Este Windows Server ya no recibe parches de seguridad. Es el hallazgo más grave que puede tener un servidor: presupuesta la migración, ponlo por escrito al cliente y, mientras tanto, aíslalo de internet.",
+    },
+    {
+      id: "servidores_so_windows_server_doc",
+      tipo: "doc",
+      anchor: "so_windows_server",
+      when: { field: "so_windows_server", value: "Windows Server 2016" },
+      texto: "Windows Server 2016 entra en fin de soporte extendido en enero de 2027. Conviene plantear la renovación este año y no esperar al último trimestre.",
+    },
+    {
+      id: "servidores_so_windows_cliente_seguridad",
+      tipo: "seguridad",
+      anchor: "so_windows_cliente",
+      when: { field: "so_windows_cliente", valueIn: ["Windows 10", "Windows 8.1", "Windows 7", "Anterior a Windows 7"] },
+      texto: "Un Windows de escritorio sin soporte haciendo de servidor: sin parches y, además, con límite de conexiones simultáneas. Plantea sustituirlo por Windows Server o por un servicio cloud.",
+    },
+    {
+      id: "servidores_so_linux_seguridad",
+      tipo: "seguridad",
+      anchor: "so_linux",
+      when: { field: "so_linux", valueIn: ["CentOS 7 o anterior", "Ubuntu Server (no LTS)"] },
+      texto: "Esta distribución ya no recibe actualizaciones de seguridad. CentOS está descontinuado: la migración natural es Rocky Linux o AlmaLinux, que son compatibles binariamente.",
+    },
     {
       id: "servidores_gral_seguridad",
       tipo: "seguridad",
@@ -198,6 +229,13 @@ export const HINTS = {
     },
   ],
   pcs: [
+    {
+      id: "pcs_so_seguridad_eol",
+      tipo: "seguridad",
+      anchor: "so",
+      when: { field: "so", value: "Windows 10" },
+      texto: "Windows 10 dejó de recibir actualizaciones de seguridad en octubre de 2025. Un parque entero sin parches es la vía de entrada más probable: plantea el plan de renovación o la ampliación de soporte (ESU).",
+    },
     {
       id: "pcs_rmm_agente_seguridad",
       tipo: "seguridad",

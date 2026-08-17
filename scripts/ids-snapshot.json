@@ -308,6 +308,53 @@
       "No revisado"
     ]
   },
+  "servidores.so_familia": {
+    "type": "select",
+    "options": [
+      "Windows Server",
+      "Windows (escritorio)",
+      "Linux",
+      "macOS",
+      "Otro"
+    ]
+  },
+  "servidores.so_windows_server": {
+    "type": "select",
+    "options": [
+      "Windows Server 2025",
+      "Windows Server 2022",
+      "Windows Server 2019",
+      "Windows Server 2016",
+      "Windows Server 2012 R2",
+      "Windows Server 2012",
+      "Windows Server 2008 R2",
+      "Windows Server 2008",
+      "Anterior a 2008"
+    ]
+  },
+  "servidores.so_windows_cliente": {
+    "type": "select",
+    "options": [
+      "Windows 11",
+      "Windows 10",
+      "Windows 8.1",
+      "Windows 7",
+      "Anterior a Windows 7"
+    ]
+  },
+  "servidores.so_linux": {
+    "type": "select",
+    "options": [
+      "Ubuntu Server LTS",
+      "Ubuntu Server (no LTS)",
+      "Debian",
+      "Red Hat Enterprise Linux",
+      "Rocky Linux / AlmaLinux",
+      "CentOS 7 o anterior",
+      "SUSE",
+      "Otra"
+    ]
+  },
   "servidores.so": {
     "type": "text",
     "options": null
@@ -1995,6 +2042,22 @@
     "type": "hint",
     "options": null
   },
+  "__hints__.servidores.servidores_so_windows_server_eol": {
+    "type": "hint",
+    "options": null
+  },
+  "__hints__.servidores.servidores_so_windows_server_doc": {
+    "type": "hint",
+    "options": null
+  },
+  "__hints__.servidores.servidores_so_windows_cliente_seguridad": {
+    "type": "hint",
+    "options": null
+  },
+  "__hints__.servidores.servidores_so_linux_seguridad": {
+    "type": "hint",
+    "options": null
+  },
   "__hints__.servidores.servidores_gral_seguridad": {
     "type": "hint",
     "options": null
@@ -2056,6 +2119,10 @@
     "options": null
   },
   "__hints__.servidores.servidores_oob_tipo_doc": {
+    "type": "hint",
+    "options": null
+  },
+  "__hints__.pcs.pcs_so_seguridad_eol": {
     "type": "hint",
     "options": null
   },

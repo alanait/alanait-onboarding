@@ -113,6 +113,18 @@ export default function App() {
   const answered = SECTIONS.filter(s => sectionEnabled[s.id] !== undefined).length;
   const progress = Math.round((answered / SECTIONS.length) * 100);
 
+  // ── Navegacion por secciones ───────────────────────────────────────────────
+  // El scroll no lo lleva la ventana sino la columna de contenido, asi que los
+  // enlaces de ancla del navegador no sirven: hay que desplazar el contenedor.
+  const contenidoRef = React.useRef(null);
+  const seccionRefs = React.useRef({});
+  const [arribaVisible, setArribaVisible] = useState(false);
+
+  const irASeccion = (sectionId) => {
+    seccionRefs.current[sectionId]?.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
+  const irArriba = () => contenidoRef.current?.scrollTo({ top: 0, behavior: "smooth" });
+
   const [exporting, setExporting] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [confirmDelete, setConfirmDelete] = useState(null);
@@ -433,9 +445,13 @@ export default function App() {
       )}
 
       {/* SCREEN VIEW */}
-      <div className="screen-only no-print" style={{ display: "flex", flexDirection: "column", minHeight: "100vh", fontFamily: "'Segoe UI', system-ui, -apple-system, sans-serif" }}>
+      {/* Alto exacto de ventana y scroll unicamente en la columna de contenido.
+          Antes se restaba una cabecera de 67px fijos, pero la cabecera envuelve
+          en varias lineas segun el ancho, asi que el total superaba 100vh y
+          aparecia una segunda barra de desplazamiento. */}
+      <div className="screen-only no-print" style={{ display: "flex", flexDirection: "column", height: "100vh", overflow: "hidden", fontFamily: "'Segoe UI', system-ui, -apple-system, sans-serif" }}>
         {/* Header */}
-        <div style={{ background: C.navy, color: "#fff", padding: "0 24px", position: "sticky", top: 0, zIndex: 100, boxShadow: "0 2px 8px rgba(0,0,0,0.3)" }}>
+        <div style={{ background: C.navy, color: "#fff", padding: "0 24px", flexShrink: 0, zIndex: 100, boxShadow: "0 2px 8px rgba(0,0,0,0.3)" }}>
           <div style={{ maxWidth: 860, margin: "0 auto", display: "flex", justifyContent: "space-between", alignItems: "center", padding: "14px 0" }}>
             <div>
               <div style={{ fontSize: 11, letterSpacing: "0.12em", color: "#93c5fd", textTransform: "uppercase", marginBottom: 2 }}>ALANA IT</div>
@@ -486,13 +502,44 @@ export default function App() {
               )}
             </div>
           </div>
+          {/* Indice de secciones: tira desplazable con el estado de cada una */}
+          <div style={{ maxWidth: 860, margin: "0 auto", display: "flex", gap: 5, overflowX: "auto", paddingBottom: 8, scrollbarWidth: "thin" }}>
+            {SECTIONS.map(s => {
+              const est = sectionEnabled[s.id];
+              const avisos = est === "si" ? hintsPendientes(s) : 0;
+              return (
+                <button
+                  key={s.id}
+                  onClick={() => irASeccion(s.id)}
+                  title={s.label}
+                  style={{
+                    display: "flex", alignItems: "center", gap: 5, flexShrink: 0,
+                    padding: "4px 10px", borderRadius: 14, cursor: "pointer",
+                    fontSize: 11.5, fontFamily: "inherit", whiteSpace: "nowrap",
+                    background: est === "si" ? "rgba(59,130,246,0.25)" : "rgba(255,255,255,0.07)",
+                    border: `1px solid ${est === "si" ? "rgba(147,197,253,0.45)" : est === "no" ? "rgba(239,68,68,0.35)" : "rgba(255,255,255,0.12)"}`,
+                    color: est === "si" ? "#dbeafe" : est === "no" ? "#94a3b8" : "#cbd5e1",
+                    opacity: est === "no" ? 0.6 : 1,
+                  }}
+                >
+                  <span aria-hidden="true">{s.icon}</span>
+                  <span>{s.multiLabel}</span>
+                  {avisos > 0 && (
+                    <span style={{ background: C.amber, color: "#fff", borderRadius: 8, padding: "0 5px", fontSize: 9.5, fontWeight: 700 }}>
+                      {avisos}
+                    </span>
+                  )}
+                </button>
+              );
+            })}
+          </div>
           <div style={{ height: 3, background: "rgba(255,255,255,0.1)" }}>
             <div style={{ height: "100%", width: `${progress}%`, background: "#3b82f6", transition: "width 0.4s ease", borderRadius: 2 }} />
           </div>
         </div>
 
         {/* Body: sidebar + content */}
-        <div style={{ display: "flex", flex: 1, overflow: "hidden" }}>
+        <div style={{ display: "flex", flex: 1, minHeight: 0, overflow: "hidden" }}>
 
         {/* Sidebar */}
         <div style={{
@@ -501,7 +548,7 @@ export default function App() {
           transition: "width 0.25s ease, min-width 0.25s ease",
           overflow: "hidden", flexShrink: 0,
           borderRight: "1px solid rgba(255,255,255,0.07)",
-          height: "calc(100vh - 67px)",
+          height: "100%",
         }}>
           <div style={{ padding: "12px 8px 8px", opacity: sidebarOpen ? 1 : 0, transition: "opacity 0.2s", display: "flex", flexDirection: "column", height: "100%" }}>
             {/* New project button */}
@@ -646,7 +693,11 @@ export default function App() {
         </div>
 
         {/* Main content */}
-        <div style={{ flex: 1, overflowY: "auto", height: "calc(100vh - 67px)" }}>
+        <div
+          ref={contenidoRef}
+          onScroll={e => setArribaVisible(e.currentTarget.scrollTop > 400)}
+          style={{ flex: 1, minWidth: 0, overflowY: "auto", height: "100%", position: "relative" }}
+        >
         <div style={{ maxWidth: 860, margin: "0 auto", padding: "24px 16px" }}>
           {/* Client data */}
           <div style={{ background: "#fff", borderRadius: 10, border: `1px solid ${C.border}`, marginBottom: 20, overflow: "hidden", boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
@@ -669,7 +720,7 @@ export default function App() {
             const enabled = sectionEnabled[section.id];
             const pendientes = enabled === "si" ? hintsPendientes(section) : 0;
             return (
-              <div key={section.id} style={{ background: "#fff", borderRadius: 10, border: `1px solid ${enabled === "si" ? C.blueBorder : enabled === "no" ? C.redBorder : C.border}`, marginBottom: 14, overflow: "hidden", boxShadow: "0 1px 4px rgba(0,0,0,0.05)", transition: "border-color 0.2s" }}>
+              <div key={section.id} ref={el => { seccionRefs.current[section.id] = el; }} style={{ background: "#fff", borderRadius: 10, border: `1px solid ${enabled === "si" ? C.blueBorder : enabled === "no" ? C.redBorder : C.border}`, marginBottom: 14, overflow: "hidden", boxShadow: "0 1px 4px rgba(0,0,0,0.05)", transition: "border-color 0.2s", scrollMarginTop: 12 }}>
                 <div style={{ padding: "14px 20px", display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: enabled === "si" ? `1px solid ${C.border}` : "none", background: enabled === "si" ? C.blueLight : enabled === "no" ? C.redLight : C.grayLight }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                     <span style={{ fontSize: 20 }}>{section.icon}</span>
@@ -763,10 +814,27 @@ export default function App() {
               {exporting ? "⏳ Generando..." : "📄 Generar PDF del informe"}
             </button>
             <div style={{ fontSize: 12, color: C.textLight, marginTop: 10 }}>
-              Se abrirá el diálogo de impresión — selecciona "Guardar como PDF"
+              El PDF se descargará directamente
             </div>
           </div>
         </div>
+
+        {/* Volver arriba: aparece al bajar, no estorba en la parte alta */}
+        {arribaVisible && (
+          <button
+            onClick={irArriba}
+            title="Volver arriba"
+            aria-label="Volver arriba"
+            style={{
+              position: "sticky", bottom: 24, float: "right", marginRight: 24,
+              width: 42, height: 42, borderRadius: "50%", cursor: "pointer",
+              background: C.navy, color: "#fff", border: "none", fontSize: 17,
+              boxShadow: "0 4px 14px rgba(13,31,60,0.35)", zIndex: 50,
+            }}
+          >
+            ↑
+          </button>
+        )}
         </div>{/* end main content */}
         </div>{/* end body row */}
       </div>

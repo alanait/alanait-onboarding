@@ -83,7 +83,14 @@ export const SECTIONS = [
       { id: "oob_tipo", label: "Acceso fuera de banda (ILO / iDRAC / IPMI)", type: "select", options: ["iLO (HPE)", "iDRAC (Dell)", "IPMI / BMC genérico", "XClarity (Lenovo)", "Otro", "No tiene", "No revisado"], dep: { field: "tipo", value: "Físico" }, group: "Hardware" },
 
       // ── Sistema operativo ────────────────────────────────────────────────
-      { id: "so", label: "Sistema Operativo", type: "text", placeholder: "Ej: Windows Server 2022", group: "Sistema operativo" },
+      { id: "so_familia", label: "Sistema operativo", type: "select", options: ["Windows Server", "Windows (escritorio)", "Linux", "macOS", "Otro"], group: "Sistema operativo" },
+      // Las versiones van en desplegables separados por familia para que el
+      // aviso de fin de soporte pueda dispararse solo, sin depender de como
+      // haya escrito el tecnico el nombre del sistema.
+      { id: "so_windows_server", label: "Versión de Windows Server", type: "select", options: ["Windows Server 2025", "Windows Server 2022", "Windows Server 2019", "Windows Server 2016", "Windows Server 2012 R2", "Windows Server 2012", "Windows Server 2008 R2", "Windows Server 2008", "Anterior a 2008"], dep: { field: "so_familia", value: "Windows Server" }, group: "Sistema operativo" },
+      { id: "so_windows_cliente", label: "Versión de Windows", type: "select", options: ["Windows 11", "Windows 10", "Windows 8.1", "Windows 7", "Anterior a Windows 7"], dep: { field: "so_familia", value: "Windows (escritorio)" }, group: "Sistema operativo" },
+      { id: "so_linux", label: "Distribución de Linux", type: "select", options: ["Ubuntu Server LTS", "Ubuntu Server (no LTS)", "Debian", "Red Hat Enterprise Linux", "Rocky Linux / AlmaLinux", "CentOS 7 o anterior", "SUSE", "Otra"], dep: { field: "so_familia", value: "Linux" }, group: "Sistema operativo" },
+      { id: "so", label: "Versión exacta / notas del sistema", type: "text", placeholder: "Ej: Windows Server 2022 Standard 21H2", group: "Sistema operativo" },
       { id: "so_soporte", label: "¿El sistema operativo está en soporte?", type: "select", options: ["En soporte", "Fuera de soporte (EOL)", "No revisado"], group: "Sistema operativo" },
       { id: "so_parcheo", label: "Nivel de parches", type: "select", options: ["Al día", "Parches pendientes", "Muy desactualizado", "No revisado"], group: "Sistema operativo" },
       { id: "so_licencia_titular", label: "Titularidad de la licencia del SO y CALs", type: "radio", options: ["A nombre del cliente", "A nombre del proveedor anterior", "No revisado"], group: "Sistema operativo" },
