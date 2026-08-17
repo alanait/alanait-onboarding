@@ -9,6 +9,7 @@ import { SECTIONS } from "./sections.js";
 import { C, inp } from "./theme.js";
 import { SiNoToggle, ImageZone, SectionFields } from "./components/fields.jsx";
 import { buildPrintFragment } from "./print/buildPrintHTML.js";
+import { hintsVisibles, claveHint, TIPOS_HINT } from "./hints.js";
 
 // ── Print View ──────────────────────────────────────────────────────────────
 // Vista para Ctrl+P del navegador. Renderiza el mismo HTML que la exportacion a
@@ -76,6 +77,37 @@ export default function App() {
   };
 
   const getCount = (id) => instanceCounts[id] || 1;
+
+  // ── Estado de los avisos de buenas practicas ───────────────────────────────
+  // Vive dentro de formData bajo __hints__, igual que __other_notes__: asi viaja
+  // gratis a Supabase, al historial de versiones y al export .alanait, sin tocar
+  // el esquema de la base de datos. Los clientes guardados sin esa clave cargan
+  // igual porque se lee con ?? "".
+  const getHint = (hintId, idx) => formData.__hints__?.[claveHint(hintId, idx)] ?? "";
+  const setHint = (hintId, idx, estado) => {
+    setFormData(prev => {
+      const actual = prev.__hints__ ?? {};
+      const clave = claveHint(hintId, idx);
+      const siguiente = { ...actual };
+      if (estado === "") delete siguiente[clave];
+      else siguiente[clave] = estado;
+      return { ...prev, __hints__: siguiente };
+    });
+    setIsDirty(true);
+  };
+
+  /** Avisos accionables sin resolver de una seccion, sumando sus instancias. */
+  const hintsPendientes = (section) => {
+    let n = 0;
+    for (let i = 0; i < getCount(section.id); i++) {
+      for (const h of hintsVisibles(section.id, id => getVal(section.id, id, i))) {
+        if (!TIPOS_HINT[h.tipo].marcable) continue;
+        if (getHint(h.id, i) !== "hecho" && getHint(h.id, i) !== "na") n++;
+      }
+    }
+    return n;
+  };
+
   const addInstance = (id) => setInstanceCounts(prev => ({ ...prev, [id]: getCount(id) + 1 }));
 
   const answered = SECTIONS.filter(s => sectionEnabled[s.id] !== undefined).length;
@@ -635,13 +667,25 @@ export default function App() {
           {/* Sections */}
           {SECTIONS.map(section => {
             const enabled = sectionEnabled[section.id];
+            const pendientes = enabled === "si" ? hintsPendientes(section) : 0;
             return (
               <div key={section.id} style={{ background: "#fff", borderRadius: 10, border: `1px solid ${enabled === "si" ? C.blueBorder : enabled === "no" ? C.redBorder : C.border}`, marginBottom: 14, overflow: "hidden", boxShadow: "0 1px 4px rgba(0,0,0,0.05)", transition: "border-color 0.2s" }}>
                 <div style={{ padding: "14px 20px", display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: enabled === "si" ? `1px solid ${C.border}` : "none", background: enabled === "si" ? C.blueLight : enabled === "no" ? C.redLight : C.grayLight }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                     <span style={{ fontSize: 20 }}>{section.icon}</span>
                     <div>
-                      <div style={{ fontWeight: 700, fontSize: 15, color: C.navy }}>{section.label}</div>
+                      <div style={{ fontWeight: 700, fontSize: 15, color: C.navy, display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+                        {section.label}
+                        {pendientes > 0 && (
+                          <span style={{
+                            fontSize: 11, fontWeight: 700, color: C.amber, background: C.amberLight,
+                            border: `1px solid ${C.amberBorder}`, borderRadius: 10, padding: "1px 8px",
+                            whiteSpace: "nowrap",
+                          }}>
+                            {pendientes} {pendientes === 1 ? "aviso" : "avisos"}
+                          </span>
+                        )}
+                      </div>
                       <div style={{ fontSize: 12, color: C.textLight, marginTop: 2 }}>{section.question}</div>
                     </div>
                   </div>
@@ -669,7 +713,7 @@ export default function App() {
                               }} style={{ background: "transparent", border: "none", color: "#ef4444", cursor: "pointer", fontSize: 12, padding: "2px 6px", fontWeight: 500 }}>✕ Eliminar</button>
                             </div>
                           )}
-                          <SectionFields section={section} instanceIdx={i} getVal={getVal} setVal={setVal} />
+                          <SectionFields section={section} instanceIdx={i} getVal={getVal} setVal={setVal} getHint={getHint} setHint={setHint} />
                         </div>
                       ))}
                       <button onClick={() => { addInstance(section.id); setIsDirty(true); }} style={{ marginTop: 8, padding: "7px 16px", border: `1.5px dashed ${C.blue}`, background: C.blueLight, color: C.blue, borderRadius: 7, fontSize: 13, fontWeight: 600, cursor: "pointer" }}>

@@ -5,6 +5,9 @@ export const C = {
   navy: "#0d1f3c", blue: "#1d4ed8", blueLight: "#eff6ff", blueBorder: "#bfdbfe",
   green: "#15803d", greenLight: "#f0fdf4", greenBorder: "#86efac",
   red: "#b91c1c", redLight: "#fef2f2", redBorder: "#fecaca",
+  // Ambar: reservado para los avisos de legado del proveedor anterior, que no
+  // son un riesgo activo (rojo) pero tampoco una simple nota (azul).
+  amber: "#b45309", amberLight: "#fffbeb", amberBorder: "#fcd34d",
   gray: "#64748b", grayLight: "#f8fafc", border: "#e2e8f0", text: "#1e293b", textLight: "#64748b",
 };
 

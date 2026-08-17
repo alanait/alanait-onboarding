@@ -22,6 +22,7 @@ import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 
 import { SECTIONS } from '../src/sections.js';
+import { HINTS } from '../src/hints.js';
 
 const AQUI = dirname(fileURLToPath(import.meta.url));
 const SNAPSHOT = join(AQUI, 'ids-snapshot.json');
@@ -41,6 +42,13 @@ function esquemaActual() {
         type: campo.type,
         options: campo.options ?? null,
       };
+    }
+  }
+  // Los ids de hint tambien son claves de datos: el estado que marca el tecnico
+  // se guarda en form_data.__hints__["id_del_hint@0"].
+  for (const [seccionId, hints] of Object.entries(HINTS)) {
+    for (const hint of hints) {
+      plano[`__hints__.${seccionId}.${hint.id}`] = { type: 'hint', options: null };
     }
   }
   return plano;

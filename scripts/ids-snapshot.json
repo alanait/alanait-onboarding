@@ -1946,5 +1946,449 @@
   "otros_dispositivos.notas": {
     "type": "textarea",
     "options": null
+  },
+  "__hints__.red.red_firewall_seguridad": {
+    "type": "hint",
+    "options": null
+  },
+  "__hints__.red.red_gral_seguridad": {
+    "type": "hint",
+    "options": null
+  },
+  "__hints__.red.red_accesos_heredados_seguridad": {
+    "type": "hint",
+    "options": null
+  },
+  "__hints__.red.red_utm_comercial": {
+    "type": "hint",
+    "options": null
+  },
+  "__hints__.red.red_linea_backup_comercial": {
+    "type": "hint",
+    "options": null
+  },
+  "__hints__.red.red_rdp_expuesto_seguridad": {
+    "type": "hint",
+    "options": null
+  },
+  "__hints__.red.red_firewall_soporte_comercial": {
+    "type": "hint",
+    "options": null
+  },
+  "__hints__.red.red_vpns_auditadas_seguridad": {
+    "type": "hint",
+    "options": null
+  },
+  "__hints__.red.red_ip_publica_tipo_doc": {
+    "type": "hint",
+    "options": null
+  },
+  "__hints__.red.red_gral_doc": {
+    "type": "hint",
+    "options": null
+  },
+  "__hints__.red.red_gral_doc_2": {
+    "type": "hint",
+    "options": null
+  },
+  "__hints__.red.red_switches_tipo_comercial": {
+    "type": "hint",
+    "options": null
+  },
+  "__hints__.servidores.servidores_gral_seguridad": {
+    "type": "hint",
+    "options": null
+  },
+  "__hints__.servidores.servidores_gral_doc": {
+    "type": "hint",
+    "options": null
+  },
+  "__hints__.servidores.servidores_so_soporte_seguridad": {
+    "type": "hint",
+    "options": null
+  },
+  "__hints__.servidores.servidores_hw_soporte_comercial": {
+    "type": "hint",
+    "options": null
+  },
+  "__hints__.servidores.servidores_accesos_heredados_legado": {
+    "type": "hint",
+    "options": null
+  },
+  "__hints__.servidores.servidores_dominio_cuentas_seguridad": {
+    "type": "hint",
+    "options": null
+  },
+  "__hints__.servidores.servidores_gpos_revisadas_legado": {
+    "type": "hint",
+    "options": null
+  },
+  "__hints__.servidores.servidores_snapshots_seguridad": {
+    "type": "hint",
+    "options": null
+  },
+  "__hints__.servidores.servidores_raid_estado_seguridad": {
+    "type": "hint",
+    "options": null
+  },
+  "__hints__.servidores.servidores_firmware_estado_seguridad": {
+    "type": "hint",
+    "options": null
+  },
+  "__hints__.servidores.servidores_so_licencia_titular_comercial": {
+    "type": "hint",
+    "options": null
+  },
+  "__hints__.servidores.servidores_gral_doc_2": {
+    "type": "hint",
+    "options": null
+  },
+  "__hints__.servidores.servidores_raid_estado_seguridad_2": {
+    "type": "hint",
+    "options": null
+  },
+  "__hints__.servidores.servidores_dominio_cuentas_seguridad_2": {
+    "type": "hint",
+    "options": null
+  },
+  "__hints__.servidores.servidores_so_licencia_titular_comercial_2": {
+    "type": "hint",
+    "options": null
+  },
+  "__hints__.servidores.servidores_oob_tipo_doc": {
+    "type": "hint",
+    "options": null
+  },
+  "__hints__.pcs.pcs_rmm_agente_seguridad": {
+    "type": "hint",
+    "options": null
+  },
+  "__hints__.pcs.pcs_rmm_agente_seguridad_2": {
+    "type": "hint",
+    "options": null
+  },
+  "__hints__.pcs.pcs_gral_doc": {
+    "type": "hint",
+    "options": null
+  },
+  "__hints__.pcs.pcs_so_soporte_comercial": {
+    "type": "hint",
+    "options": null
+  },
+  "__hints__.pcs.pcs_so_soporte_comercial_2": {
+    "type": "hint",
+    "options": null
+  },
+  "__hints__.pcs.pcs_parcheo_gestion_seguridad": {
+    "type": "hint",
+    "options": null
+  },
+  "__hints__.pcs.pcs_parcheo_gestion_seguridad_2": {
+    "type": "hint",
+    "options": null
+  },
+  "__hints__.pcs.pcs_parcheo_terceros_seguridad": {
+    "type": "hint",
+    "options": null
+  },
+  "__hints__.pcs.pcs_accesos_heredados_seguridad": {
+    "type": "hint",
+    "options": null
+  },
+  "__hints__.pcs.pcs_admin_local_seguridad": {
+    "type": "hint",
+    "options": null
+  },
+  "__hints__.pcs.pcs_admin_local_password_seguridad": {
+    "type": "hint",
+    "options": null
+  },
+  "__hints__.pcs.pcs_dominio_doc": {
+    "type": "hint",
+    "options": null
+  },
+  "__hints__.pcs.pcs_cifrado_portatiles_seguridad": {
+    "type": "hint",
+    "options": null
+  },
+  "__hints__.pcs.pcs_cifrado_claves_seguridad": {
+    "type": "hint",
+    "options": null
+  },
+  "__hints__.pcs.pcs_cifrado_claves_seguridad_2": {
+    "type": "hint",
+    "options": null
+  },
+  "__hints__.pcs.pcs_gral_doc_2": {
+    "type": "hint",
+    "options": null
+  },
+  "__hints__.pcs.pcs_software_licencias_comercial": {
+    "type": "hint",
+    "options": null
+  },
+  "__hints__.pcs.pcs_software_licencias_seguridad": {
+    "type": "hint",
+    "options": null
+  },
+  "__hints__.backup.backup_gral_seguridad": {
+    "type": "hint",
+    "options": null
+  },
+  "__hints__.backup.backup_pruebas_seguridad": {
+    "type": "hint",
+    "options": null
+  },
+  "__hints__.backup.backup_consola_accesos_heredados_seguridad": {
+    "type": "hint",
+    "options": null
+  },
+  "__hints__.backup.backup_gral_seguridad_2": {
+    "type": "hint",
+    "options": null
+  },
+  "__hints__.backup.backup_offsite_seguridad": {
+    "type": "hint",
+    "options": null
+  },
+  "__hints__.backup.backup_inmutabilidad_seguridad": {
+    "type": "hint",
+    "options": null
+  },
+  "__hints__.backup.backup_repo_parcheo_seguridad": {
+    "type": "hint",
+    "options": null
+  },
+  "__hints__.backup.backup_repo_accesos_heredados_seguridad": {
+    "type": "hint",
+    "options": null
+  },
+  "__hints__.backup.backup_repo_mfa_seguridad": {
+    "type": "hint",
+    "options": null
+  },
+  "__hints__.backup.backup_repo_expuesto_seguridad": {
+    "type": "hint",
+    "options": null
+  },
+  "__hints__.backup.backup_gral_doc": {
+    "type": "hint",
+    "options": null
+  },
+  "__hints__.backup.backup_repo_dedicado_doc": {
+    "type": "hint",
+    "options": null
+  },
+  "__hints__.backup.backup_backup_alertas_seguridad": {
+    "type": "hint",
+    "options": null
+  },
+  "__hints__.backup.backup_gral_comercial": {
+    "type": "hint",
+    "options": null
+  },
+  "__hints__.backup.backup_backup_cobertura_seguridad": {
+    "type": "hint",
+    "options": null
+  },
+  "__hints__.backup.backup_destino_seguridad": {
+    "type": "hint",
+    "options": null
+  },
+  "__hints__.email.email_proveedor_doc": {
+    "type": "hint",
+    "options": null
+  },
+  "__hints__.email.email_plan_m365_comercial": {
+    "type": "hint",
+    "options": null
+  },
+  "__hints__.email.email_plan_m365_comercial_2": {
+    "type": "hint",
+    "options": null
+  },
+  "__hints__.email.email_admins_heredados_seguridad": {
+    "type": "hint",
+    "options": null
+  },
+  "__hints__.email.email_admins_revisados_seguridad": {
+    "type": "hint",
+    "options": null
+  },
+  "__hints__.email.email_proveedor_doc_2": {
+    "type": "hint",
+    "options": null
+  },
+  "__hints__.email.email_mfa_seguridad": {
+    "type": "hint",
+    "options": null
+  },
+  "__hints__.email.email_mfa_seguridad_2": {
+    "type": "hint",
+    "options": null
+  },
+  "__hints__.email.email_licencias_revisadas_comercial": {
+    "type": "hint",
+    "options": null
+  },
+  "__hints__.email.email_usuarios_inactivos_seguridad": {
+    "type": "hint",
+    "options": null
+  },
+  "__hints__.email.email_backup_correo_comercial": {
+    "type": "hint",
+    "options": null
+  },
+  "__hints__.email.email_conditional_access_seguridad": {
+    "type": "hint",
+    "options": null
+  },
+  "__hints__.email.email_spf_seguridad": {
+    "type": "hint",
+    "options": null
+  },
+  "__hints__.email.email_spf_seguridad_2": {
+    "type": "hint",
+    "options": null
+  },
+  "__hints__.email.email_dkim_seguridad": {
+    "type": "hint",
+    "options": null
+  },
+  "__hints__.email.email_dmarc_seguridad": {
+    "type": "hint",
+    "options": null
+  },
+  "__hints__.email.email_dmarc_seguridad_2": {
+    "type": "hint",
+    "options": null
+  },
+  "__hints__.email.email_comparticion_externa_seguridad": {
+    "type": "hint",
+    "options": null
+  },
+  "__hints__.antivirus.antivirus_tipo_comercial": {
+    "type": "hint",
+    "options": null
+  },
+  "__hints__.antivirus.antivirus_tipo_comercial_2": {
+    "type": "hint",
+    "options": null
+  },
+  "__hints__.antivirus.antivirus_licencias_estado_comercial": {
+    "type": "hint",
+    "options": null
+  },
+  "__hints__.antivirus.antivirus_cobertura_seguridad": {
+    "type": "hint",
+    "options": null
+  },
+  "__hints__.antivirus.antivirus_consola_acceso_seguridad": {
+    "type": "hint",
+    "options": null
+  },
+  "__hints__.antivirus.antivirus_consola_acceso_seguridad_2": {
+    "type": "hint",
+    "options": null
+  },
+  "__hints__.antivirus.antivirus_consola_acceso_seguridad_3": {
+    "type": "hint",
+    "options": null
+  },
+  "__hints__.antivirus.antivirus_consola_seguridad": {
+    "type": "hint",
+    "options": null
+  },
+  "__hints__.wifi.wifi_password_heredada_seguridad": {
+    "type": "hint",
+    "options": null
+  },
+  "__hints__.wifi.wifi_cifrado_seguridad": {
+    "type": "hint",
+    "options": null
+  },
+  "__hints__.wifi.wifi_cifrado_seguridad_2": {
+    "type": "hint",
+    "options": null
+  },
+  "__hints__.wifi.wifi_invitados_aislado_seguridad": {
+    "type": "hint",
+    "options": null
+  },
+  "__hints__.wifi.wifi_accesos_heredados_seguridad": {
+    "type": "hint",
+    "options": null
+  },
+  "__hints__.wifi.wifi_aps_soporte_comercial": {
+    "type": "hint",
+    "options": null
+  },
+  "__hints__.sai.sai_cableado_estado_doc": {
+    "type": "hint",
+    "options": null
+  },
+  "__hints__.sai.sai_gral_doc": {
+    "type": "hint",
+    "options": null
+  },
+  "__hints__.almacenamiento.almacenamiento_es_destino_backup_doc": {
+    "type": "hint",
+    "options": null
+  },
+  "__hints__.telefonia.telefonia_centralita_acceso_legado": {
+    "type": "hint",
+    "options": null
+  },
+  "__hints__.impresion.impresion_gral_seguridad": {
+    "type": "hint",
+    "options": null
+  },
+  "__hints__.erp.erp_gral_legado": {
+    "type": "hint",
+    "options": null
+  },
+  "__hints__.licenciamiento.licenciamiento_titularidad_legado": {
+    "type": "hint",
+    "options": null
+  },
+  "__hints__.licenciamiento.licenciamiento_renovacion_automatica_comercial": {
+    "type": "hint",
+    "options": null
+  },
+  "__hints__.licenciamiento.licenciamiento_acceso_panel_seguridad": {
+    "type": "hint",
+    "options": null
+  },
+  "__hints__.licenciamiento.licenciamiento_ssl_estado_seguridad": {
+    "type": "hint",
+    "options": null
+  },
+  "__hints__.licenciamiento.licenciamiento_ssl_estado_seguridad_2": {
+    "type": "hint",
+    "options": null
+  },
+  "__hints__.licenciamiento.licenciamiento_tipo_servicio_seguridad": {
+    "type": "hint",
+    "options": null
+  },
+  "__hints__.licenciamiento.licenciamiento_tipo_servicio_doc": {
+    "type": "hint",
+    "options": null
+  },
+  "__hints__.licenciamiento.licenciamiento_cloud_cuentas_heredadas_seguridad": {
+    "type": "hint",
+    "options": null
+  },
+  "__hints__.licenciamiento.licenciamiento_cloud_mfa_seguridad": {
+    "type": "hint",
+    "options": null
+  },
+  "__hints__.licenciamiento.licenciamiento_gral_comercial": {
+    "type": "hint",
+    "options": null
+  },
+  "__hints__.otros_dispositivos.otros_dispositivos_gral_seguridad": {
+    "type": "hint",
+    "options": null
   }
 }
