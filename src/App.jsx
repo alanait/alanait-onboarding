@@ -21,6 +21,16 @@ function PrintView({ clientData, sectionEnabled, formData, instanceCounts, secti
   return <div dangerouslySetInnerHTML={{ __html: html }} />;
 }
 
+/** Boton cuadrado de la cabecera: solo icono, con el nombre en su `title`. */
+const btnIcono = (activo) => ({
+  width: 30, height: 30, borderRadius: 7, flexShrink: 0,
+  display: "flex", alignItems: "center", justifyContent: "center",
+  fontSize: 14, lineHeight: 1, padding: 0, cursor: "pointer",
+  background: activo ? "rgba(47,182,186,0.35)" : "rgba(255,255,255,0.12)",
+  border: `1px solid ${activo ? "rgba(47,182,186,0.65)" : "rgba(255,255,255,0.2)"}`,
+  color: "#fff", fontFamily: "inherit", transition: "background 0.15s",
+});
+
 // ── Main Component ───────────────────────────────────────────────────────────
 export default function App() {
   const [session, setSession] = useState(null);
@@ -454,63 +464,70 @@ export default function App() {
       <div className="screen-only no-print" style={{ display: "flex", flexDirection: "column", height: "100vh", overflow: "hidden", fontFamily: "'Segoe UI', system-ui, -apple-system, sans-serif" }}>
         {/* Header */}
         <div style={{ background: C.navy, color: "#fff", padding: "0 24px", flexShrink: 0, zIndex: 100, boxShadow: "0 2px 8px rgba(0,0,0,0.3)" }}>
-          <div style={{ maxWidth: 860, margin: "0 auto", display: "flex", justifyContent: "space-between", alignItems: "center", padding: "14px 0" }}>
-            <div>
-              <div style={{ fontSize: 11, letterSpacing: "0.12em", color: "#93c5fd", textTransform: "uppercase", marginBottom: 2 }}>ALANA IT</div>
-              <div style={{ fontSize: 17, fontWeight: 700 }}>Onboarding Técnico</div>
-              {currentFilePath && <div style={{ fontSize: 11, color: "#93c5fd", marginTop: 1 }}>{currentFilePath.split("\\").pop().split("/").pop()}{isDirty ? " •" : ""}</div>}
+          {/* Una sola fila de 46px. Antes la marca ocupaba tres lineas y los
+              botones envolvian en dos filas: la cabecera medía más de 150px.
+              Ahora los conmutadores y las acciones secundarias son solo icono
+              con su titulo, y el texto se reserva para Guardar y Exportar. */}
+          <div style={{ maxWidth: 1180, margin: "0 auto", display: "flex", alignItems: "center", gap: 8, height: 46 }}>
+            {isSupabaseConfigured() && (
+              <button onClick={() => {
+                if (isDirty) { unsavedCallbackRef.current = () => setView('dashboard'); setShowUnsaved(true); }
+                else setView('dashboard');
+              }} title="Volver al panel de clientes" aria-label="Volver al panel de clientes" style={btnIcono(false)}>←</button>
+            )}
+
+            <div style={{ minWidth: 0, marginRight: 4 }}>
+              <span style={{ fontSize: 10, letterSpacing: "0.14em", color: "#A9C6EA", textTransform: "uppercase", marginRight: 7 }}>Alana IT</span>
+              <span style={{ fontSize: 13.5, fontWeight: 700 }}>
+                {currentFilePath ? currentFilePath.split("\\").pop().split("/").pop() : "Onboarding técnico"}
+              </span>
+              {isDirty && <span title="Cambios sin guardar" style={{ color: "#2FB6BA", marginLeft: 5, fontSize: 15 }}>•</span>}
             </div>
-            <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
-              {/* Left group: navigation + actions */}
-              {isSupabaseConfigured() && (
-                <button onClick={() => {
-                  if (isDirty) { unsavedCallbackRef.current = () => setView('dashboard'); setShowUnsaved(true); }
-                  else setView('dashboard');
-                }} style={{ background: "rgba(255,255,255,0.12)", color: "#fff", border: "1px solid rgba(255,255,255,0.2)", padding: "9px 14px", borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: "pointer", transition: "all 0.2s" }}>
-                  ← Panel
-                </button>
-              )}
-              <button onClick={() => { setSidebarOpen(p => !p); loadRecent(); }} style={{ background: sidebarOpen ? "rgba(47,182,186,0.35)" : "rgba(255,255,255,0.12)", color: "#fff", border: `1px solid ${sidebarOpen ? "rgba(47,182,186,0.6)" : "rgba(255,255,255,0.2)"}`, padding: "9px 14px", borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: "pointer", transition: "all 0.2s" }}>
-                ☰ Proyectos
-              </button>
-              <button onClick={() => setInformeOpen(p => !p)} title="Informe en vivo" style={{ background: informeOpen ? "rgba(47,182,186,0.35)" : "rgba(255,255,255,0.12)", color: "#fff", border: `1px solid ${informeOpen ? "rgba(47,182,186,0.6)" : "rgba(255,255,255,0.2)"}`, padding: "9px 14px", borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: "pointer", transition: "all 0.2s" }}>
-                ▤ Informe
-              </button>
-              <button onClick={handleSave} disabled={saving} style={{ background: isDirty ? C.green : "rgba(255,255,255,0.12)", color: "#fff", border: `1px solid ${isDirty ? "#1FA0A4" : "rgba(255,255,255,0.2)"}`, padding: "9px 14px", borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: "pointer", transition: "all 0.2s", opacity: saving ? 0.6 : 1 }}>
-                {saving ? "⏳ Guardando..." : isDirty ? "💾 Guardar *" : "💾 Guardar"}
-              </button>
-              {isSupabaseConfigured() && currentClientId && (
-                <button onClick={() => setShowVersionHistory(true)} style={{ background: "rgba(255,255,255,0.12)", color: "#fff", border: "1px solid rgba(255,255,255,0.2)", padding: "9px 14px", borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: "pointer", transition: "all 0.2s" }}>
-                  📜 Historial
-                </button>
-              )}
-              {/* Spacer */}
-              <div style={{ flex: 1 }} />
-              {/* Right group: progress + PDF + user */}
-              <div style={{ textAlign: "right" }}>
-                <div style={{ fontSize: 11, color: "#93c5fd" }}>Progreso</div>
-                <div style={{ fontSize: 14, fontWeight: 700 }}>{answered}/{SECTIONS.length}</div>
-              </div>
-              <div style={{ width: 42, height: 42, borderRadius: "50%", background: "rgba(255,255,255,0.1)", border: "3px solid #3b82f6", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 700 }}>
-                {progress}%
-              </div>
-              <button onClick={handlePrint} disabled={exporting} style={{ background: C.blue, color: "#fff", border: "none", padding: "9px 18px", borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", gap: 6, opacity: exporting ? 0.6 : 1 }}>
-                {exporting ? "⏳ Generando..." : "📄 Exportar PDF"}
-              </button>
-              {session && (
-                <div style={{ display: "flex", alignItems: "center", gap: 8, paddingLeft: 8, borderLeft: "1px solid rgba(255,255,255,0.2)" }}>
-                  <span style={{ fontSize: 12, color: "#93c5fd" }}>👤 {getUserName(session)}</span>
-                  <button onClick={async () => { await signOut(); setSession(null); }} style={{ background: "rgba(255,255,255,0.08)", color: "#94a3b8", border: "none", padding: "6px 10px", borderRadius: 6, fontSize: 11, cursor: "pointer" }}>
-                    Salir
-                  </button>
-                </div>
-              )}
-            </div>
+
+            <div style={{ flex: 1 }} />
+
+            <span style={{ fontSize: 11.5, color: "#A9C6EA", whiteSpace: "nowrap" }}>
+              {answered}/{SECTIONS.length} · <b style={{ color: "#fff", fontWeight: 700 }}>{progress}%</b>
+            </span>
+
+            <span style={{ width: 1, height: 20, background: "rgba(255,255,255,0.18)", margin: "0 3px" }} />
+
+            <button onClick={() => { setSidebarOpen(p => !p); loadRecent(); }} title="Proyectos recientes" aria-label="Proyectos recientes" style={btnIcono(sidebarOpen)}>☰</button>
+            <button onClick={() => setInformeOpen(p => !p)} title="Informe en vivo" aria-label="Informe en vivo" style={btnIcono(informeOpen)}>▤</button>
+            {isSupabaseConfigured() && currentClientId && (
+              <button onClick={() => setShowVersionHistory(true)} title="Historial de versiones" aria-label="Historial de versiones" style={btnIcono(false)}>🕘</button>
+            )}
+
+            <button onClick={handleSave} disabled={saving} style={{
+              background: isDirty ? C.green : "rgba(255,255,255,0.12)", color: "#fff",
+              border: `1px solid ${isDirty ? "#1FA0A4" : "rgba(255,255,255,0.2)"}`,
+              padding: "0 13px", height: 30, borderRadius: 7, fontSize: 12.5, fontWeight: 600,
+              cursor: "pointer", opacity: saving ? 0.6 : 1, whiteSpace: "nowrap", fontFamily: "inherit",
+            }}>
+              {saving ? "Guardando…" : "Guardar"}
+            </button>
+            <button onClick={handlePrint} disabled={exporting} style={{
+              background: "#2FB6BA", color: "#fff", border: "none",
+              padding: "0 14px", height: 30, borderRadius: 7, fontSize: 12.5, fontWeight: 600,
+              cursor: "pointer", opacity: exporting ? 0.6 : 1, whiteSpace: "nowrap", fontFamily: "inherit",
+            }}>
+              {exporting ? "Generando…" : "PDF"}
+            </button>
+
+            {session && (
+              <>
+                <span style={{ width: 1, height: 20, background: "rgba(255,255,255,0.18)", margin: "0 3px" }} />
+                <span title={getUserName(session)} style={{ fontSize: 11.5, color: "#A9C6EA", whiteSpace: "nowrap", maxWidth: 110, overflow: "hidden", textOverflow: "ellipsis" }}>
+                  {getUserName(session)}
+                </span>
+                <button onClick={async () => { await signOut(); setSession(null); }} title="Cerrar sesión" aria-label="Cerrar sesión" style={btnIcono(false)}>⏻</button>
+              </>
+            )}
           </div>
           {/* Indice de secciones. Solo el icono: con el nombre al lado, las 15
               secciones no caben y obligaban a desplazar la tira. El nombre sale
               al pasar el raton. */}
-          <div style={{ maxWidth: 860, margin: "0 auto", display: "flex", gap: 6, justifyContent: "center", flexWrap: "wrap", paddingBottom: 8 }}>
+          <div style={{ maxWidth: 1180, margin: "0 auto", display: "flex", gap: 5, flexWrap: "wrap", paddingBottom: 7 }}>
             {SECTIONS.map(s => {
               const est = sectionEnabled[s.id];
               const avisos = est === "si" ? hintsPendientes(s) : 0;
@@ -522,9 +539,9 @@ export default function App() {
                   aria-label={`Ir a ${s.label}`}
                   style={{
                     position: "relative", flexShrink: 0,
-                    width: 34, height: 30, borderRadius: 8, cursor: "pointer",
+                    width: 30, height: 26, borderRadius: 6, cursor: "pointer",
                     display: "flex", alignItems: "center", justifyContent: "center",
-                    fontSize: 17, lineHeight: 1, padding: 0,
+                    fontSize: 15, lineHeight: 1, padding: 0,
                     background: est === "si" ? "rgba(59,130,246,0.28)" : "rgba(255,255,255,0.07)",
                     border: `1px solid ${est === "si" ? "rgba(147,197,253,0.45)" : est === "no" ? "rgba(239,68,68,0.3)" : "rgba(255,255,255,0.12)"}`,
                     opacity: est === "no" ? 0.45 : 1,
