@@ -357,7 +357,7 @@ export default function App() {
   // Auth guard - show login if Supabase is configured but no session
   if (isSupabaseConfigured() && authLoading) {
     return (
-      <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "#0d1f3c", color: "#fff", fontFamily: "'Segoe UI', system-ui, sans-serif" }}>
+      <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: C.navy, color: "#fff", fontFamily: "'Segoe UI', system-ui, sans-serif" }}>
         <div style={{ textAlign: "center" }}>
           <div style={{ fontSize: 32, marginBottom: 12 }}>⏳</div>
           <div>Cargando...</div>
@@ -417,7 +417,7 @@ export default function App() {
         <div style={{ position: "fixed", inset: 0, zIndex: 99999, background: "rgba(0,0,0,0.6)", display: "flex", alignItems: "center", justifyContent: "center" }}>
           <div style={{ background: "#fff", borderRadius: 12, padding: "28px 32px", width: 380, boxShadow: "0 20px 60px rgba(0,0,0,0.3)" }}>
             <div style={{ fontSize: 20, marginBottom: 8 }}>💾</div>
-            <div style={{ fontWeight: 700, fontSize: 16, color: "#0d1f3c", marginBottom: 8 }}>Cambios sin guardar</div>
+            <div style={{ fontWeight: 700, fontSize: 16, color: C.navy, marginBottom: 8 }}>Cambios sin guardar</div>
             <div style={{ fontSize: 14, color: "#64748b", marginBottom: 24 }}>
               El proyecto actual tiene cambios sin guardar. ¿Qué quieres hacer?
             </div>
@@ -427,7 +427,7 @@ export default function App() {
                 setShowUnsaved(false);
                 if (unsavedCallbackRef.current) await unsavedCallbackRef.current();
                 unsavedCallbackRef.current = null;
-              }} style={{ padding: "10px", background: "#15803d", border: "none", borderRadius: 8, color: "#fff", fontSize: 14, fontWeight: 600, cursor: "pointer" }}>
+              }} style={{ padding: "10px", background: C.green, border: "none", borderRadius: 8, color: "#fff", fontSize: 14, fontWeight: 600, cursor: "pointer" }}>
                 💾 Guardar y continuar
               </button>
               <button onClick={async () => {
@@ -476,7 +476,7 @@ export default function App() {
               <button onClick={() => setInformeOpen(p => !p)} title="Informe en vivo" style={{ background: informeOpen ? "rgba(47,182,186,0.35)" : "rgba(255,255,255,0.12)", color: "#fff", border: `1px solid ${informeOpen ? "rgba(47,182,186,0.6)" : "rgba(255,255,255,0.2)"}`, padding: "9px 14px", borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: "pointer", transition: "all 0.2s" }}>
                 ▤ Informe
               </button>
-              <button onClick={handleSave} disabled={saving} style={{ background: isDirty ? "#15803d" : "rgba(255,255,255,0.12)", color: "#fff", border: `1px solid ${isDirty ? "#16a34a" : "rgba(255,255,255,0.2)"}`, padding: "9px 14px", borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: "pointer", transition: "all 0.2s", opacity: saving ? 0.6 : 1 }}>
+              <button onClick={handleSave} disabled={saving} style={{ background: isDirty ? C.green : "rgba(255,255,255,0.12)", color: "#fff", border: `1px solid ${isDirty ? "#1FA0A4" : "rgba(255,255,255,0.2)"}`, padding: "9px 14px", borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: "pointer", transition: "all 0.2s", opacity: saving ? 0.6 : 1 }}>
                 {saving ? "⏳ Guardando..." : isDirty ? "💾 Guardar *" : "💾 Guardar"}
               </button>
               {isSupabaseConfigured() && currentClientId && (
