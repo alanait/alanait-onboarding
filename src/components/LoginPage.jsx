@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { signIn, signUp } from "../lib/auth.js";
+import { FUENTE } from "../theme.js";
 
 const C = {
   navy: "#1E3A6E", blue: "#2F56A3", blueLight: "#EEF3FB",
