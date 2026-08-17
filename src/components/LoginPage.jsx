@@ -1,10 +1,11 @@
 import React, { useState } from "react";
 import { signIn, signUp } from "../lib/auth.js";
+import { FUENTE } from "../theme.js";
 
 const C = {
-  navy: "#0d1f3c", blue: "#1d4ed8", blueLight: "#eff6ff",
-  green: "#15803d", red: "#b91c1c", gray: "#64748b",
-  border: "#e2e8f0", textLight: "#94a3b8",
+  navy: "#1E3A6E", blue: "#2F56A3", blueLight: "#EEF3FB",
+  green: "#178A8E", red: "#CC3366", gray: "#868686",
+  border: "#E4E6EA", textLight: "#9AA0A6",
 };
 
 export default function LoginPage({ onLogin }) {
@@ -60,8 +61,8 @@ export default function LoginPage({ onLogin }) {
       <div style={styles.card}>
         {/* Logo / Header */}
         <div style={{ textAlign: "center", marginBottom: 24 }}>
-          <div style={{ fontSize: 11, letterSpacing: "0.15em", color: C.blue, textTransform: "uppercase", fontWeight: 700, marginBottom: 4 }}>ALANA IT</div>
-          <h1 style={{ fontSize: 22, fontWeight: 700, color: C.navy, margin: 0 }}>Onboarding Tecnico</h1>
+          <div style={{ fontSize: 11, letterSpacing: "0.15em", color: C.blue, textTransform: "uppercase", fontWeight: 500, marginBottom: 4 }}>ALANA IT</div>
+          <h1 style={{ fontSize: 22, fontWeight: 500, color: C.navy, margin: 0 }}>Onboarding Tecnico</h1>
           <p style={{ color: C.textLight, fontSize: 13, marginTop: 6 }}>
             {mode === "login" ? "Inicia sesion para continuar" : "Crea tu cuenta"}
           </p>
@@ -69,7 +70,7 @@ export default function LoginPage({ onLogin }) {
 
         {/* Error */}
         {error && (
-          <div style={{ background: "#fef2f2", border: "1px solid #fecaca", borderRadius: 8, padding: "10px 14px", marginBottom: 16, fontSize: 13, color: C.red }}>
+          <div style={{ background: "#FDF2F6", border: "1px solid #F3C2D4", borderRadius: 8, padding: "10px 14px", marginBottom: 16, fontSize: 13, color: C.red }}>
             {error}
           </div>
         )}
@@ -139,11 +140,11 @@ export default function LoginPage({ onLogin }) {
 const styles = {
   container: {
     minHeight: "100vh",
-    background: "linear-gradient(135deg, #0d1f3c 0%, #1e3a5f 50%, #0d1f3c 100%)",
+    background: "linear-gradient(135deg, #1E3A6E 0%, #2F56A3 50%, #1E3A6E 100%)",
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
-    fontFamily: "'Segoe UI', system-ui, sans-serif",
+    fontFamily: FUENTE,
     padding: 16,
     boxSizing: "border-box",
   },
@@ -158,14 +159,14 @@ const styles = {
   label: {
     display: "block",
     fontSize: 12,
-    fontWeight: 600,
-    color: "#374151",
+    fontWeight: 500,
+    color: "#4A4A4A",
     marginBottom: 5,
   },
   input: {
     width: "100%",
     padding: "10px 14px",
-    border: "1px solid #e2e8f0",
+    border: "1px solid #E4E6EA",
     borderRadius: 8,
     fontSize: 14,
     outline: "none",
@@ -174,21 +175,21 @@ const styles = {
   },
   primaryBtn: {
     padding: "12px",
-    background: "#1d4ed8",
+    background: "#2F56A3",
     color: "#fff",
     border: "none",
     borderRadius: 8,
     fontSize: 15,
-    fontWeight: 700,
+    fontWeight: 500,
     cursor: "pointer",
     marginTop: 4,
   },
   linkBtn: {
     background: "none",
     border: "none",
-    color: "#1d4ed8",
+    color: "#2F56A3",
     cursor: "pointer",
-    fontWeight: 600,
+    fontWeight: 500,
     fontSize: 13,
     padding: 0,
     textDecoration: "underline",
