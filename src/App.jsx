@@ -502,8 +502,10 @@ export default function App() {
               )}
             </div>
           </div>
-          {/* Indice de secciones: tira desplazable con el estado de cada una */}
-          <div style={{ maxWidth: 860, margin: "0 auto", display: "flex", gap: 5, overflowX: "auto", paddingBottom: 8, scrollbarWidth: "thin" }}>
+          {/* Indice de secciones. Solo el icono: con el nombre al lado, las 15
+              secciones no caben y obligaban a desplazar la tira. El nombre sale
+              al pasar el raton. */}
+          <div style={{ maxWidth: 860, margin: "0 auto", display: "flex", gap: 6, justifyContent: "center", flexWrap: "wrap", paddingBottom: 8 }}>
             {SECTIONS.map(s => {
               const est = sectionEnabled[s.id];
               const avisos = est === "si" ? hintsPendientes(s) : 0;
@@ -512,20 +514,33 @@ export default function App() {
                   key={s.id}
                   onClick={() => irASeccion(s.id)}
                   title={s.label}
+                  aria-label={`Ir a ${s.label}`}
                   style={{
-                    display: "flex", alignItems: "center", gap: 5, flexShrink: 0,
-                    padding: "4px 10px", borderRadius: 14, cursor: "pointer",
-                    fontSize: 11.5, fontFamily: "inherit", whiteSpace: "nowrap",
-                    background: est === "si" ? "rgba(59,130,246,0.25)" : "rgba(255,255,255,0.07)",
-                    border: `1px solid ${est === "si" ? "rgba(147,197,253,0.45)" : est === "no" ? "rgba(239,68,68,0.35)" : "rgba(255,255,255,0.12)"}`,
-                    color: est === "si" ? "#dbeafe" : est === "no" ? "#94a3b8" : "#cbd5e1",
-                    opacity: est === "no" ? 0.6 : 1,
+                    position: "relative", flexShrink: 0,
+                    width: 34, height: 30, borderRadius: 8, cursor: "pointer",
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                    fontSize: 17, lineHeight: 1, padding: 0,
+                    background: est === "si" ? "rgba(59,130,246,0.28)" : "rgba(255,255,255,0.07)",
+                    border: `1px solid ${est === "si" ? "rgba(147,197,253,0.45)" : est === "no" ? "rgba(239,68,68,0.3)" : "rgba(255,255,255,0.12)"}`,
+                    opacity: est === "no" ? 0.45 : 1,
+                    transition: "background 0.15s, opacity 0.15s",
+                  }}
+                  onMouseEnter={e => { e.currentTarget.style.background = "rgba(147,197,253,0.35)"; e.currentTarget.style.opacity = 1; }}
+                  onMouseLeave={e => {
+                    e.currentTarget.style.background = est === "si" ? "rgba(59,130,246,0.28)" : "rgba(255,255,255,0.07)";
+                    e.currentTarget.style.opacity = est === "no" ? 0.45 : 1;
                   }}
                 >
                   <span aria-hidden="true">{s.icon}</span>
-                  <span>{s.multiLabel}</span>
                   {avisos > 0 && (
-                    <span style={{ background: C.amber, color: "#fff", borderRadius: 8, padding: "0 5px", fontSize: 9.5, fontWeight: 700 }}>
+                    <span style={{
+                      position: "absolute", top: -4, right: -4,
+                      minWidth: 15, height: 15, borderRadius: 8,
+                      background: C.amber, color: "#fff",
+                      fontSize: 9.5, fontWeight: 700, lineHeight: "15px",
+                      textAlign: "center", padding: "0 3px", boxSizing: "border-box",
+                      border: `1.5px solid ${C.navy}`,
+                    }}>
                       {avisos}
                     </span>
                   )}
