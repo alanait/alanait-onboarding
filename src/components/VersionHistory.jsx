@@ -2,8 +2,8 @@ import React, { useState, useEffect } from "react";
 import { getVersions, loadVersion } from "../lib/clientService.js";
 
 const C = {
-  navy: "#0d1f3c", blue: "#1d4ed8", blueLight: "#eff6ff",
-  gray: "#64748b", border: "#e2e8f0", textLight: "#94a3b8",
+  navy: "#1E3A6E", blue: "#2F56A3", blueLight: "#EEF3FB",
+  gray: "#868686", border: "#E4E6EA", textLight: "#9AA0A6",
 };
 
 export default function VersionHistory({ clientId, onRestore, onClose }) {

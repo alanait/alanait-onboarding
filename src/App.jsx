@@ -10,6 +10,7 @@ import { C, inp } from "./theme.js";
 import { SiNoToggle, ImageZone, SectionFields } from "./components/fields.jsx";
 import { buildPrintFragment } from "./print/buildPrintHTML.js";
 import { hintsVisibles, claveHint, TIPOS_HINT } from "./hints.js";
+import ReportPanel from "./components/ReportPanel.jsx";
 
 // ── Print View ──────────────────────────────────────────────────────────────
 // Vista para Ctrl+P del navegador. Renderiza el mismo HTML que la exportacion a
@@ -127,6 +128,7 @@ export default function App() {
 
   const [exporting, setExporting] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [informeOpen, setInformeOpen] = useState(true);
   const [confirmDelete, setConfirmDelete] = useState(null);
   const [showUnsaved, setShowUnsaved] = useState(false);
   const unsavedCallbackRef = React.useRef(null); // stores path to confirm
@@ -468,8 +470,11 @@ export default function App() {
                   ← Panel
                 </button>
               )}
-              <button onClick={() => { setSidebarOpen(p => !p); loadRecent(); }} style={{ background: sidebarOpen ? "rgba(29,78,216,0.4)" : "rgba(255,255,255,0.12)", color: "#fff", border: `1px solid ${sidebarOpen ? "rgba(29,78,216,0.6)" : "rgba(255,255,255,0.2)"}`, padding: "9px 14px", borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: "pointer", transition: "all 0.2s" }}>
+              <button onClick={() => { setSidebarOpen(p => !p); loadRecent(); }} style={{ background: sidebarOpen ? "rgba(47,182,186,0.35)" : "rgba(255,255,255,0.12)", color: "#fff", border: `1px solid ${sidebarOpen ? "rgba(47,182,186,0.6)" : "rgba(255,255,255,0.2)"}`, padding: "9px 14px", borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: "pointer", transition: "all 0.2s" }}>
                 ☰ Proyectos
+              </button>
+              <button onClick={() => setInformeOpen(p => !p)} title="Informe en vivo" style={{ background: informeOpen ? "rgba(47,182,186,0.35)" : "rgba(255,255,255,0.12)", color: "#fff", border: `1px solid ${informeOpen ? "rgba(47,182,186,0.6)" : "rgba(255,255,255,0.2)"}`, padding: "9px 14px", borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: "pointer", transition: "all 0.2s" }}>
+                ▤ Informe
               </button>
               <button onClick={handleSave} disabled={saving} style={{ background: isDirty ? "#15803d" : "rgba(255,255,255,0.12)", color: "#fff", border: `1px solid ${isDirty ? "#16a34a" : "rgba(255,255,255,0.2)"}`, padding: "9px 14px", borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: "pointer", transition: "all 0.2s", opacity: saving ? 0.6 : 1 }}>
                 {saving ? "⏳ Guardando..." : isDirty ? "💾 Guardar *" : "💾 Guardar"}
@@ -851,6 +856,25 @@ export default function App() {
           </button>
         )}
         </div>{/* end main content */}
+
+        {/* Informe en vivo: se rehace en cada tecla, asi que el tecnico ve el
+            efecto de lo que responde sin tener que exportar el PDF. */}
+        <div style={{
+          width: informeOpen ? 300 : 0, minWidth: informeOpen ? 300 : 0,
+          background: "#fff", borderLeft: informeOpen ? `1px solid ${C.border}` : "none",
+          overflowY: "auto", overflowX: "hidden", height: "100%", flexShrink: 0,
+          transition: "width 0.25s ease, min-width 0.25s ease",
+        }}>
+          {informeOpen && (
+            <ReportPanel
+              sectionEnabled={sectionEnabled}
+              getVal={getVal}
+              getCount={getCount}
+              getHint={getHint}
+              onIrASeccion={irASeccion}
+            />
+          )}
+        </div>
         </div>{/* end body row */}
       </div>
     </>

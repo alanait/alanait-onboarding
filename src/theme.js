@@ -1,14 +1,33 @@
-// Paleta y estilo base de input compartidos por el editor de onboarding.
-// (Dashboard, LoginPage y VersionHistory aun declaran su propia copia de C.)
+// Paleta corporativa de ALANA IT, tomada de alanait.com.
+//
+//   Azul de marca   #2F56A3   identidad, cabecera, titulares
+//   Turquesa        #2FB6BA   acento vivo: confirmaciones y acciones
+//   Magenta         #CC3366   realce y riesgo
+//   Tinta           #333333   texto
+//   Gris            #868686   texto secundario
+//   Papel           #F9F9F9   fondos
+//
+// Los nombres de las claves se conservan (navy, blue, green, red...) porque son
+// los que usa todo el codigo; lo que cambia son los valores. "green" y "red" ya
+// no son verde y rojo literales: son el turquesa de confirmacion y el magenta
+// de riesgo de la marca.
 
 export const C = {
-  navy: "#0d1f3c", blue: "#1d4ed8", blueLight: "#eff6ff", blueBorder: "#bfdbfe",
-  green: "#15803d", greenLight: "#f0fdf4", greenBorder: "#86efac",
-  red: "#b91c1c", redLight: "#fef2f2", redBorder: "#fecaca",
-  // Ambar: reservado para los avisos de legado del proveedor anterior, que no
-  // son un riesgo activo (rojo) pero tampoco una simple nota (azul).
-  amber: "#b45309", amberLight: "#fffbeb", amberBorder: "#fcd34d",
-  gray: "#64748b", grayLight: "#f8fafc", border: "#e2e8f0", text: "#1e293b", textLight: "#64748b",
+  // Azul de marca. `navy` es la version profunda para la cabecera y las
+  // superficies oscuras; `blue` es el azul corporativo tal cual.
+  navy: "#1E3A6E", blue: "#2F56A3", blueLight: "#EEF3FB", blueBorder: "#BBCCE8",
+
+  // Turquesa: seccion activa, campos completos, confirmaciones.
+  green: "#178A8E", greenLight: "#E6F7F7", greenBorder: "#9BDCDE",
+
+  // Magenta: riesgo, hallazgos, secciones sin servicio.
+  red: "#CC3366", redLight: "#FDF2F6", redBorder: "#F3C2D4",
+
+  // Ambar: herencias del proveedor anterior, ni riesgo activo ni simple nota.
+  amber: "#B4530F", amberLight: "#FDF5EC", amberBorder: "#F0C89A",
+
+  gray: "#868686", grayLight: "#F9F9F9", border: "#E4E6EA",
+  text: "#333333", textLight: "#868686",
 };
 
 export const inp = {

@@ -4,9 +4,9 @@ import { isSupabaseConfigured } from "../lib/supabase.js";
 import { getUserName } from "../lib/auth.js";
 
 const C = {
-  navy: "#0d1f3c", blue: "#1d4ed8", blueLight: "#eff6ff",
-  green: "#15803d", red: "#b91c1c", gray: "#64748b",
-  border: "#e2e8f0", textLight: "#94a3b8",
+  navy: "#1E3A6E", blue: "#2F56A3", blueLight: "#EEF3FB",
+  green: "#178A8E", red: "#CC3366", gray: "#868686",
+  border: "#E4E6EA", textLight: "#9AA0A6",
 };
 
 export default function Dashboard({ onOpenClient, onNewClient, onImportFile, session, onSignOut }) {
@@ -57,14 +57,14 @@ export default function Dashboard({ onOpenClient, onNewClient, onImportFile, ses
 
   if (!isSupabaseConfigured()) {
     return (
-      <div style={{ minHeight: "100vh", background: "#f8fafc", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'Segoe UI', system-ui, sans-serif" }}>
+      <div style={{ minHeight: "100vh", background: "#F9F9F9", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'Segoe UI', system-ui, sans-serif" }}>
         <div style={{ background: "#fff", borderRadius: 12, padding: 40, maxWidth: 500, textAlign: "center", boxShadow: "0 4px 20px rgba(0,0,0,0.08)" }}>
           <div style={{ fontSize: 48, marginBottom: 16 }}>⚙️</div>
           <h2 style={{ color: C.navy, marginBottom: 8 }}>Configurar Supabase</h2>
           <p style={{ color: C.gray, fontSize: 14, lineHeight: 1.6, marginBottom: 20 }}>
             Para usar el modo cloud, configura las variables de entorno:
           </p>
-          <div style={{ background: "#1e293b", borderRadius: 8, padding: 16, textAlign: "left", fontSize: 13, color: "#e2e8f0", fontFamily: "monospace", lineHeight: 1.8 }}>
+          <div style={{ background: "#333333", borderRadius: 8, padding: 16, textAlign: "left", fontSize: 13, color: "#E4E6EA", fontFamily: "monospace", lineHeight: 1.8 }}>
             VITE_SUPABASE_URL=https://xxx.supabase.co<br />
             VITE_SUPABASE_ANON_KEY=eyJhbG...
           </div>
@@ -83,12 +83,12 @@ export default function Dashboard({ onOpenClient, onNewClient, onImportFile, ses
   }
 
   return (
-    <div style={{ minHeight: "100vh", background: "#f8fafc", fontFamily: "'Segoe UI', system-ui, sans-serif" }}>
+    <div style={{ minHeight: "100vh", background: "#F9F9F9", fontFamily: "'Segoe UI', system-ui, sans-serif" }}>
       {/* Header */}
       <div style={{ background: C.navy, color: "#fff", padding: "0 24px", boxShadow: "0 2px 8px rgba(0,0,0,0.3)" }}>
         <div style={{ maxWidth: 1000, margin: "0 auto", display: "flex", justifyContent: "space-between", alignItems: "center", padding: "16px 0" }}>
           <div>
-            <div style={{ fontSize: 11, letterSpacing: "0.12em", color: "#93c5fd", textTransform: "uppercase", marginBottom: 2 }}>ALANA IT</div>
+            <div style={{ fontSize: 11, letterSpacing: "0.12em", color: "#A9C6EA", textTransform: "uppercase", marginBottom: 2 }}>ALANA IT</div>
             <div style={{ fontSize: 18, fontWeight: 700 }}>Panel de Clientes</div>
           </div>
           <div style={{ display: "flex", gap: 10 }}>
@@ -109,8 +109,8 @@ export default function Dashboard({ onOpenClient, onNewClient, onImportFile, ses
             </button>
             {session && (
               <div style={{ display: "flex", alignItems: "center", gap: 8, marginLeft: 8, paddingLeft: 8, borderLeft: "1px solid rgba(255,255,255,0.2)" }}>
-                <span style={{ fontSize: 12, color: "#93c5fd" }}>👤 {getUserName(session)}</span>
-                <button onClick={onSignOut} style={{ background: "rgba(255,255,255,0.08)", color: "#94a3b8", border: "none", padding: "6px 10px", borderRadius: 6, fontSize: 11, cursor: "pointer" }}>
+                <span style={{ fontSize: 12, color: "#A9C6EA" }}>👤 {getUserName(session)}</span>
+                <button onClick={onSignOut} style={{ background: "rgba(255,255,255,0.08)", color: "#9AA0A6", border: "none", padding: "6px 10px", borderRadius: 6, fontSize: 11, cursor: "pointer" }}>
                   Salir
                 </button>
               </div>
@@ -172,7 +172,7 @@ export default function Dashboard({ onOpenClient, onNewClient, onImportFile, ses
           <div style={{ background: "#fff", borderRadius: 12, border: `1px solid ${C.border}`, overflow: "hidden", boxShadow: "0 1px 4px rgba(0,0,0,0.04)" }}>
             <table style={{ width: "100%", borderCollapse: "collapse" }}>
               <thead>
-                <tr style={{ background: "#f8fafc", borderBottom: `2px solid ${C.border}` }}>
+                <tr style={{ background: "#F9F9F9", borderBottom: `2px solid ${C.border}` }}>
                   {["Empresa", "Sector", "Contacto", "Responsable", "Creado por", "Fecha", ""].map((h, i) => (
                     <th key={i} style={{ padding: "12px 16px", textAlign: "left", fontSize: 11, fontWeight: 700, color: C.gray, textTransform: "uppercase", letterSpacing: "0.05em" }}>
                       {h}
@@ -192,9 +192,9 @@ export default function Dashboard({ onOpenClient, onNewClient, onImportFile, ses
                       <div style={{ fontWeight: 700, color: C.navy, fontSize: 14 }}>{c.empresa || "Sin nombre"}</div>
                       <div style={{ fontSize: 12, color: C.textLight }}>{c.trabajadores ? `${c.trabajadores} trabajadores` : ""}</div>
                     </td>
-                    <td style={{ padding: "14px 16px", fontSize: 13, color: "#374151" }}>{c.sector || "—"}</td>
-                    <td style={{ padding: "14px 16px", fontSize: 13, color: "#374151" }}>{c.contacto || "—"}</td>
-                    <td style={{ padding: "14px 16px", fontSize: 13, color: "#374151" }}>{c.responsable || "—"}</td>
+                    <td style={{ padding: "14px 16px", fontSize: 13, color: "#4A4A4A" }}>{c.sector || "—"}</td>
+                    <td style={{ padding: "14px 16px", fontSize: 13, color: "#4A4A4A" }}>{c.contacto || "—"}</td>
+                    <td style={{ padding: "14px 16px", fontSize: 13, color: "#4A4A4A" }}>{c.responsable || "—"}</td>
                     <td style={{ padding: "14px 16px", fontSize: 12, color: C.textLight }}>
                       {c.created_by ? c.created_by.split('@')[0] : "—"}
                     </td>
@@ -209,18 +209,18 @@ export default function Dashboard({ onOpenClient, onNewClient, onImportFile, ses
                             borderRadius: 5, fontSize: 11, fontWeight: 600, cursor: "pointer",
                           }}>Eliminar</button>
                           <button onClick={() => setConfirmDeleteId(null)} style={{
-                            padding: "4px 10px", background: "#f1f5f9", color: "#64748b", border: "none",
+                            padding: "4px 10px", background: "#F1F2F4", color: "#868686", border: "none",
                             borderRadius: 5, fontSize: 11, cursor: "pointer",
                           }}>No</button>
                         </div>
                       ) : (
                         <button onClick={e => { e.stopPropagation(); setConfirmDeleteId(c.id); }} style={{
-                          background: "transparent", border: "none", color: "#cbd5e1",
+                          background: "transparent", border: "none", color: "#C7CBD1",
                           cursor: "pointer", fontSize: 16, padding: "4px 8px", borderRadius: 4,
                           transition: "color 0.15s",
                         }}
                         onMouseEnter={e => e.currentTarget.style.color = C.red}
-                        onMouseLeave={e => e.currentTarget.style.color = "#cbd5e1"}
+                        onMouseLeave={e => e.currentTarget.style.color = "#C7CBD1"}
                         >🗑️</button>
                       )}
                     </td>
