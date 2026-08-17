@@ -11,6 +11,7 @@ import { SiNoToggle, ImageZone, SectionFields } from "./components/fields.jsx";
 import { buildPrintFragment } from "./print/buildPrintHTML.js";
 import { hintsVisibles, claveHint, TIPOS_HINT } from "./hints.js";
 import ReportPanel from "./components/ReportPanel.jsx";
+import SectionRail from "./components/SectionRail.jsx";
 
 // ── Print View ──────────────────────────────────────────────────────────────
 // Vista para Ctrl+P del navegador. Renderiza el mismo HTML que la exportacion a
@@ -132,13 +133,32 @@ export default function App() {
   const [arribaVisible, setArribaVisible] = useState(false);
 
   const irASeccion = (sectionId) => {
+    setSeccionActiva(sectionId);
     seccionRefs.current[sectionId]?.scrollIntoView({ behavior: "smooth", block: "start" });
   };
   const irArriba = () => contenidoRef.current?.scrollTo({ top: 0, behavior: "smooth" });
 
   const [exporting, setExporting] = useState(false);
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [railOpen, setRailOpen] = useState(true);
   const [informeOpen, setInformeOpen] = useState(true);
+  const [seccionActiva, setSeccionActiva] = useState(null);
+
+  /** Campos visibles y rellenos de una seccion, sumando instancias. */
+  const avanceSeccion = (sectionId) => {
+    const sec = SECTIONS.find(s => s.id === sectionId);
+    let total = 0, rellenos = 0;
+    if (!sec || sectionEnabled[sectionId] !== "si") return { total, rellenos };
+    for (let i = 0; i < getCount(sectionId); i++) {
+      for (const f of sec.fields) {
+        if (f.dep && getVal(sectionId, f.dep.field, i) !== f.dep.value) continue;
+        total++;
+        const v = getVal(sectionId, f.id, i);
+        if (Array.isArray(v) ? v.length > 0 : v !== "" && v !== undefined) rellenos++;
+      }
+    }
+    return { total, rellenos };
+  };
   const [confirmDelete, setConfirmDelete] = useState(null);
   const [showUnsaved, setShowUnsaved] = useState(false);
   const unsavedCallbackRef = React.useRef(null); // stores path to confirm
@@ -492,7 +512,8 @@ export default function App() {
 
             <span style={{ width: 1, height: 20, background: "rgba(255,255,255,0.18)", margin: "0 3px" }} />
 
-            <button onClick={() => { setSidebarOpen(p => !p); loadRecent(); }} title="Proyectos recientes" aria-label="Proyectos recientes" style={btnIcono(sidebarOpen)}>☰</button>
+            <button onClick={() => setRailOpen(p => !p)} title="Lista de secciones" aria-label="Lista de secciones" style={btnIcono(railOpen)}>☰</button>
+            <button onClick={() => { setSidebarOpen(p => !p); loadRecent(); }} title="Proyectos recientes" aria-label="Proyectos recientes" style={btnIcono(sidebarOpen)}>🗂</button>
             <button onClick={() => setInformeOpen(p => !p)} title="Informe en vivo" aria-label="Informe en vivo" style={btnIcono(informeOpen)}>▤</button>
             {isSupabaseConfigured() && currentClientId && (
               <button onClick={() => setShowVersionHistory(true)} title="Historial de versiones" aria-label="Historial de versiones" style={btnIcono(false)}>🕘</button>
@@ -524,70 +545,39 @@ export default function App() {
               </>
             )}
           </div>
-          {/* Indice de secciones. Solo el icono: con el nombre al lado, las 15
-              secciones no caben y obligaban a desplazar la tira. El nombre sale
-              al pasar el raton. */}
-          <div style={{ maxWidth: 1180, margin: "0 auto", display: "flex", gap: 5, flexWrap: "wrap", paddingBottom: 7 }}>
-            {SECTIONS.map(s => {
-              const est = sectionEnabled[s.id];
-              const avisos = est === "si" ? hintsPendientes(s) : 0;
-              return (
-                <button
-                  key={s.id}
-                  onClick={() => irASeccion(s.id)}
-                  title={s.label}
-                  aria-label={`Ir a ${s.label}`}
-                  style={{
-                    position: "relative", flexShrink: 0,
-                    width: 30, height: 26, borderRadius: 6, cursor: "pointer",
-                    display: "flex", alignItems: "center", justifyContent: "center",
-                    fontSize: 15, lineHeight: 1, padding: 0,
-                    background: est === "si" ? "rgba(59,130,246,0.28)" : "rgba(255,255,255,0.07)",
-                    border: `1px solid ${est === "si" ? "rgba(147,197,253,0.45)" : est === "no" ? "rgba(239,68,68,0.3)" : "rgba(255,255,255,0.12)"}`,
-                    opacity: est === "no" ? 0.45 : 1,
-                    transition: "background 0.15s, opacity 0.15s",
-                  }}
-                  onMouseEnter={e => { e.currentTarget.style.background = "rgba(147,197,253,0.35)"; e.currentTarget.style.opacity = 1; }}
-                  onMouseLeave={e => {
-                    e.currentTarget.style.background = est === "si" ? "rgba(59,130,246,0.28)" : "rgba(255,255,255,0.07)";
-                    e.currentTarget.style.opacity = est === "no" ? 0.45 : 1;
-                  }}
-                >
-                  <span aria-hidden="true">{s.icon}</span>
-                  {avisos > 0 && (
-                    <span style={{
-                      position: "absolute", top: -4, right: -4,
-                      minWidth: 15, height: 15, borderRadius: 8,
-                      background: C.amber, color: "#fff",
-                      fontSize: 9.5, fontWeight: 700, lineHeight: "15px",
-                      textAlign: "center", padding: "0 3px", boxSizing: "border-box",
-                      border: `1.5px solid ${C.navy}`,
-                    }}>
-                      {avisos}
-                    </span>
-                  )}
-                </button>
-              );
-            })}
-          </div>
-          <div style={{ height: 3, background: "rgba(255,255,255,0.1)" }}>
-            <div style={{ height: "100%", width: `${progress}%`, background: "#3b82f6", transition: "width 0.4s ease", borderRadius: 2 }} />
+          <div style={{ height: 2, background: "rgba(255,255,255,0.14)" }}>
+            <div style={{ height: "100%", width: `${progress}%`, background: "#2FB6BA", transition: "width 0.4s ease" }} />
           </div>
         </div>
 
         {/* Body: sidebar + content */}
-        <div style={{ display: "flex", flex: 1, minHeight: 0, overflow: "hidden" }}>
+        <div style={{ display: "flex", flex: 1, minHeight: 0, overflow: "hidden", position: "relative" }}>
 
-        {/* Sidebar */}
+        {/* Navegacion por secciones: columna fija, siempre a la vista */}
+        <SectionRail
+          abierto={railOpen}
+          sectionEnabled={sectionEnabled}
+          avance={avanceSeccion}
+          avisos={hintsPendientes}
+          activa={seccionActiva}
+          onIr={irASeccion}
+        />
+
+        {/* Proyectos: panel superpuesto. Es gestion de archivos, no navegacion
+            del formulario, asi que no merece una columna permanente. */}
+        {sidebarOpen && (
+          <div onClick={() => setSidebarOpen(false)} style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.35)", zIndex: 200 }} />
+        )}
         <div style={{
-          width: sidebarOpen ? 200 : 0, minWidth: sidebarOpen ? 200 : 0,
-          background: "#111827", display: "flex", flexDirection: "column",
-          transition: "width 0.25s ease, min-width 0.25s ease",
-          overflow: "hidden", flexShrink: 0,
-          borderRight: "1px solid rgba(255,255,255,0.07)",
-          height: "100%",
+          position: "absolute", top: 0, left: 0, bottom: 0, zIndex: 201,
+          width: 236, display: "flex", flexDirection: "column",
+          background: "#16294D", height: "100%",
+          transform: sidebarOpen ? "translateX(0)" : "translateX(-100%)",
+          visibility: sidebarOpen ? "visible" : "hidden",
+          transition: "transform 0.22s ease, visibility 0.22s",
+          boxShadow: sidebarOpen ? "2px 0 18px rgba(0,0,0,0.28)" : "none",
         }}>
-          <div style={{ padding: "12px 8px 8px", opacity: sidebarOpen ? 1 : 0, transition: "opacity 0.2s", display: "flex", flexDirection: "column", height: "100%" }}>
+          <div style={{ padding: "12px 8px 8px", display: "flex", flexDirection: "column", height: "100%" }}>
             {/* New project button */}
             <button onClick={handleNewProject} style={{
               width: "100%", padding: "8px 10px", background: "transparent",
@@ -735,7 +725,7 @@ export default function App() {
           onScroll={e => setArribaVisible(e.currentTarget.scrollTop > 400)}
           style={{ flex: 1, minWidth: 0, overflowY: "auto", height: "100%", position: "relative" }}
         >
-        <div style={{ maxWidth: 860, margin: "0 auto", padding: "24px 16px" }}>
+        <div style={{ maxWidth: 900, margin: "0 auto", padding: "20px 20px 24px" }}>
           {/* Client data */}
           <div style={{ background: "#fff", borderRadius: 10, border: `1px solid ${C.border}`, marginBottom: 20, overflow: "hidden", boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
             <div style={{ background: C.navy, padding: "12px 20px", display: "flex", alignItems: "center", gap: 10 }}>

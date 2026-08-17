@@ -26,10 +26,9 @@ function resumir({ sectionEnabled, getVal, getCount, getHint }) {
   let campos = 0, rellenos = 0;
   const abiertos = [];
   const porTipo = { seguridad: 0, legado: 0, comercial: 0, doc: 0 };
-  const porSeccion = [];
 
   for (const s of activas) {
-    let cs = 0, rs = 0, avisos = 0;
+    let cs = 0, rs = 0;
     for (let i = 0; i < getCount(s.id); i++) {
       for (const f of s.fields) {
         // Un campo condicional que no se cumple no cuenta: no se puede rellenar
@@ -43,13 +42,11 @@ function resumir({ sectionEnabled, getVal, getCount, getHint }) {
         const marcable = TIPOS_HINT[h.tipo].marcable;
         const estado = getHint(h.id, i);
         if (marcable && estado !== "hecho" && estado !== "na") {
-          avisos++;
           abiertos.push({ ...h, seccion: s.label, icono: s.icon, instancia: getCount(s.id) > 1 ? i + 1 : null });
         }
       }
     }
     campos += cs; rellenos += rs;
-    porSeccion.push({ id: s.id, label: s.label, icono: s.icon, cs, rs, avisos });
   }
 
   // Los de seguridad primero: son los que no pueden quedarse sin cerrar
@@ -60,7 +57,7 @@ function resumir({ sectionEnabled, getVal, getCount, getHint }) {
     activas: activas.length,
     campos, rellenos,
     pctCampos: campos ? Math.round((rellenos / campos) * 100) : 0,
-    abiertos, porTipo, porSeccion,
+    abiertos, porTipo,
   };
 }
 
@@ -162,36 +159,6 @@ export default function ReportPanel({ sectionEnabled, getVal, getCount, getHint,
         </>
       )}
 
-      {/* Avance por seccion */}
-      {r.porSeccion.length > 0 && (
-        <>
-          <div style={titulo}>Por sección</div>
-          {r.porSeccion.map(s => (
-            <button
-              key={s.id}
-              onClick={() => onIrASeccion(s.id)}
-              style={{
-                display: "flex", alignItems: "center", gap: 8, width: "100%",
-                background: "transparent", border: "none", padding: "4px 0",
-                cursor: "pointer", fontFamily: "inherit", textAlign: "left",
-              }}
-            >
-              <span style={{ fontSize: 12, flexShrink: 0 }} aria-hidden="true">{s.icono}</span>
-              <span style={{ flex: 1, fontSize: 11.5, color: C.text, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-                {s.label}
-              </span>
-              {s.avisos > 0 && (
-                <span style={{ fontSize: 9.5, fontWeight: 700, color: "#fff", background: C.red, borderRadius: 7, padding: "0 5px", flexShrink: 0 }}>
-                  {s.avisos}
-                </span>
-              )}
-              <span style={{ width: 42, height: 4, borderRadius: 2, background: C.border, overflow: "hidden", flexShrink: 0 }}>
-                <span style={{ display: "block", height: "100%", width: `${s.cs ? Math.round((s.rs / s.cs) * 100) : 0}%`, background: s.cs && s.rs === s.cs ? C.green : C.blue }} />
-              </span>
-            </button>
-          ))}
-        </>
-      )}
     </div>
   );
 }
