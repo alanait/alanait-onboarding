@@ -5,7 +5,7 @@ import LoginPage from "./components/LoginPage.jsx";
 import { isSupabaseConfigured } from "./lib/supabase.js";
 import { getSession, onAuthChange, signOut, getUserName } from "./lib/auth.js";
 import { saveClient as saveToCloud, loadClient, exportToFile, searchClients } from "./lib/clientService.js";
-import { SECTIONS } from "./sections.js";
+import { SECTIONS, lectorEfectivo, reindexarHints } from "./sections.js";
 import { C, inp, FUENTE } from "./theme.js";
 import { SiNoToggle, ImageZone, SectionFields } from "./components/fields.jsx";
 import { buildPrintFragment } from "./print/buildPrintHTML.js";
@@ -112,7 +112,7 @@ export default function App() {
   const hintsPendientes = (section) => {
     let n = 0;
     for (let i = 0; i < getCount(section.id); i++) {
-      for (const h of hintsVisibles(section.id, id => getVal(section.id, id, i))) {
+      for (const h of hintsVisibles(section.id, lectorEfectivo(section.id, getVal, i))) {
         if (!TIPOS_HINT[h.tipo].marcable) continue;
         if (getHint(h.id, i) !== "hecho" && getHint(h.id, i) !== "na") n++;
       }
@@ -784,7 +784,15 @@ export default function App() {
                                   const count = getCount(section.id);
                                   for (let j = i; j < count - 1; j++) sec[j] = sec[j + 1] || {};
                                   delete sec[count - 1];
-                                  return { ...prev, [section.id]: sec };
+                                  // Los estados de aviso van indexados por instancia
+                                  // (hintId@2): si no se reindexan aqui, al borrar la
+                                  // instancia 1 los avisos resueltos de la 2 se quedan
+                                  // colgados y aparecen sobre datos que no son suyos.
+                                  return {
+                                    ...prev,
+                                    [section.id]: sec,
+                                    __hints__: reindexarHints(prev.__hints__ ?? {}, section.id, i, count),
+                                  };
                                 });
                                 setInstanceCounts(prev => ({ ...prev, [section.id]: Math.max(1, getCount(section.id) - 1) }));
                                 setIsDirty(true);

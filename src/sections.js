@@ -482,3 +482,38 @@ export const SECTIONS = [
     ]
   },
 ];
+
+/**
+ * Lector de campos que respeta los condicionales.
+ *
+ * Un campo cuyo `dep` no se cumple no se pinta, pero su valor sigue en
+ * form_data si alguna vez se contesto y luego se cambio el campo del que
+ * depende. Leer en crudo hace que ese valor fosil dispare avisos que el tecnico
+ * no puede ver ni resolver, y que puntue en el ciberscore.
+ *
+ * Todo lo que interprete respuestas (avisos, informe, score) debe leer por
+ * aqui, no directamente de form_data.
+ */
+export function lectorEfectivo(sectionId, getVal, idx) {
+  const seccion = SECTIONS.find(s => s.id === sectionId);
+  return (campoId) => {
+    const campo = seccion?.fields.find(f => f.id === campoId);
+    if (campo?.dep && getVal(sectionId, campo.dep.field, idx) !== campo.dep.value) return "";
+    return getVal(sectionId, campoId, idx);
+  };
+}
+
+/** Reindexa las claves `hintId@idx` al eliminar la instancia `idx` de una seccion. */
+export function reindexarHints(hints, sectionId, idxBorrado, total) {
+  const ids = (SECTIONS.find(s => s.id === sectionId)?.fields ?? []) && Object.keys(hints);
+  const salida = {};
+  for (const clave of ids) {
+    const [hintId, i] = clave.split("@");
+    const n = Number(i);
+    if (Number.isNaN(n)) { salida[clave] = hints[clave]; continue; }
+    if (n < idxBorrado) salida[clave] = hints[clave];
+    else if (n === idxBorrado) continue;                       // se va con la instancia
+    else salida[`${hintId}@${n - 1}`] = hints[clave];          // sube un puesto
+  }
+  return salida;
+}

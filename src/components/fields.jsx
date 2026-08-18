@@ -4,6 +4,7 @@
 import React, { useState } from "react";
 import { C, inp } from "../theme.js";
 import { hintsVisibles, claveHint } from "../hints.js";
+import { lectorEfectivo } from "../sections.js";
 import HintBanner from "./HintBanner.jsx";
 
 function CidrField({ value, onChange, placeholder, style }) {
@@ -338,7 +339,7 @@ function SectionFields({ section, instanceIdx, getVal, setVal, getHint, setHint 
     porGrupo.get(g).push(f);
   }
 
-  const hints = hintsVisibles(section.id, id => getVal(section.id, id, instanceIdx));
+  const hints = hintsVisibles(section.id, lectorEfectivo(section.id, getVal, instanceIdx));
   const sueltos = hints.filter(h => !h.anchor);
   const comun = { section, instanceIdx, getVal, setVal, hints, getHint, setHint };
 

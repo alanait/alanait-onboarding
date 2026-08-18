@@ -8,7 +8,7 @@
 
 import React from "react";
 import { C } from "../theme.js";
-import { SECTIONS } from "../sections.js";
+import { SECTIONS, lectorEfectivo } from "../sections.js";
 import { hintsVisibles, TIPOS_HINT } from "../hints.js";
 
 const COLOR_TIPO = {
@@ -37,7 +37,7 @@ function resumir({ sectionEnabled, getVal, getCount, getHint }) {
         const v = getVal(s.id, f.id, i);
         if (Array.isArray(v) ? v.length > 0 : v !== "" && v !== undefined) rs++;
       }
-      for (const h of hintsVisibles(s.id, id => getVal(s.id, id, i))) {
+      for (const h of hintsVisibles(s.id, lectorEfectivo(s.id, getVal, i))) {
         porTipo[h.tipo]++;
         const marcable = TIPOS_HINT[h.tipo].marcable;
         const estado = getHint(h.id, i);
