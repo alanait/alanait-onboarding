@@ -9,6 +9,8 @@ import { SECTIONS, lectorEfectivo, reindexarHints } from "./sections.js";
 import { C, inp, FUENTE } from "./theme.js";
 import { SiNoToggle, ImageZone, SectionFields } from "./components/fields.jsx";
 import { buildPrintFragment } from "./print/buildPrintHTML.js";
+import { computeScore } from "./score/computeScore.js";
+import { CRITERIOS, PRECONDICIONES } from "./score/criterios.js";
 import { hintsVisibles, claveHint, TIPOS_HINT } from "./hints.js";
 import ReportPanel from "./components/ReportPanel.jsx";
 import SectionRail from "./components/SectionRail.jsx";
@@ -18,7 +20,8 @@ import SectionRail from "./components/SectionRail.jsx";
 // PDF, asi que informe y PDF nunca pueden divergir. El contenido va escapado en
 // buildPrintFragment, por eso es seguro inyectarlo.
 function PrintView({ clientData, sectionEnabled, formData, instanceCounts, sectionImages }) {
-  const html = buildPrintFragment(clientData, sectionEnabled, formData, instanceCounts, sectionImages);
+  const score = computeScore({ formData, sectionEnabled, instanceCounts, criterios: CRITERIOS, precondiciones: PRECONDICIONES });
+  const html = buildPrintFragment(clientData, sectionEnabled, formData, instanceCounts, sectionImages, score);
   return <div dangerouslySetInnerHTML={{ __html: html }} />;
 }
 
@@ -182,7 +185,8 @@ export default function App() {
       const html2pdf = (await import('html2pdf.js')).default;
 
       const container = document.createElement('div');
-      container.innerHTML = buildPrintFragment(clientData, sectionEnabled, formData, instanceCounts, sectionImages);
+      const score = computeScore({ formData, sectionEnabled, instanceCounts, criterios: CRITERIOS, precondiciones: PRECONDICIONES });
+      container.innerHTML = buildPrintFragment(clientData, sectionEnabled, formData, instanceCounts, sectionImages, score);
       // 190mm = A4 (210mm) menos los margenes de 10mm que aplica html2pdf a cada
       // lado. Asi el contenido se mapea 1:1 con el area imprimible y no se corta.
       container.style.width = '190mm';

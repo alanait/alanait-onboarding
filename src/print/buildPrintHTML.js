@@ -6,6 +6,7 @@
 
 import { SECTIONS } from "../sections.js";
 import { LOGO_ALANA } from "../assets/logo.js";
+import { selloNota, paginaDiagnostico, bloqueHallazgos, bloquePlan, bloqueOportunidades } from "./informe.js";
 
 // Escapa valores introducidos por el tecnico para que no rompan el HTML del informe
 export const esc = (s) => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
@@ -25,7 +26,7 @@ const PRINT_CSS = `
   .alana-print pre, .alana-print div { overflow-wrap: anywhere; }
 `;
 
-export function buildPrintFragment(clientData, sectionEnabled, formData, instanceCounts, sectionImages) {
+export function buildPrintFragment(clientData, sectionEnabled, formData, instanceCounts, sectionImages, score = null) {
   const getVal = (sectionId, fieldId, idx = null) => {
     if (idx !== null) return formData[sectionId]?.[idx]?.[fieldId] ?? "";
     return formData[sectionId]?.[fieldId] ?? "";
@@ -60,6 +61,7 @@ export function buildPrintFragment(clientData, sectionEnabled, formData, instanc
       ${clientData.fecha ? `<tr><td style="padding:6px 20px 6px 0;font-size:13px;color:#9AA0A6;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;">Fecha visita</td><td style="padding:6px 0;font-size:14px;color:#333333;">${esc(clientData.fecha)}</td></tr>` : ""}
       ${clientData.responsable ? `<tr><td style="padding:6px 20px 6px 0;font-size:13px;color:#9AA0A6;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;">Técnico</td><td style="padding:6px 0;font-size:14px;font-weight:600;color:#2F56A3;">${esc(clientData.responsable)}</td></tr>` : ""}
     </table>
+    ${score ? `<div style="margin-bottom:44px;">${selloNota(score)}</div>` : ""}
     <div style="border-top:2px solid #E4E6EA;padding-top:20px;display:flex;justify-content:space-between;align-items:center;">
       <div style="font-size:12px;color:#9AA0A6;">alanait.com</div>
       <div style="text-align:right;font-size:12px;color:#9AA0A6;">
@@ -68,8 +70,18 @@ export function buildPrintFragment(clientData, sectionEnabled, formData, instanc
     </div>
   </div>`;
 
+  // ── Parte ejecutiva: diagnostico, hallazgos, plan y oportunidades ──────
+  // Va antes del inventario: quien abre el PDF tiene que ver el veredicto y lo
+  // que hay que hacer sin pasar por 280 campos primero.
+  if (score) {
+    body += paginaDiagnostico(score, sectionEnabled, clientData.fecha);
+    body += bloqueHallazgos(score);
+  }
+  body += bloquePlan(score, sectionEnabled, formData, instanceCounts);
+  body += bloqueOportunidades(sectionEnabled, formData, instanceCounts);
+
   // Header (index page)
-  body += `<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:20px;padding-bottom:14px;border-bottom:3px solid #1E3A6E;">
+  body += `<div style="page-break-before:always;display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:20px;padding-bottom:14px;border-bottom:3px solid #1E3A6E;">
     <div>
       <div style="font-size:10px;letter-spacing:0.1em;color:#868686;text-transform:uppercase;margin-bottom:4px;">Informe de Onboarding Técnico</div>
       <h1 style="margin:0;font-size:24px;color:#1E3A6E;font-weight:800;">${esc(clientData.empresa || "—")}</h1>
@@ -190,10 +202,10 @@ export function buildPrintFragment(clientData, sectionEnabled, formData, instanc
 }
 
 // Documento HTML completo y autonomo, para guardar el informe como archivo suelto.
-export function buildPrintHTML(clientData, sectionEnabled, formData, instanceCounts, sectionImages) {
+export function buildPrintHTML(clientData, sectionEnabled, formData, instanceCounts, sectionImages, score = null) {
   return `<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8">
     <title>Onboarding ${esc(clientData.empresa || "")}</title>
   </head><body style="margin:0;padding:24px;">${
-    buildPrintFragment(clientData, sectionEnabled, formData, instanceCounts, sectionImages)
+    buildPrintFragment(clientData, sectionEnabled, formData, instanceCounts, sectionImages, score)
   }</body></html>`;
 }
