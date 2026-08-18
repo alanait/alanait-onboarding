@@ -4,3 +4,7 @@ dist/
 .claude/
 .env.local
 .env*.local
+
+# Restos de scripts de analisis
+_audit_tmp*
+_tmp_*

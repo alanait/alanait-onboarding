@@ -6,8 +6,12 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "node scripts/check-ids.mjs && vite build",
+    "build": "node scripts/check-ids.mjs && node scripts/check-imports.mjs && node scripts/check-score.mjs && node scripts/test-score.mjs && vite build",
     "check-ids": "node scripts/check-ids.mjs",
+    "test-score": "node scripts/test-score.mjs",
+    "check-imports": "node scripts/check-imports.mjs",
+    "check-score": "node scripts/check-score.mjs",
+    "escenarios": "node scripts/escenarios-score.mjs",
     "preview": "vite preview"
   },
   "dependencies": {
