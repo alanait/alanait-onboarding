@@ -58,3 +58,19 @@ cambiarán. Es lo esperable — pero conviene volver a puntuarlos y comprobar qu
 el orden relativo se mantiene: el cliente bien protegido debe seguir por encima
 del medio, y el que no tiene copias debe seguir capado. Si eso se rompe, el
 cambio de criterios tiene un efecto que no se había previsto.
+
+## Nombres en el panel
+
+Al cargarlos, cada cliente aparece con su nota en el nombre —por ejemplo
+`Construccions Pla i Fills SL - Ex. Ciberscore 6/100`— para distinguirlos de
+los clientes reales de un vistazo.
+
+La etiqueta se calcula, no se escribe a mano. Si se tocan los criterios y las
+notas cambian, basta con volver a ejecutar:
+
+```bash
+node scripts/etiquetar-ejemplos.mjs
+```
+
+Eso reetiqueta los cinco y republica los que sirve la aplicacion en
+`public/ejemplos/`.
