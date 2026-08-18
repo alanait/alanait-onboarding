@@ -139,6 +139,19 @@ export default function App() {
   const irArriba = () => contenidoRef.current?.scrollTo({ top: 0, behavior: "smooth" });
 
   const [exporting, setExporting] = useState(false);
+  const [imprimiendo, setImprimiendo] = useState(false);
+
+  // Ctrl+P: montar la vista de impresion justo antes y desmontarla despues.
+  useEffect(() => {
+    const antes = () => setImprimiendo(true);
+    const despues = () => setImprimiendo(false);
+    window.addEventListener("beforeprint", antes);
+    window.addEventListener("afterprint", despues);
+    return () => {
+      window.removeEventListener("beforeprint", antes);
+      window.removeEventListener("afterprint", despues);
+    };
+  }, []);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [railOpen, setRailOpen] = useState(true);
   const [informeOpen, setInformeOpen] = useState(true);
@@ -424,16 +437,20 @@ export default function App() {
           .print-only { display: none !important; }
         }
       `}</style>
-      {/* PRINT VIEW — only shown when printing */}
-      <div className="print-only">
-        <PrintView
-          clientData={clientData}
-          sectionEnabled={sectionEnabled}
-          formData={formData}
-          instanceCounts={instanceCounts}
-          sectionImages={sectionImages}
-        />
-      </div>
+      {/* Vista de impresion: solo se monta mientras se imprime de verdad.
+          Montada siempre, reconstruia el informe completo —el logo de 91 KB y
+          todas las capturas en base64— en cada pulsacion de tecla. */}
+      {imprimiendo && (
+        <div className="print-only">
+          <PrintView
+            clientData={clientData}
+            sectionEnabled={sectionEnabled}
+            formData={formData}
+            instanceCounts={instanceCounts}
+            sectionImages={sectionImages}
+          />
+        </div>
+      )}
       {/* VERSION HISTORY MODAL */}
       {showVersionHistory && currentClientId && (
         <VersionHistory
@@ -592,7 +609,7 @@ export default function App() {
             </button>
             <button onClick={() => handleLoad()} style={{
               width: "100%", padding: "8px 10px", background: "transparent",
-              border: "none", borderRadius: 6, color: "#64748b",
+              border: "none", borderRadius: 6, color: "#A9C6EA",
               fontSize: 12, fontWeight: 500, cursor: "pointer", textAlign: "left",
               display: "flex", alignItems: "center", gap: 7, marginBottom: 12,
               whiteSpace: "nowrap",
@@ -606,7 +623,7 @@ export default function App() {
             {isSupabaseConfigured() && (
               <button onClick={handleExportFile} style={{
                 width: "100%", padding: "8px 10px", background: "transparent",
-                border: "none", borderRadius: 6, color: "#64748b",
+                border: "none", borderRadius: 6, color: "#A9C6EA",
                 fontSize: 12, fontWeight: 500, cursor: "pointer", textAlign: "left",
                 display: "flex", alignItems: "center", gap: 7, marginBottom: 12,
                 whiteSpace: "nowrap",
@@ -618,12 +635,12 @@ export default function App() {
             )}
 
             {/* Recent projects list */}
-            <div style={{ fontSize: 10, fontWeight: 500, color: "#374151", textTransform: "uppercase", letterSpacing: "0.08em", padding: "0 6px", marginBottom: 4 }}>
+            <div style={{ fontSize: 10, fontWeight: 500, color: "#A9C6EA", textTransform: "uppercase", letterSpacing: "0.08em", padding: "0 6px", marginBottom: 4 }}>
               Recientes
             </div>
             <div style={{ overflowY: "auto", flex: 1 }}>
               {recentProjects.length === 0 ? (
-                <div style={{ padding: "10px 6px", fontSize: 11, color: "#374151", fontStyle: "italic" }}>
+                <div style={{ padding: "10px 6px", fontSize: 11, color: "#93A7C4", fontStyle: "italic" }}>
                   Sin proyectos aún
                 </div>
               ) : recentProjects.map((p, i) => {
@@ -883,6 +900,8 @@ export default function App() {
           {informeOpen && (
             <ReportPanel
               sectionEnabled={sectionEnabled}
+              formData={formData}
+              instanceCounts={instanceCounts}
               getVal={getVal}
               getCount={getCount}
               getHint={getHint}

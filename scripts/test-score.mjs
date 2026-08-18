@@ -80,5 +80,29 @@ const a = r({ red: "si" }, { red: { 0: { rdp_expuesto: "No", utm: "Sí" } } });
 const b = r({ red: "si" }, { red: { 0: { rdp_expuesto: "No", utm: "Sí" } } });
 es("misma entrada, misma salida", JSON.stringify(a), JSON.stringify(b));
 
+console.log("");
+console.log("Caps y condicionales (bug encontrado en la revision)");
+{
+  // firewall_soporte solo existe si firewall = "Sí". Un valor fosil de cuando
+  // se contesto que si, con el firewall ahora en "No", no puede capar nada.
+  const CR = [
+    { id: "fwsop", dominio: "perimetro", seccion: "red", campo: "firewall_soporte", peso: 2,
+      dep: { field: "firewall", value: "Sí" },
+      mapa: { "En soporte": 1, "Fuera de soporte (EOL)": 0 }, agregacion: "min",
+      critico: { cuando: ["Fuera de soporte (EOL)"], capDominio: 59 }, porQue: "firewall EOL" },
+    { id: "utm2", dominio: "perimetro", seccion: "red", campo: "utm", peso: 1,
+      mapa: { "Sí": 1, "No": 0 }, agregacion: "max", porQue: "sin UTM" },
+  ];
+  const oculto = computeScore({ criterios: CR, sectionEnabled: { red: "si" },
+    formData: { red: { 0: { firewall: "No", firewall_soporte: "Fuera de soporte (EOL)", utm: "Sí" } } } });
+  es("un valor fosil oculto no capa el dominio", oculto.dominios.find(d => d.id === "perimetro").nota, 100);
+  es("y no genera hallazgo", oculto.hallazgos.length, 0);
+
+  const visible = computeScore({ criterios: CR, sectionEnabled: { red: "si" },
+    formData: { red: { 0: { firewall: "Sí", firewall_soporte: "Fuera de soporte (EOL)", utm: "Sí" } } } });
+  es("con el campo visible si capa", visible.dominios.find(d => d.id === "perimetro").nota, 33);
+  es("y si genera hallazgo", visible.hallazgos.length, 1);
+}
+
 console.log(`\n${ok} correctas, ${fallos} fallos\n`);
 process.exit(fallos ? 1 : 0);

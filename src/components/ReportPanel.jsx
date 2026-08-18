@@ -10,6 +10,17 @@ import React from "react";
 import { C } from "../theme.js";
 import { SECTIONS, lectorEfectivo } from "../sections.js";
 import { hintsVisibles, TIPOS_HINT } from "../hints.js";
+import { computeScore } from "../score/computeScore.js";
+import { CRITERIOS, PRECONDICIONES } from "../score/criterios.js";
+
+// Semaforo de la nota. El magenta de marca marca el riesgo alto y el turquesa
+// el bajo, para no meter un verde y un rojo ajenos a la paleta.
+const COLOR_TRAMO = {
+  critico: C.red,
+  alto: C.red,
+  medio: C.amber,
+  bajo: C.green,
+};
 
 const COLOR_TIPO = {
   seguridad: { c: C.red, bg: C.redLight, borde: C.redBorder },
@@ -70,8 +81,9 @@ function Cifra({ valor, etiqueta, color }) {
   );
 }
 
-export default function ReportPanel({ sectionEnabled, getVal, getCount, getHint, onIrASeccion }) {
+export default function ReportPanel({ sectionEnabled, formData, instanceCounts, getVal, getCount, getHint, onIrASeccion }) {
   const r = resumir({ sectionEnabled, getVal, getCount, getHint });
+  const score = computeScore({ formData, sectionEnabled, instanceCounts, criterios: CRITERIOS, precondiciones: PRECONDICIONES });
   const seguridadAbiertos = r.abiertos.filter(h => h.tipo === "seguridad").length;
 
   const titulo = {
@@ -81,9 +93,48 @@ export default function ReportPanel({ sectionEnabled, getVal, getCount, getHint,
 
   return (
     <div style={{ padding: "16px 16px 28px" }}>
-      <div style={titulo}>Informe en vivo</div>
+      <div style={titulo}>CiberScore</div>
+      {score.nota === null ? (
+        <div style={{ fontSize: 12, color: C.textLight, background: C.grayLight, borderRadius: 6, padding: "10px 12px", marginBottom: 18 }}>
+          Aún no hay respuestas suficientes para calcular la nota.
+        </div>
+      ) : (
+        <div style={{ marginBottom: 18 }}>
+          <div style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
+            <span style={{ fontSize: 38, fontWeight: 600, lineHeight: 1, color: COLOR_TRAMO[score.tramo.nivel], fontVariantNumeric: "tabular-nums" }}>
+              {score.nota}
+            </span>
+            <span style={{ fontSize: 12, color: C.textLight }}>/ 100</span>
+            <span style={{ marginLeft: "auto", fontSize: 11, fontWeight: 500, color: COLOR_TRAMO[score.tramo.nivel] }}>
+              {score.tramo.etiqueta}
+            </span>
+          </div>
+          <div style={{ height: 6, borderRadius: 3, background: C.border, overflow: "hidden", margin: "9px 0 4px" }}>
+            <div style={{ height: "100%", width: `${score.nota}%`, background: COLOR_TRAMO[score.tramo.nivel], transition: "width 0.3s" }} />
+          </div>
+          <div style={{ fontSize: 10.5, color: C.textLight }}>
+            {score.capadaGlobal && <b style={{ color: C.red }}>Limitada por un hallazgo crítico · </b>}
+            calculada sobre el {score.cobertura}% del modelo
+          </div>
 
-      {/* Cobertura */}
+          <div style={{ marginTop: 12 }}>
+            {score.dominios.filter(d => d.evaluable).map(d => (
+              <div key={d.id} style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
+                <span style={{ flex: 1, fontSize: 11.5, color: C.text, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                  {d.nombre}
+                </span>
+                {d.capado && <span title="Limitado por un hallazgo crítico" style={{ fontSize: 9.5, color: C.red }}>▲</span>}
+                <span style={{ width: 44, height: 4, borderRadius: 2, background: C.border, overflow: "hidden", flexShrink: 0 }}>
+                  <span style={{ display: "block", height: "100%", width: `${d.nota}%`, background: COLOR_TRAMO[d.tramo.nivel] }} />
+                </span>
+                <span style={{ width: 22, textAlign: "right", fontSize: 11, color: C.textLight, fontVariantNumeric: "tabular-nums" }}>{d.nota}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      <div style={titulo}>Cobertura del formulario</div>
       <div style={{ display: "flex", gap: 10, marginBottom: 12 }}>
         <Cifra valor={`${r.respondidas}/${r.total}`} etiqueta="secciones respondidas" color={C.blue} />
         <Cifra valor={`${r.pctCampos}%`} etiqueta={`${r.rellenos} de ${r.campos} campos`} color={r.pctCampos >= 80 ? C.green : C.blue} />

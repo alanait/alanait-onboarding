@@ -40,6 +40,17 @@ function valorEnInstancia(criterio, leer) {
   return criterio.mapa[v];
 }
 
+
+/**
+ * Valor literal de un campo respetando su condicional, sin pasar por el mapa.
+ * Lo usa el disparo de caps, que compara contra los literales criticos.
+ */
+function valorCrudoEfectivo(criterio, leer) {
+  if (criterio.dep && leer(criterio.dep.field) !== criterio.dep.value) return null;
+  const v = leer(criterio.campo);
+  return vacio(v) ? null : v;
+}
+
 /** Agrega las instancias de una seccion segun diga el criterio. */
 function agregar(valores, modo) {
   const v = valores.filter(x => x !== null);
@@ -91,10 +102,12 @@ export function computeScore({ formData = {}, sectionEnabled = {}, instanceCount
     d.pesos += c.peso;
     d.evaluados++;
 
-    // Un cap se dispara si CUALQUIER instancia esta en el estado critico
+    // Un cap se dispara si CUALQUIER instancia esta en el estado critico.
+    // Se lee con el mismo filtro que el resto: un valor fosil de un campo
+    // oculto por su `dep` no puede capar un dominio entero.
     if (c.critico) {
-      const disparado = Array.from({ length: n }, (_, i) => formData[c.seccion]?.[i]?.[c.campo])
-        .some(v => c.critico.cuando.includes(v));
+      const disparado = Array.from({ length: n }, (_, i) => valorCrudoEfectivo(c, (campo) => formData[c.seccion]?.[i]?.[campo] ?? ""))
+        .some(v => v !== null && c.critico.cuando.includes(v));
       if (disparado) {
         hallazgos.push({ id: c.id, dominio: c.dominio, gravedad: "critico", texto: c.porQue });
         if (c.critico.capDominio !== undefined) d.cap = Math.min(d.cap, c.critico.capDominio);
