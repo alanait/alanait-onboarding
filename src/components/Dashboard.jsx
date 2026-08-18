@@ -42,18 +42,33 @@ export default function Dashboard({ onOpenClient, onNewClient, onImportFile, ses
     }
   };
 
-  const handleImport = async (file) => {
+  // Acepta varios archivos de una vez: los ejemplos son cinco, y de uno en uno
+  // son cinco viajes al explorador. Con uno solo se abre el cliente al acabar;
+  // con varios no, porque abrir el ultimo dejaria los otros cuatro sin ver.
+  const handleImport = async (archivos) => {
     setImporting(true);
-    try {
-      const text = await file.text();
-      const data = JSON.parse(text);
-      const newId = await importFromFile(data);
-      load();
-      onOpenClient(newId);
-    } catch (err) {
-      alert("Error al importar: " + err.message);
+    const fallidos = [];
+    let ultimoId = null;
+
+    for (const file of archivos) {
+      try {
+        ultimoId = await importFromFile(JSON.parse(await file.text()));
+      } catch (err) {
+        fallidos.push(`${file.name}: ${err.message}`);
+      }
     }
+
+    await load();
     setImporting(false);
+
+    if (fallidos.length) {
+      alert(`No se pudieron importar ${fallidos.length} de ${archivos.length}:
+
+` + fallidos.join("
+"));
+      return;
+    }
+    if (archivos.length === 1 && ultimoId) onOpenClient(ultimoId);
   };
 
   if (!isSupabaseConfigured()) {
@@ -98,10 +113,10 @@ export default function Dashboard({ onOpenClient, onNewClient, onImportFile, ses
               border: "1px solid rgba(255,255,255,0.2)", borderRadius: 8, fontSize: 13,
               fontWeight: 500, cursor: "pointer",
             }}>
-              {importing ? "⏳ Importando..." : "📂 Importar .alanait"}
+              {importing ? "Importando…" : "Importar .alanait"}
             </button>
-            <input ref={fileRef} type="file" accept=".alanait" style={{ display: "none" }}
-              onChange={e => { if (e.target.files[0]) handleImport(e.target.files[0]); e.target.value = ""; }} />
+            <input ref={fileRef} type="file" accept=".alanait" multiple style={{ display: "none" }}
+              onChange={e => { if (e.target.files.length) handleImport([...e.target.files]); e.target.value = ""; }} />
             <button onClick={onNewClient} style={{
               padding: "9px 18px", background: C.blue, color: "#fff",
               border: "none", borderRadius: 8, fontSize: 13, fontWeight: 500, cursor: "pointer",
