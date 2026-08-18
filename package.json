@@ -6,8 +6,9 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "node scripts/check-ids.mjs && vite build",
+    "build": "node scripts/check-ids.mjs && node scripts/test-score.mjs && vite build",
     "check-ids": "node scripts/check-ids.mjs",
+    "test-score": "node scripts/test-score.mjs",
     "preview": "vite preview"
   },
   "dependencies": {
