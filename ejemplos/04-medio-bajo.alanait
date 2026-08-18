@@ -1,0 +1,260 @@
+{
+ "clientData": {
+  "sedes": "1",
+  "web": "",
+  "empresa": "Mecanitzats Serra SL",
+  "sector": "Mecanizados y calderería",
+  "trabajadores": "24",
+  "contacto": "Ramon Serra",
+  "telefono": "935 662 118",
+  "email": "rserra@mecanitzatsserra.com",
+  "direccion": "C/ Ferrers 4, Pol. Ind. Sud, 08760 Martorell",
+  "fecha": "2026-08-18",
+  "responsable": "Juan Carlos"
+ },
+ "sectionEnabled": {
+  "red": "si",
+  "servidores": "si",
+  "pcs": "si",
+  "backup": "si",
+  "email": "si",
+  "antivirus": "si",
+  "wifi": "si",
+  "vpn": "no",
+  "sai": "si",
+  "almacenamiento": "si",
+  "telefonia": "si",
+  "impresion": "si",
+  "erp": "si",
+  "licenciamiento": "si",
+  "otros_dispositivos": "no"
+ },
+ "formData": {
+  "red": {
+   "0": {
+    "isp": "Adamo",
+    "conexion_tipo": "Fibra",
+    "conexion_vel": "1 Gbps simétrico",
+    "ip_publica_tipo": "Dinámica",
+    "linea_backup": "No",
+    "firewall": "Sí",
+    "firewall_marca": "SonicWall TZ300",
+    "firewall_soporte": "Fuera de soporte (EOL)",
+    "firewall_firmware_ok": "No",
+    "firewall_gestion": "Sin gestión activa",
+    "accesos_heredados": "Pendiente de revocar",
+    "nat_reglas": "Existen sin documentar",
+    "rdp_expuesto": "No revisado",
+    "vpns_auditadas": "Pendiente de auditar",
+    "utm": "No",
+    "switches_tipo": "Todos no gestionados",
+    "vlans": "No",
+    "dhcp_servidor": "Servidor Windows (AD/DHCP)",
+    "dns_tipo": "DNS del ISP",
+    "monitorizacion": "No",
+    "ip_gateway": "192.168.10.1",
+    "ip_rango": "192.168.10.0/24",
+    "ddns": "No"
+   }
+  },
+  "servidores": {
+   "0": {
+    "nombre": "SRV-DC01",
+    "ip": "192.168.20.10",
+    "tipo": "Físico",
+    "hipervisor": "VMware ESXi",
+    "snapshots": "Sin snapshots",
+    "so_familia": "Windows Server",
+    "so_windows_server": "Windows Server 2019",
+    "so_soporte": "En soporte",
+    "so_parcheo": "Parches pendientes",
+    "so_licencia_titular": "A nombre del proveedor anterior",
+    "roles": [
+     "Domain Controller",
+     "DNS",
+     "DHCP"
+    ],
+    "ram": "32 GB",
+    "raid_estado": "Óptimo",
+    "hw_soporte": "Fuera de garantía",
+    "dominio": "Sí",
+    "dominio_cuentas": "Pendiente de revisar",
+    "gpos_revisadas": "Pendiente de revisar",
+    "acceso_remoto": "RDP",
+    "accesos_heredados": "Revocados",
+    "firmware_estado": "Muy desactualizado",
+    "oob_tipo": "No tiene"
+   }
+  },
+  "pcs": {
+   "0": {
+    "cantidad": "20",
+    "portatiles_num": "8",
+    "so": "Mixto",
+    "so_soporte": "Mixto",
+    "parcheo_gestion": "Windows Update automático sin control",
+    "parcheo_terceros": "Sin gestión",
+    "software_licencias": "Hay software sin licencia",
+    "dominio": "Mixto",
+    "gestion_central": "Sí",
+    "gestion_tipo": "Intune + GPO",
+    "rmm_agente": "No",
+    "rmm_producto": "NinjaOne",
+    "admin_local": "Todos son administradores",
+    "admin_local_password": "La misma en todos los equipos",
+    "accesos_heredados": "Pendiente de revocar",
+    "cifrado_portatiles": "No activo",
+    "cifrado_claves": "En AD / Entra ID",
+    "antiguedad": "> 6 años"
+   }
+  },
+  "backup": {
+   "0": {
+    "software": "Acronis",
+    "consola_accesos_heredados": "Pendiente de revocar",
+    "frecuencia": "Diario",
+    "tipo": "Incremental",
+    "retencion_rango": "15 a 30 días",
+    "destino": [
+     "Disco externo",
+     "Cloud (Azure/S3/Jotelulu)"
+    ],
+    "offsite": "Sí",
+    "ultimo_job": "Con avisos",
+    "backup_alertas": "Se envían pero nadie las revisa",
+    "pruebas": "No",
+    "pruebas_freq": "Trimestral",
+    "inmutabilidad": "No",
+    "repo_dedicado": "No (solo cloud)"
+   }
+  },
+  "email": {
+   "0": {
+    "proveedor": "Microsoft 365",
+    "dominio": "garriguesassessors.cat",
+    "buzones": "20",
+    "mfa": "Parcialmente",
+    "mfa_admins": "No",
+    "antispam": "No",
+    "spf": "Correcto",
+    "dkim": "No existe",
+    "dmarc": "No existe",
+    "admins_revisados": "Pendiente de revisar",
+    "admins_heredados": "Pendiente de revocar",
+    "usuarios_inactivos": "Pendiente de revisar",
+    "licencias_revisadas": "Pendiente de revisar",
+    "backup_correo": "No",
+    "comparticion_externa": "No revisado",
+    "archivado": "No"
+   }
+  },
+  "antivirus": {
+   "0": {
+    "solucion": "Windows Defender de serie",
+    "tipo": "Antivirus básico",
+    "cobertura": "La mayoría, con excepciones",
+    "servidores_av": "Sí",
+    "licencias_estado": "Vigente",
+    "consola": "Sí",
+    "consola_acceso": "El cliente",
+    "alertas_monitorizadas": "El cliente"
+   }
+  },
+  "wifi": {
+   "0": {
+    "ssids": "GA_CORP, GA_INVITADOS",
+    "cifrado": "WPA2-PSK",
+    "invitados": "No",
+    "invitados_aislado": "Con acceso a la LAN",
+    "password_heredada": "Pendiente de cambiar",
+    "controlador": "No, APs autónomos",
+    "marca": "Ubiquiti UniFi",
+    "aps_soporte": "Fuera de soporte (EOL)",
+    "cobertura": "Parcial",
+    "accesos_heredados": "Pendiente de revocar"
+   }
+  },
+  "vpn": {
+   "0": {
+    "tipo": "SSL/TLS",
+    "solucion": "FortiClient",
+    "usuarios": "12",
+    "mfa": "Sí"
+   }
+  },
+  "sai": {
+   "0": {
+    "rack_tipo": "Sin armario (equipos sueltos)",
+    "rack_estado": "Deficiente",
+    "rack_cerrado": "Abierto / sin puertas",
+    "sala_tipo": "Almacén",
+    "ventilacion": "Ninguna",
+    "acceso_restringido": "No",
+    "cableado_estado": "Bueno, sin documentación",
+    "cableado_categoria": "Cat 6",
+    "patch_panel": "Sí, sin etiquetar",
+    "etiquetado": "Parcial",
+    "pdu_tipo": "Regletas schuko",
+    "pdu_gestionable": "No aplica",
+    "circuito_dedicado": "Compartido",
+    "sai_existe": "Sí",
+    "marca": "APC Smart-UPS 3000",
+    "protegidos": [
+     "Servidores",
+     "Router/Firewall"
+    ],
+    "baterias": "Sí",
+    "sai_firmware": "No revisado",
+    "sai_gestion": "Sin acceso remoto",
+    "monitorizado": "No",
+    "sai_apagado": "No"
+   }
+  },
+  "almacenamiento": {
+   "0": {
+    "tipo": "SharePoint / OneDrive",
+    "ubicacion": "Cloud",
+    "permisos": "Sí",
+    "es_destino_backup": "No"
+   }
+  },
+  "telefonia": {
+   "0": {
+    "tipo": "Microsoft Teams Phone",
+    "centralita": "Sí",
+    "centralita_tipo": "Teams Phone",
+    "centralita_acceso": "Sí, credenciales en poder del cliente o ALANA"
+   }
+  },
+  "impresion": {
+   "0": {
+    "marca": "Kyocera TASKalfa 3253ci",
+    "tipo": "Multifunción",
+    "conectividad": "Red (cable)",
+    "ip": "192.168.10.50",
+    "gestion": "Sí"
+   }
+  },
+  "erp": {
+   "0": {
+    "nombre": "A3 Asesor",
+    "tipo": "Contabilidad",
+    "proveedor": "Wolters Kluwer",
+    "alojamiento": "Cloud/SaaS",
+    "soporte": "Sí"
+   }
+  },
+  "licenciamiento": {
+   "0": {
+    "tipo_servicio": "Dominio",
+    "proveedor": "Arsys",
+    "titularidad": "A nombre del proveedor anterior",
+    "renovacion_automatica": "No revisado",
+    "acceso_panel": "Sí, pero las tiene el proveedor anterior",
+    "dominio_dns_gestion": "Cloudflare u otro DNS externo"
+   }
+  }
+ },
+ "instanceCounts": {},
+ "sectionImages": {}
+}
