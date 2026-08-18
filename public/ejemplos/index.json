@@ -1,0 +1,27 @@
+[
+ {
+  "archivo": "01-bien-protegido.alanait",
+  "empresa": "Garrigues Assessors SL",
+  "sector": "Asesoría fiscal y laboral"
+ },
+ {
+  "archivo": "02-medio-alto.alanait",
+  "empresa": "Tecnics Valles Enginyeria SL",
+  "sector": "Ingeniería industrial"
+ },
+ {
+  "archivo": "03-medio.alanait",
+  "empresa": "Distribucions Bages SA",
+  "sector": "Distribución alimentaria"
+ },
+ {
+  "archivo": "04-medio-bajo.alanait",
+  "empresa": "Mecanitzats Serra SL",
+  "sector": "Mecanizados y calderería"
+ },
+ {
+  "archivo": "05-riesgo-critico.alanait",
+  "empresa": "Construccions Pla i Fills SL",
+  "sector": "Construcción y reformas"
+ }
+]
