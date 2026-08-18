@@ -62,10 +62,8 @@ export default function Dashboard({ onOpenClient, onNewClient, onImportFile, ses
     setImporting(false);
 
     if (fallidos.length) {
-      alert(`No se pudieron importar ${fallidos.length} de ${archivos.length}:
-
-` + fallidos.join("
-"));
+      const salto = String.fromCharCode(10);
+      alert(`No se pudieron importar ${fallidos.length} de ${archivos.length}:` + salto + salto + fallidos.join(salto));
       return;
     }
     if (archivos.length === 1 && ultimoId) onOpenClient(ultimoId);
