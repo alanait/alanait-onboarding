@@ -104,5 +104,33 @@ console.log("Caps y condicionales (bug encontrado en la revision)");
   es("y si genera hallazgo", visible.hallazgos.length, 1);
 }
 
+console.log("");
+console.log("Fiabilidad de la nota (fallos hallados al revisar la fase 4)");
+{
+  const CR = [
+    { id: "mfa", dominio: "identidad", seccion: "email", campo: "mfa", peso: 3,
+      mapa: { "Sí": 1, "No": 0 }, agregacion: "min", porQue: "MFA" },
+    { id: "rdp2", dominio: "perimetro", seccion: "red", campo: "rdp_expuesto", peso: 3,
+      mapa: { "No": 1, "Sí": 0 }, agregacion: "min", porQue: "RDP" },
+  ];
+  const PR = [{ id: "sin_bk", seccion: "backup", cuando: "no", dominio: "backup",
+    capGlobal: 59, exigida: true, texto: "sin copias" }];
+  const r2 = (se, fd) => computeScore({ criterios: CR, precondiciones: PR, sectionEnabled: se, formData: fd });
+
+  // Una respuesta suelta daba 100 sobre 100 y "riesgo bajo"
+  const suelta = r2({ email: "si" }, { email: { 0: { mfa: "Sí" } } });
+  es("una sola respuesta no da nota fiable", suelta.fiable, false);
+  es("pero la nota se sigue devolviendo", suelta.nota, 100);
+
+  // Callar sobre el backup puntuaba mejor que reconocer que no hay copias
+  const callando = r2({ email: "si", red: "si" }, { email: { 0: { mfa: "Sí" } }, red: { 0: { rdp_expuesto: "No" } } });
+  es("seccion exigida sin responder invalida la nota", callando.fiable, false);
+  es("y dice cual falta", callando.sinResponder, ["backup"]);
+
+  const declarado = r2({ email: "si", red: "si", backup: "no" }, { email: { 0: { mfa: "Sí" } }, red: { 0: { rdp_expuesto: "No" } } });
+  es("reconocer que no hay backup si da nota", declarado.nota !== null, true);
+  es("capada a 59", declarado.nota, 59);
+}
+
 console.log(`\n${ok} correctas, ${fallos} fallos\n`);
 process.exit(fallos ? 1 : 0);

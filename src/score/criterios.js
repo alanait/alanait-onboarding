@@ -219,8 +219,8 @@ export const CRITERIOS = [
 // misma el hallazgo. Marcar "no" en backup no es un dato que falte —es que el
 // cliente no tiene copias— y ningun reparto de puntos puede compensar eso.
 export const PRECONDICIONES = [
-  { id: "sin_backup", seccion: "backup", cuando: "no", dominio: "backup", capGlobal: 59, capDominio: 0,
+  { id: "sin_backup", seccion: "backup", cuando: "no", dominio: "backup", capGlobal: 59, capDominio: 0, exigida: true,
     texto: "El cliente no tiene copias de seguridad. Es el hallazgo mas grave posible y limita la nota global por si solo." },
-  { id: "sin_antivirus", seccion: "antivirus", cuando: "no", dominio: "endpoint", capDominio: 30,
+  { id: "sin_antivirus", seccion: "antivirus", cuando: "no", dominio: "endpoint", capDominio: 30, exigida: true,
     texto: "No hay solucion antivirus ni EDR desplegada en el parque de equipos." },
 ];

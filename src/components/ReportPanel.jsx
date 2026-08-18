@@ -94,7 +94,19 @@ export default function ReportPanel({ sectionEnabled, formData, instanceCounts, 
   return (
     <div style={{ padding: "16px 16px 28px" }}>
       <div style={titulo}>CiberScore</div>
-      {score.nota === null ? (
+      {score.nota !== null && !score.fiable ? (
+        <div style={{ marginBottom: 18 }}>
+          <div style={{ fontSize: 26, fontWeight: 500, color: C.textLight, lineHeight: 1 }}>—</div>
+          <div style={{ fontSize: 11.5, color: C.text, marginTop: 8, lineHeight: 1.45 }}>
+            Cobertura insuficiente para dar nota.
+          </div>
+          <div style={{ fontSize: 10.5, color: C.textLight, marginTop: 4, lineHeight: 1.45 }}>
+            {score.sinResponder.length > 0
+              ? `Falta responder ${score.sinResponder.join(" y ")}: sin eso la nota no significa nada.`
+              : `Evaluado el ${score.cobertura}% del modelo; hace falta al menos el ${score.coberturaMinima}%.`}
+          </div>
+        </div>
+      ) : score.nota === null ? (
         <div style={{ fontSize: 12, color: C.textLight, background: C.grayLight, borderRadius: 6, padding: "10px 12px", marginBottom: 18 }}>
           Aún no hay respuestas suficientes para calcular la nota.
         </div>

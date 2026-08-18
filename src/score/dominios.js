@@ -28,6 +28,17 @@ export const TRAMOS = [
 
 export const tramoDe = (nota) => TRAMOS.find(t => nota <= t.hasta) ?? TRAMOS[TRAMOS.length - 1];
 
+// Peso minimo de dominios que hay que haber evaluado para que la nota
+// signifique algo. Sin esto, un cliente que solo ha contestado "MFA: si" y nada
+// mas sale con 100 sobre 100 y "riesgo bajo", que es exactamente lo contrario
+// de lo que mide: no es que este bien, es que no se ha mirado.
+//
+// 60 obliga a haber evaluado, como minimo, el equivalente a perimetro, backup e
+// identidad, que son los tres dominios donde un fallo se lleva la empresa por
+// delante. Por debajo de eso se devuelve la nota igualmente —el informe tiene
+// que seguir siendo util a medio rellenar— pero marcada como no fiable.
+export const COBERTURA_MINIMA = 60;
+
 // Version del modelo. Una nota guardada con una version distinta no es
 // comparable con las de hoy: al cambiar pesos, criterios o literales, sube esto.
 export const SCORE_MODEL_VERSION = "1.0.0";

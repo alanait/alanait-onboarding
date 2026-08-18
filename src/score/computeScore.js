@@ -17,7 +17,7 @@
 //      dice si manda la peor instancia (`min`, para SO en soporte o RAID) o si
 //      basta con una buena (`max`, para backup fuera de sede).
 
-import { DOMINIOS, tramoDe, SCORE_MODEL_VERSION } from "./dominios.js";
+import { DOMINIOS, tramoDe, SCORE_MODEL_VERSION, COBERTURA_MINIMA } from "./dominios.js";
 
 const vacio = (v) => v === undefined || v === null || v === "" || (Array.isArray(v) && v.length === 0);
 
@@ -75,7 +75,12 @@ export function computeScore({ formData = {}, sectionEnabled = {}, instanceCount
 
   // ── Precondiciones de seccion ────────────────────────────────────────────
   // "No tiene backup" no es un dato que falte: es el hallazgo.
+  const sinResponder = [];
   for (const p of precondiciones) {
+    // Dejar la seccion en blanco no puede puntuar mejor que reconocer que no
+    // hay servicio: sin backup son 59 y sin contestar salian 100, porque el
+    // dominio simplemente no computaba. Ahora invalida la fiabilidad.
+    if (p.exigida && sectionEnabled[p.seccion] === undefined) sinResponder.push(p.seccion);
     if (sectionEnabled[p.seccion] !== p.cuando) continue;
     hallazgos.push({ id: p.id, dominio: p.dominio, gravedad: "critico", texto: p.texto });
     if (p.capDominio !== undefined) porDominio[p.dominio].cap = Math.min(porDominio[p.dominio].cap, p.capDominio);
@@ -139,9 +144,17 @@ export function computeScore({ formData = {}, sectionEnabled = {}, instanceCount
 
   const global = pesoTotal ? Math.round(Math.min(numerador / pesoTotal, capGlobal)) : null;
 
+  // La nota se devuelve siempre —a medio rellenar tambien sirve para orientar—
+  // pero solo es fiable con cobertura suficiente y sin secciones exigidas en
+  // blanco. La interfaz decide como presentarla; el motor solo lo declara.
+  const fiable = global !== null && pesoTotal >= COBERTURA_MINIMA && sinResponder.length === 0;
+
   return {
     version: SCORE_MODEL_VERSION,
     nota: global,
+    fiable,
+    sinResponder,
+    coberturaMinima: COBERTURA_MINIMA,
     tramo: global === null ? null : tramoDe(global),
     capadaGlobal: global !== null && capGlobal < 100,
     cobertura: pesoTotal,
