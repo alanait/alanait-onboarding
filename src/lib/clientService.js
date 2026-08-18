@@ -8,6 +8,12 @@ async function getUserEmail() {
   } catch { return ''; }
 }
 
+// Vigencia de las URLs firmadas de las capturas: una jornada de trabajo. Se
+// generan al abrir el cliente, asi que basta con que cubran la sesion de
+// edicion mas larga razonable. Subirla no aporta nada y alarga la ventana en
+// la que una URL filtrada sigue sirviendo.
+const VIGENCIA_URL_IMAGEN = 8 * 60 * 60; // segundos
+
 // ─── Helpers ──────────────────────────────────────────
 
 function base64ToBlob(dataUrl) {
@@ -112,13 +118,27 @@ export async function loadClient(id) {
     .order('section_id')
     .order('sort_order');
 
-  // Build sectionImages object matching frontend format
+  // URLs firmadas, no publicas. Las capturas contienen credenciales y datos
+  // sensibles de los clientes: con el bucket publico cualquiera que conociera
+  // o adivinara una ruta podia descargarlas sin iniciar sesion. Se piden en
+  // lote (una sola llamada) y caducan solas.
+  const rutas = (images || []).map(i => i.storage_path);
+  const firmadas = new Map();
+  if (rutas.length) {
+    const { data: urls, error: errUrl } = await supabase.storage
+      .from('client-images')
+      .createSignedUrls(rutas, VIGENCIA_URL_IMAGEN);
+    if (errUrl) console.error('createSignedUrls error:', errUrl);
+    for (const u of (urls || [])) {
+      if (u.signedUrl) firmadas.set(u.path, u.signedUrl);
+    }
+  }
+
   const sectionImages = {};
   for (const img of (images || [])) {
     if (!sectionImages[img.section_id]) sectionImages[img.section_id] = [];
-    const { data: urlData } = supabase.storage.from('client-images').getPublicUrl(img.storage_path);
     sectionImages[img.section_id].push({
-      src: urlData.publicUrl,
+      src: firmadas.get(img.storage_path) || '',
       caption: img.caption || '',
       name: img.file_name || '',
       _storageId: img.id,

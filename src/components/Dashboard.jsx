@@ -16,7 +16,6 @@ export default function Dashboard({ onOpenClient, onNewClient, onImportFile, ses
   const [loading, setLoading] = useState(true);
   const [confirmDeleteId, setConfirmDeleteId] = useState(null);
   const [importing, setImporting] = useState(false);
-  const [cargandoEjemplos, setCargandoEjemplos] = useState(false);
   const fileRef = useRef(null);
 
   const load = async () => {
@@ -71,38 +70,6 @@ export default function Dashboard({ onOpenClient, onNewClient, onImportFile, ses
   };
 
 
-  // Clientes de ejemplo. Se sirven como archivos estaticos junto a la app y se
-  // importan por la misma via que un .alanait de verdad, asi que no hay ningun
-  // camino especial que mantener. Pide confirmacion porque escribe en la base
-  // de datos real, al lado de los clientes de verdad.
-  const cargarEjemplos = async () => {
-    let indice;
-    try {
-      indice = await (await fetch("/ejemplos/index.json")).json();
-    } catch {
-      alert("No se pudo leer el índice de ejemplos.");
-      return;
-    }
-    const nombres = indice.map(e => "· " + e.empresa).join(String.fromCharCode(10));
-    if (!confirm(`Se añadirán ${indice.length} clientes de ejemplo al panel:` +
-                 String.fromCharCode(10) + String.fromCharCode(10) + nombres +
-                 String.fromCharCode(10) + String.fromCharCode(10) +
-                 "Son ficticios y se pueden borrar como cualquier otro. ¿Continuar?")) return;
-
-    setCargandoEjemplos(true);
-    const fallidos = [];
-    for (const e of indice) {
-      try {
-        await importFromFile(await (await fetch("/ejemplos/" + e.archivo)).json());
-      } catch (err) {
-        fallidos.push(e.empresa + ": " + err.message);
-      }
-    }
-    await load();
-    setCargandoEjemplos(false);
-    if (fallidos.length) alert("No se pudieron cargar:" + String.fromCharCode(10) + fallidos.join(String.fromCharCode(10)));
-  };
-
   if (!isSupabaseConfigured()) {
     return (
       <div style={{ minHeight: "100vh", background: "#F9F9F9", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: FUENTE }}>
@@ -149,13 +116,6 @@ export default function Dashboard({ onOpenClient, onNewClient, onImportFile, ses
             </button>
             <input ref={fileRef} type="file" accept=".alanait" multiple style={{ display: "none" }}
               onChange={e => { if (e.target.files.length) handleImport([...e.target.files]); e.target.value = ""; }} />
-            <button onClick={cargarEjemplos} disabled={cargandoEjemplos} title="Añade cinco clientes ficticios que cubren el rango del CiberScore" style={{
-              padding: "9px 14px", background: "transparent", color: "#A9C6EA",
-              border: "1px solid rgba(255,255,255,0.18)", borderRadius: 8, fontSize: 12.5,
-              cursor: "pointer", opacity: cargandoEjemplos ? 0.6 : 1, fontFamily: "inherit",
-            }}>
-              {cargandoEjemplos ? "Cargando…" : "Cargar ejemplos"}
-            </button>
             <button onClick={onNewClient} style={{
               padding: "9px 18px", background: C.blue, color: "#fff",
               border: "none", borderRadius: 8, fontSize: 13, fontWeight: 500, cursor: "pointer",

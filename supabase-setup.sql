@@ -86,6 +86,8 @@ CREATE POLICY "Authenticated full access on client_images"
 -- Nombre: client-images
 -- Public: FALSE
 --
+-- Si el bucket ya existe y era publico, cerrarlo con supabase-storage-privado.sql
+--
 -- Un bucket publico permite listar y descargar las capturas sin iniciar sesion,
 -- y esas capturas contienen credenciales y datos sensibles de los clientes.
 -- Con el bucket privado hay que servir las imagenes con URLs firmadas
