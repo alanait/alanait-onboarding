@@ -51,6 +51,19 @@ function valorCrudoEfectivo(criterio, leer) {
   return vacio(v) ? null : v;
 }
 
+/**
+ * Si el criterio LLEGA A APLICAR en esta instancia, con independencia de que se
+ * haya contestado o no.
+ *
+ * Es la diferencia entre "no aplica" y "no se ha mirado", que el motor hasta
+ * ahora no distinguia: los dos salian del denominador por igual. Un campo
+ * oculto porque su condicional no se cumple no existe para este cliente y no
+ * puede contar como evidencia que falta; uno visible y en blanco si.
+ */
+function aplicaEnInstancia(criterio, leer) {
+  return !(criterio.dep && leer(criterio.dep.field) !== criterio.dep.value);
+}
+
 /** Agrega las instancias de una seccion segun diga el criterio. */
 function agregar(valores, modo) {
   const v = valores.filter(x => x !== null);
@@ -68,7 +81,12 @@ function agregar(valores, modo) {
  */
 export function computeScore({ formData = {}, sectionEnabled = {}, instanceCounts = {}, criterios = [], precondiciones = [] }) {
   const porDominio = {};
-  for (const d of Object.keys(DOMINIOS)) porDominio[d] = { suma: 0, pesos: 0, cap: 100, evaluados: 0 };
+  // `pesos` es el peso de los criterios que SE HAN PODIDO evaluar (el
+  // denominador de la nota). `pesoAplicable` es el de los que le tocaban a este
+  // cliente, contestados o no. La distancia entre ambos es la evidencia que
+  // falta, y es lo que hasta ahora el motor no sabia medir: un dominio con un
+  // solo criterio bueno de diez daba 100 sin que nada lo delatara.
+  for (const d of Object.keys(DOMINIOS)) porDominio[d] = { suma: 0, pesos: 0, pesoAplicable: 0, cap: 100, evaluados: 0 };
 
   const hallazgos = [];
   let capGlobal = 100;
@@ -98,6 +116,13 @@ export function computeScore({ formData = {}, sectionEnabled = {}, instanceCount
     for (let i = 0; i < n; i++) {
       valores.push(valorEnInstancia(c, (campo) => formData[c.seccion]?.[i]?.[campo] ?? ""));
     }
+
+    // Le toca a este cliente si aplica en al menos una instancia: con tres
+    // servidores, un criterio que solo aplica al tercero sigue siendo evidencia
+    // que se espera.
+    const aplica = Array.from({ length: n }, (_, i) =>
+      aplicaEnInstancia(c, (campo) => formData[c.seccion]?.[i]?.[campo] ?? "")).some(Boolean);
+    if (aplica) porDominio[c.dominio].pesoAplicable += c.peso;
 
     const valor = agregar(valores, c.agregacion);
     if (valor === null) continue;
@@ -132,10 +157,16 @@ export function computeScore({ formData = {}, sectionEnabled = {}, instanceCount
     const bruto = evaluable ? (d.suma / d.pesos) * 100 : null;
     const nota = evaluable ? Math.round(Math.min(bruto, d.cap)) : null;
 
+    // Cuanto de lo que habia que mirar en este dominio se ha mirado de verdad.
+    // No cambia la nota: la mide. Quien la presente decide si con un 10% de
+    // evidencia detras esa nota se puede ensenar como tal.
+    const evidencia = d.pesoAplicable > 0 ? Math.round((d.pesos / d.pesoAplicable) * 100) : null;
+
     dominios.push({
       id, nombre: DOMINIOS[id].nombre, peso: DOMINIOS[id].peso,
       nota, evaluable, capado: evaluable && bruto > d.cap,
       criteriosEvaluados: d.evaluados,
+      evidencia, pesoEvaluado: d.pesos, pesoAplicable: d.pesoAplicable,
       tramo: evaluable ? tramoDe(nota) : null,
     });
 
@@ -143,6 +174,21 @@ export function computeScore({ formData = {}, sectionEnabled = {}, instanceCount
   }
 
   const global = pesoTotal ? Math.round(Math.min(numerador / pesoTotal, capGlobal)) : null;
+
+  // Evidencia global: que parte del modelo aplicable se ha llegado a evaluar,
+  // ponderada por el peso de cada dominio.
+  //
+  // No confundir con `cobertura`, que cuenta el peso de los dominios que tienen
+  // ALGUN criterio evaluado: un dominio con un solo criterio de diez cuenta ahi
+  // por su peso entero. Por eso un cliente del que apenas se sabe nada podia
+  // salir con cobertura 92% y nota 100. `evidencia` es la que no se deja
+  // enganar: ese mismo cliente sale por debajo del 10%.
+  let pesoEvaluadoTotal = 0, pesoAplicableTotal = 0;
+  for (const [id, d] of Object.entries(porDominio)) {
+    pesoEvaluadoTotal += d.pesos * DOMINIOS[id].peso;
+    pesoAplicableTotal += d.pesoAplicable * DOMINIOS[id].peso;
+  }
+  const evidencia = pesoAplicableTotal > 0 ? Math.round((pesoEvaluadoTotal / pesoAplicableTotal) * 100) : 0;
 
   // La nota se devuelve siempre —a medio rellenar tambien sirve para orientar—
   // pero solo es fiable con cobertura suficiente y sin secciones exigidas en
@@ -158,6 +204,7 @@ export function computeScore({ formData = {}, sectionEnabled = {}, instanceCount
     tramo: global === null ? null : tramoDe(global),
     capadaGlobal: global !== null && capGlobal < 100,
     cobertura: pesoTotal,
+    evidencia,
     dominios: dominios.sort((a, b) => b.peso - a.peso),
     hallazgos,
   };
