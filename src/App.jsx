@@ -204,7 +204,15 @@ export default function App() {
         image: { type: 'jpeg', quality: 0.95 },
         html2canvas: { scale: 2, useCORS: true, letterRendering: true },
         jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
-        pagebreak: { mode: ['avoid-all', 'css', 'legacy'] },
+        // El modo 'css' calcula los saltos midiendo getBoundingClientRect() del
+        // DOM fuente y traduciendolo a pixeles del canvas ya renderizado (con
+        // scale:2). Con varios "page-break-before:always" seguidos (el informe
+        // ejecutivo encadena cinco) ese calculo se va desalineando: mete una
+        // pagina en blanco de mas y corta el titulo del bloque siguiente por
+        // arriba, dejando un fleco de una linea antes de repetirlo entero en la
+        // pagina siguiente. 'legacy' con selector propio no mide nada: cada
+        // elemento marcado es un salto exacto, sin arrastrar error.
+        pagebreak: { mode: ['avoid-all', 'legacy'], before: '.pdf-break-before', after: '.pdf-break-after' },
       }).from(container).save();
 
       document.body.removeChild(container);

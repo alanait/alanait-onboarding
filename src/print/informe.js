@@ -83,8 +83,14 @@ export function paginaDiagnostico(score, sectionEnabled, fecha) {
       const c = COLOR_TRAMO[d.tramo.nivel];
       notaColor = c;
       nota = String(d.nota);
-      cuerpo = `<span style="display:inline-block;width:${anchoPeso(d.peso)}px;height:7px;background:${C.borde};border-radius:4px;overflow:hidden;vertical-align:middle;">
-          <span style="display:block;height:100%;width:${d.nota}%;background:${c};"></span>
+      const anchoTrack = anchoPeso(d.peso);
+      // Nada de overflow:hidden para recortar el relleno: html2canvas no rasteriza
+      // bien un hijo en % dentro de un border-radius+overflow:hidden (el relleno
+      // desaparece y solo queda la pista gris). Ancho exacto en px y position:
+      // absolute en su lugar, que no depende de que el motor recorte nada.
+      const anchoFill = Math.min(anchoTrack, Math.round(anchoTrack * d.nota / 100));
+      cuerpo = `<span style="display:inline-block;width:${anchoTrack}px;height:7px;background:${C.borde};border-radius:4px;vertical-align:middle;position:relative;">
+          <span style="display:block;position:absolute;left:0;top:0;height:7px;width:${anchoFill}px;background:${c};border-radius:4px;"></span>
         </span>`;
     } else {
       nota = "—";
@@ -101,7 +107,7 @@ export function paginaDiagnostico(score, sectionEnabled, fecha) {
     </tr>`;
   }).join("");
 
-  return `<div style="page-break-before:always;">
+  return `<div class="pdf-break-before" style="page-break-before:always;">
     <h2 style="font-size:16px;font-weight:500;color:${C.azul};margin:0 0 4px;">Diagnóstico</h2>
     <p style="font-size:12.5px;color:${C.tinta};line-height:1.55;margin:0 0 18px;max-width:64ch;">${lectura}</p>
 
@@ -153,7 +159,7 @@ export function bloqueHallazgos(score) {
     </div>`;
   }).join("");
 
-  return `<div style="page-break-before:always;">
+  return `<div class="pdf-break-before" style="page-break-before:always;">
     <h2 style="font-size:16px;font-weight:500;color:${C.azul};margin:0 0 4px;">Hallazgos críticos</h2>
     <p style="font-size:11px;color:${C.gris};margin:0 0 12px;">
       ${lista.length} hallazgo${lista.length > 1 ? "s" : ""} que limita${lista.length > 1 ? "n" : ""} la puntuación por sí solo${lista.length > 1 ? "s" : ""}.
@@ -217,7 +223,7 @@ export function bloquePlan(score, sectionEnabled, formData, instanceCounts) {
     </div>`;
   }).join("");
 
-  return `<div style="page-break-before:always;">
+  return `<div class="pdf-break-before" style="page-break-before:always;">
     <h2 style="font-size:16px;font-weight:500;color:${C.azul};margin:0 0 4px;">Plan de acción</h2>
     <p style="font-size:11px;color:${C.gris};margin:0 0 12px;">
       Tareas de seguridad y de limpieza del proveedor anterior que siguen abiertas, en orden de prioridad.
@@ -251,7 +257,7 @@ export function bloqueOportunidades(sectionEnabled, formData, instanceCounts) {
       <div style="font-size:9.5px;color:${C.gris};margin-top:2px;">${esc(h.seccion)}</div>
     </div>`).join("");
 
-  return `<div style="page-break-before:always;">
+  return `<div class="pdf-break-before" style="page-break-before:always;">
     <div style="background:${C.magenta};color:#fff;font-size:10px;letter-spacing:0.08em;text-transform:uppercase;padding:5px 10px;border-radius:4px;display:inline-block;margin-bottom:10px;">
       Uso interno · no entregar al cliente
     </div>
