@@ -53,13 +53,13 @@ export function buildPrintFragment(clientData, sectionEnabled, formData, instanc
     <h1 style="font-size:52px;font-weight:800;color:#1E3A6E;margin:0 0 12px 0;line-height:1.1;">${esc(clientData.empresa || "Empresa")}</h1>
     <p style="font-size:18px;color:#868686;margin:0 0 48px 0;">Informe de inventario y análisis técnico inicial</p>
     <table style="border-collapse:collapse;width:auto;margin-bottom:60px;">
-      ${clientData.contacto ? `<tr><td style="padding:6px 20px 6px 0;font-size:13px;color:#9AA0A6;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;">Contacto</td><td style="padding:6px 0;font-size:14px;color:#333333;font-weight:500;">${esc(clientData.contacto)}</td></tr>` : ""}
-      ${clientData.telefono ? `<tr><td style="padding:6px 20px 6px 0;font-size:13px;color:#9AA0A6;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;">Teléfono</td><td style="padding:6px 0;font-size:14px;color:#333333;">${esc(clientData.telefono)}</td></tr>` : ""}
-      ${clientData.email ? `<tr><td style="padding:6px 20px 6px 0;font-size:13px;color:#9AA0A6;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;">Email</td><td style="padding:6px 0;font-size:14px;color:#333333;">${esc(clientData.email)}</td></tr>` : ""}
-      ${clientData.web ? `<tr><td style="padding:6px 20px 6px 0;font-size:13px;color:#9AA0A6;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;">Web</td><td style="padding:6px 0;font-size:14px;color:#2F56A3;">${esc(clientData.web)}</td></tr>` : ""}
-      ${clientData.direccion ? `<tr><td style="padding:6px 20px 6px 0;font-size:13px;color:#9AA0A6;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;">Dirección</td><td style="padding:6px 0;font-size:14px;color:#333333;">${esc(clientData.direccion)}</td></tr>` : ""}
-      ${clientData.fecha ? `<tr><td style="padding:6px 20px 6px 0;font-size:13px;color:#9AA0A6;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;">Fecha visita</td><td style="padding:6px 0;font-size:14px;color:#333333;">${esc(clientData.fecha)}</td></tr>` : ""}
-      ${clientData.responsable ? `<tr><td style="padding:6px 20px 6px 0;font-size:13px;color:#9AA0A6;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;">Técnico</td><td style="padding:6px 0;font-size:14px;font-weight:600;color:#2F56A3;">${esc(clientData.responsable)}</td></tr>` : ""}
+      ${clientData.contacto ? `<tr class="pdf-avoid"><td style="padding:6px 20px 6px 0;font-size:13px;color:#9AA0A6;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;">Contacto</td><td style="padding:6px 0;font-size:14px;color:#333333;font-weight:500;">${esc(clientData.contacto)}</td></tr>` : ""}
+      ${clientData.telefono ? `<tr class="pdf-avoid"><td style="padding:6px 20px 6px 0;font-size:13px;color:#9AA0A6;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;">Teléfono</td><td style="padding:6px 0;font-size:14px;color:#333333;">${esc(clientData.telefono)}</td></tr>` : ""}
+      ${clientData.email ? `<tr class="pdf-avoid"><td style="padding:6px 20px 6px 0;font-size:13px;color:#9AA0A6;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;">Email</td><td style="padding:6px 0;font-size:14px;color:#333333;">${esc(clientData.email)}</td></tr>` : ""}
+      ${clientData.web ? `<tr class="pdf-avoid"><td style="padding:6px 20px 6px 0;font-size:13px;color:#9AA0A6;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;">Web</td><td style="padding:6px 0;font-size:14px;color:#2F56A3;">${esc(clientData.web)}</td></tr>` : ""}
+      ${clientData.direccion ? `<tr class="pdf-avoid"><td style="padding:6px 20px 6px 0;font-size:13px;color:#9AA0A6;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;">Dirección</td><td style="padding:6px 0;font-size:14px;color:#333333;">${esc(clientData.direccion)}</td></tr>` : ""}
+      ${clientData.fecha ? `<tr class="pdf-avoid"><td style="padding:6px 20px 6px 0;font-size:13px;color:#9AA0A6;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;">Fecha visita</td><td style="padding:6px 0;font-size:14px;color:#333333;">${esc(clientData.fecha)}</td></tr>` : ""}
+      ${clientData.responsable ? `<tr class="pdf-avoid"><td style="padding:6px 20px 6px 0;font-size:13px;color:#9AA0A6;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;">Técnico</td><td style="padding:6px 0;font-size:14px;font-weight:600;color:#2F56A3;">${esc(clientData.responsable)}</td></tr>` : ""}
     </table>
     ${score ? `<div style="margin-bottom:44px;">${selloNota(score)}</div>` : ""}
     <div style="border-top:2px solid #E4E6EA;padding-top:20px;display:flex;justify-content:space-between;align-items:center;">
@@ -98,7 +98,7 @@ export function buildPrintFragment(clientData, sectionEnabled, formData, instanc
 
   // Client data
   const clientRows = Object.entries(clientData).filter(([,v]) => v)
-    .map(([k,v]) => `<tr><td style="${tdL}">${esc(clientLabels[k]||k)}</td><td style="${tdV}">${esc(v)}</td></tr>`).join("");
+    .map(([k,v]) => `<tr class="pdf-avoid"><td style="${tdL}">${esc(clientLabels[k]||k)}</td><td style="${tdV}">${esc(v)}</td></tr>`).join("");
   if (clientRows) {
     body += `<div style="margin-bottom:20px;"><h2 style="${h2S}">👤 Datos del Cliente</h2>
       <table style="width:100%;border-collapse:collapse;"><tbody>${clientRows}</tbody></table></div>`;
@@ -120,14 +120,14 @@ export function buildPrintFragment(clientData, sectionEnabled, formData, instanc
         const g = f.group || "";
         if (!porGrupo.has(g)) { porGrupo.set(g, []); orden.push(g); }
         porGrupo.get(g).push(
-          `<tr><td style="${tdL}">${esc(f.label)}</td><td style="${tdV}">${esc(Array.isArray(v) ? v.join(", ") : v)}</td></tr>`
+          `<tr class="pdf-avoid"><td style="${tdL}">${esc(f.label)}</td><td style="${tdV}">${esc(Array.isArray(v) ? v.join(", ") : v)}</td></tr>`
         );
       });
 
       let rows = "";
       orden.forEach(g => {
         if (g !== "") {
-          rows += `<tr><td colspan="2" style="${tdG}">${esc(g)}</td></tr>`;
+          rows += `<tr class="pdf-avoid"><td colspan="2" style="${tdG}">${esc(g)}</td></tr>`;
         }
         rows += porGrupo.get(g).join("");
       });

@@ -109,7 +109,7 @@ export function paginaDiagnostico(score, sectionEnabled, fecha) {
     const capa = d.capado
       ? `<div style="font-size:9.5px;color:${C.magenta};padding-left:2px;">Limitado por un hallazgo crítico</div>`
       : "";
-    return `<tr>
+    return `<tr class="pdf-avoid">
       <td style="padding:5px 8px 5px 0;font-size:11.5px;color:${C.tinta};width:44%;">${esc(d.nombre)}${capa}</td>
       <td style="padding:5px 8px;font-size:9.5px;color:${C.gris};width:16%;">${d.peso}% de la nota</td>
       <td style="padding:5px 8px;width:32%;">${cuerpo}</td>
