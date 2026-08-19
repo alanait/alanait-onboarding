@@ -77,8 +77,33 @@ console.log("\nCliente sin hallazgos (nota 99)");
   const c = JSON.parse(readFileSync(join(dir, "01-bien-protegido.alanait"), "utf8"));
   const { html, score } = informe(c);
   es("no genera bloque de hallazgos", html.includes("Hallazgos críticos"), false);
-  es("y lo dice en el diagnostico", html.includes("Sin hallazgos críticos"), true);
+  // La frase afirma algo mas fuerte que antes, y solo se puede decir cuando de
+  // verdad se comprobo todo: antes se imprimia "Sin hallazgos criticos
+  // abiertos" tambien sobre lo que nadie habia mirado.
+  es("y afirma que se comprobo todo", html.includes("Se comprobaron todos los criterios que aplicaban"), true);
   es("nota fiable", score.fiable, true);
+  es("sin comprobaciones criticas pendientes", score.capadoresPendientes.length, 0);
+}
+
+// ── Un cliente a medias no puede declararse limpio ─────────────────────
+// El caso Kishoa-Powen: backup 100/100 con un criterio contestado de diez, y el
+// informe imprimiendo "sin hallazgos criticos abiertos" encima.
+console.log("\nCliente a medias (el caso que destapo el fallo)");
+{
+  const medias = {
+    clientData: { empresa: "A medias SL" },
+    sectionEnabled: { backup: "si", email: "si", pcs: "si", antivirus: "si", servidores: "si",
+                      red: "no", wifi: "no", vpn: "no", armario: "no", impresion: "no",
+                      otros: "no", almacenamiento: "no", telefonia: "no", apps: "no", licencias: "no" },
+    formData: { backup: { 0: { frecuencia: "Continuo" } }, email: { 0: { archivado: "Sí" } } },
+    instanceCounts: {}, sectionImages: {},
+  };
+  const { html, score } = informe(medias);
+  es("no da nota fiable", score.fiable, false);
+  es("y hay comprobaciones criticas sin hacer", score.capadoresPendientes.length > 0, true);
+  es("el informe NO dice que se comprobo todo", html.includes("Se comprobaron todos los criterios que aplicaban"), false);
+  es("y NO dice 'Sin hallazgos críticos'", html.includes("Sin hallazgos críticos"), false);
+  es("las publica como pendientes", html.includes("Comprobaciones críticas pendientes"), true);
 }
 
 // ── Casos limite ────────────────────────────────────────────────────────────

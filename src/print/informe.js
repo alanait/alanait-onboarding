@@ -48,10 +48,10 @@ export function selloNota(score) {
     ? esc(score.tramo.etiqueta)
     : (score.sinResponder?.length ? "Sin datos suficientes" : "Sin nota");
   const pie = hayNota
-    ? `cobertura ${score.cobertura}% · modelo ${esc(score.version)}`
+    ? `evidencia ${score.evidencia}% · modelo ${esc(score.version)}`
     : (score.sinResponder?.length
-        ? `falta responder ${esc(score.sinResponder.join(" y "))}`
-        : `evaluado el ${score.cobertura}% del modelo`);
+        ? `faltan ${score.sinResponder.length} secciones por responder`
+        : `sólo se ha comprobado el ${score.evidencia}% del modelo`);
 
   return `<div style="display:inline-block;border:2px solid ${color};border-radius:8px;padding:14px 20px;min-width:150px;text-align:center;">
     <div style="font-size:40px;font-weight:500;color:${color};line-height:1;">${valor}${hayNota ? '<span style="font-size:15px;color:#868686;font-weight:400;"> / 100</span>' : ""}</div>
@@ -59,7 +59,7 @@ export function selloNota(score) {
     <div style="font-size:9.5px;color:#868686;margin-top:3px;">${pie}</div>
   </div>
   <div style="font-size:9.5px;color:#868686;margin-top:8px;max-width:260px;line-height:1.45;">
-    Medición del estado técnico observado en la visita. No es una calificación de la empresa.
+    Medición del estado técnico observado en la visita. No es una calificación de la empresa.${hayNota ? "" : "<br><b style=\"font-weight:500;\">No hay nota porque no hay evidencia suficiente:</b> lo que no se comprobó no cuenta como correcto."}
   </div>`;
 }
 
@@ -70,20 +70,36 @@ export function paginaDiagnostico(score, sectionEnabled, fecha) {
   const evaluables = score.dominios.filter(d => d.evaluable);
   const color = score.fiable && score.nota !== null ? COLOR_TRAMO[score.tramo.nivel] : C.gris;
 
+  // Lo que el cliente ha declarado que no tiene. Va en el alcance porque cambia
+  // el denominador: sin decirlo, un lector no puede saber si un dominio en
+  // blanco es que no existe o que no se miro.
+  const sinServicio = SECTIONS.filter(s => (sectionEnabled || {})[s.id] === "no").map(s => s.label);
+
   // Lectura de la nota, construida con los datos y no a mano
   const criticos = score.hallazgos.length;
   const peor = evaluables.length ? evaluables.reduce((a, b) => (a.nota <= b.nota ? a : b)) : null;
+  // La frase tiene que hablar de la REVISION, no del cliente. Lo unico que se
+  // puede afirmar es que ningun criterio COMPROBADO disparo un hallazgo, y con
+  // medio formulario en blanco esa frase tiene todas las papeletas de ser
+  // falsa: el caso que destapo esto imprimia "sin hallazgos criticos abiertos"
+  // sobre un backup del que solo se habia mirado un criterio de diez.
+  const pendientes = score.capadoresPendientes?.length ?? 0;
+  const coletilla = pendientes > 0
+    ? ` Quedan ${pendientes} comprobación${pendientes > 1 ? "es" : ""} crítica${pendientes > 1 ? "s" : ""} sin hacer.`
+    : "";
   let lectura;
   if (!score.fiable) {
     lectura = score.sinResponder?.length
-      ? `Sin nota: falta responder ${esc(score.sinResponder.join(" y "))}. Sin esos datos cualquier puntuación sería engañosa.`
-      : `Sin nota: sólo se ha podido evaluar el ${score.cobertura}% del modelo, por debajo del ${score.coberturaMinima}% necesario.`;
+      ? `Sin nota: quedan ${score.sinResponder.length} secciones sin responder (${esc(score.sinResponder.join(", "))}). Mientras no se decida si el cliente tiene esos servicios, cualquier puntuación sería engañosa.`
+      : `Sin nota: sólo se ha comprobado el ${score.evidencia}% de lo que aplicaba a este cliente, por debajo del ${score.evidenciaMinima}% necesario. La nota provisional sería ${score.nota} sobre 100, y sólo puede subir a medida que se complete la visita.`;
+  } else if (criticos === 0 && pendientes === 0) {
+    lectura = `Nota ${score.nota} sobre 100, ${score.tramo.etiqueta.toLowerCase()}. Se comprobaron todos los criterios que aplicaban a este cliente y ninguno ha dado un hallazgo crítico.`;
   } else if (criticos === 0) {
-    lectura = `Nota ${score.nota} sobre 100, ${score.tramo.etiqueta.toLowerCase()}. Sin hallazgos críticos abiertos.`;
+    lectura = `Nota ${score.nota} sobre 100, ${score.tramo.etiqueta.toLowerCase()}. Ninguno de los criterios comprobados ha dado un hallazgo crítico, pero quedan ${pendientes} comprobación${pendientes > 1 ? "es" : ""} crítica${pendientes > 1 ? "s" : ""} sin hacer: hasta que se hagan, la ausencia de hallazgos no es una afirmación sobre el cliente.`;
   } else {
     lectura = `Nota ${score.nota} sobre 100, ${score.tramo.etiqueta.toLowerCase()}. ${criticos} hallazgo${criticos > 1 ? "s" : ""} crítico${criticos > 1 ? "s" : ""}` +
       (peor ? `, y el dominio más débil es ${esc(peor.nombre.toLowerCase())} (${peor.nota}).` : ".") +
-      (score.capadaGlobal ? " La nota global está limitada por un hallazgo crítico." : "");
+      (score.capadaGlobal ? " La nota global está limitada por un hallazgo crítico." : "") + coletilla;
   }
 
   const filas = score.dominios.map(d => {
@@ -109,8 +125,14 @@ export function paginaDiagnostico(score, sectionEnabled, fecha) {
     const capa = d.capado
       ? `<div style="font-size:9.5px;color:${C.magenta};padding-left:2px;">Limitado por un hallazgo crítico</div>`
       : "";
+    // En ambar y no en magenta: el magenta es un problema del cliente, y esto
+    // es un hueco de la visita. La barra no necesita nada especial —con el
+    // denominador aplicable su longitud YA es la fraccion demostrada.
+    const evid = (d.evaluable && d.evidencia !== null && d.evidencia < 100)
+      ? `<div style="font-size:9.5px;color:${C.ambar};padding-left:2px;">${d.criteriosEvaluados} de ${d.criteriosAplicables} criterios comprobados</div>`
+      : "";
     return `<tr class="pdf-avoid">
-      <td style="padding:5px 8px 5px 0;font-size:11.5px;color:${C.tinta};width:44%;">${esc(d.nombre)}${capa}</td>
+      <td style="padding:5px 8px 5px 0;font-size:11.5px;color:${C.tinta};width:44%;">${esc(d.nombre)}${capa}${evid}</td>
       <td style="padding:5px 8px;font-size:9.5px;color:${C.gris};width:16%;">${d.peso}% de la nota</td>
       <td style="padding:5px 8px;width:32%;">${cuerpo}</td>
       <td style="padding:5px 0;font-size:12px;color:${notaColor};text-align:right;width:8%;white-space:nowrap;">${nota}</td>
@@ -128,7 +150,9 @@ export function paginaDiagnostico(score, sectionEnabled, fecha) {
     <div style="margin-top:20px;background:${C.papel};border:1px solid ${C.borde};border-radius:6px;padding:10px 13px;font-size:10px;color:${C.gris};line-height:1.55;">
       <b style="color:${C.tinta};font-weight:500;">Alcance.</b> Observación directa en la visita del ${esc(fecha || "—")}.
       No incluye escaneo de vulnerabilidades, prueba de restauración propia ni revisión de consolas a las que no se dio acceso.
-      Evaluado el ${score.cobertura}% del peso del modelo${score.version ? ` · CiberScore ${esc(score.version)}` : ""}.
+      Comprobado el ${score.evidencia}% del peso del modelo que aplicaba a este cliente${score.version ? ` · CiberScore ${esc(score.version)}` : ""}.
+      <b style="color:${C.tinta};font-weight:500;">Lo que no se comprobó no puntúa: sale con valor cero, nunca como correcto.</b>
+      Secciones declaradas inexistentes en este cliente: ${esc(sinServicio.length ? sinServicio.join(", ") : "ninguna")}.
       Una nota calculada con otra versión del modelo no es comparable con esta.
     </div>
   </div>`;
@@ -139,7 +163,33 @@ export function paginaDiagnostico(score, sectionEnabled, fecha) {
 // por que el criterio puntua asi, lleva jerga del modelo y mide 200 caracteres
 // de media. No describe el problema y no cabe.
 export function bloqueHallazgos(score) {
-  if (!score || !score.hallazgos.length) return "";
+  if (!score) return "";
+
+  const pendientes = score.capadoresPendientes ?? [];
+
+  // Sin hallazgos pero con comprobaciones criticas sin hacer, callarse seria lo
+  // peor: el lector entiende "no hay problemas" cuando lo cierto es "no se ha
+  // mirado". Se imprime el bloque con la lista de lo que falta.
+  if (!score.hallazgos.length) {
+    if (!pendientes.length) return "";
+    const filasP = pendientes.map(p => {
+      const dom = score.dominios.find(d => d.id === p.dominio);
+      return `<div class="pdf-avoid" style="padding:7px 0;border-bottom:1px solid ${C.borde};page-break-inside:avoid;">
+        <div style="font-size:12px;font-weight:500;color:${C.tinta};line-height:1.4;">${esc(p.titular || p.campo)}</div>
+        <div style="font-size:9.5px;color:${C.gris};margin-top:2px;">${esc(dom ? dom.nombre : p.dominio)} · sin comprobar</div>
+      </div>`;
+    }).join("");
+    return `<div class="pdf-break-before" style="height:24px;"></div>
+    <div style="page-break-before:always;">
+      <h2 style="font-size:16px;font-weight:500;color:${C.azul};margin:0 0 4px;">Comprobaciones críticas pendientes</h2>
+      <p style="font-size:11px;color:${C.gris};margin:0 0 12px;">
+        Ningún criterio de los comprobados ha disparado un hallazgo crítico, pero quedan
+        ${pendientes.length} comprobación${pendientes.length > 1 ? "es" : ""} que sí pueden darlo y que nadie ha hecho.
+        Hasta cerrarlas, este informe no afirma que el cliente esté limpio.
+      </p>
+      <div style="border-top:2px solid ${C.ambar};">${filasP}</div>
+    </div>`;
+  }
 
   const titularDe = (h) => {
     const c = CRITERIOS.find(x => x.id === h.id) || PRECONDICIONES.find(x => x.id === h.id);

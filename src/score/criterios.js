@@ -12,6 +12,24 @@
 // el motor casa por cadena, y un criterio que no case deja de puntuar en
 // silencio. scripts/check-score.mjs lo verifica en cada build.
 
+// Literales que significan "este control no existe en este cliente". Salen del
+// denominador: su superficie de riesgo es genuinamente menor, y exigir
+// evidencia sobre algo que no existe convertiria el aviso en ruido permanente.
+//
+// "Otro"/"Otra" entran aqui a proposito: el cliente tiene algo que el
+// desplegable no sabe graduar. No es un hueco de la visita —el tecnico
+// contesto— y contarlo como cero seria castigarle por un caso que el modelo no
+// contempla. Solo afecta a red_dns, sai_sala y srv_so_version_linux.
+export const LITERALES_NO_APLICA = ["No aplica", "No hay red de invitados", "Otro", "Otra"];
+
+// Literales que significan "existe y nadie lo ha mirado". Valen lo mismo que el
+// hueco: declararlo y callarlo son el mismo estado de conocimiento, y si
+// valieran distinto el tecnico aprenderia a no tocar el desplegable.
+//
+// La excepcion es `computa`, que sigue documentada en computeScore: para unos
+// pocos criterios desconocer el dato ES el hallazgo, y ahi si puntua.
+export const LITERALES_SIN_COMPROBAR = ["No revisado", "No se sabe", "No sabe"];
+
 export const CRITERIOS = [
 
   // ── Red y perímetro ─────────────────────────────────────
@@ -171,11 +189,11 @@ export const CRITERIOS = [
     porQue: "Microsoft y Google garantizan el servicio, no tus datos (responsabilidad compartida). Un borrado masivo, un ex-empleado o un ransomware sobre el buzon no se recuperan sin copia propia." },
   { id: "correo_archivado", dominio: "correo", seccion: "email", campo: "archivado", peso: 1, mapa: { "Sí": 1, No: 0 }, agregacion: "min",
     porQue: "Sin archivado no hay retencion garantizada ni forma de responder a una peticion legal o a una investigacion interna sobre correo antiguo. Impacto de cumplimiento, no de brecha: por eso pesa poco." },
-  { id: "correo_admins_revisados", dominio: "correo", seccion: "email", campo: "admins_revisados", peso: 2, mapa: { "Revisado, correcto": 1, "Revisado, con hallazgos": 0 }, agregacion: "min",
+  { id: "correo_admins_revisados", dominio: "correo", seccion: "email", campo: "admins_revisados", peso: 2, mapa: { "Revisado, correcto": 1, "Revisado, con hallazgos": 0, "Pendiente de revisar": 0 }, agregacion: "min",
     porQue: "Los administradores de mas son la puerta trasera silenciosa del tenant. Un hallazgo aqui significa cuentas privilegiadas reales que nadie controla, no una tarea pendiente." },
-  { id: "correo_usuarios_inactivos", dominio: "correo", seccion: "email", campo: "usuarios_inactivos", peso: 1, mapa: { "Revisado, correcto": 1, "Revisado, con hallazgos": 0 }, agregacion: "min",
+  { id: "correo_usuarios_inactivos", dominio: "correo", seccion: "email", campo: "usuarios_inactivos", peso: 1, mapa: { "Revisado, correcto": 1, "Revisado, con hallazgos": 0, "Pendiente de revisar": 0 }, agregacion: "min",
     porQue: "Los buzones de gente que ya no esta siguen siendo credenciales validas que nadie vigila, y ademas se pagan todos los meses (CIS 5.3)." },
-  { id: "correo_licencias_revisadas", dominio: "correo", seccion: "email", campo: "licencias_revisadas", peso: 1, mapa: { "Revisado, correcto": 1, "Revisado, con hallazgos": 0 }, agregacion: "min",
+  { id: "correo_licencias_revisadas", dominio: "correo", seccion: "email", campo: "licencias_revisadas", peso: 1, mapa: { "Revisado, correcto": 1, "Revisado, con hallazgos": 0, "Pendiente de revisar": 0 }, agregacion: "min",
     porQue: "Licencias mal asignadas dejan usuarios sin las protecciones del plan que la empresa ya esta pagando (Defender, DLP, archivado), ademas del coste tirado." },
 
   // ── Saneamiento del onboarding ──────────────────────────

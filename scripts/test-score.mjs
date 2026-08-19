@@ -36,8 +36,11 @@ console.log("\nRegla 1 — la ignorancia no puntua");
 es("sin nada respondido no hay nota", r({}, {}).nota, null);
 es("'No revisado' sale del denominador",
    dom(r({ red: "si" }, { red: { 0: { rdp_expuesto: "No revisado", utm: "Sí" } } }), "perimetro").criteriosEvaluados, 1);
+// El titular de este test siempre dijo lo correcto; era la asercion la que
+// documentaba el bug. Con el denominador aplicable, rdp sin comprobar pesa 3 y
+// vale 0, asi que utm (2 de 5) da 40 y no 100.
 es("...y no puntua como bueno",
-   dom(r({ red: "si" }, { red: { 0: { rdp_expuesto: "No revisado", utm: "Sí" } } }), "perimetro").nota, 100);
+   dom(r({ red: "si" }, { red: { 0: { rdp_expuesto: "No revisado", utm: "Sí" } } }), "perimetro").nota, 40);
 es("campo vacio sale del denominador",
    dom(r({ red: "si" }, { red: { 0: { utm: "Sí" } } }), "perimetro").criteriosEvaluados, 1);
 es("literal desconocido no inventa valor",
@@ -57,8 +60,11 @@ es("y lo senala", sinbk.capadaGlobal, true);
 console.log("\nRegla 3 — multi-instancia");
 es("min: manda el peor servidor",
    dom(r({ servidores: "si" }, { servidores: { 0: { so_soporte: "En soporte" }, 1: { so_soporte: "Fuera de soporte (EOL)" } } }, { servidores: 2 }), "endpoint").nota, 0);
+// rdp se contesta en las dos instancias para aislar lo que este test mide: si
+// se deja en blanco, su peso entra en el denominador valiendo 0 y tapa el
+// efecto de la agregacion.
 es("max: basta una buena",
-   dom(r({ red: "si" }, { red: { 0: { utm: "No" }, 1: { utm: "Sí" } } }, { red: 2 }), "perimetro").nota, 100);
+   dom(r({ red: "si" }, { red: { 0: { utm: "No", rdp_expuesto: "No" }, 1: { utm: "Sí", rdp_expuesto: "No" } } }, { red: 2 }), "perimetro").nota, 100);
 const capMulti = r({ red: "si" }, { red: { 0: { rdp_expuesto: "No" }, 1: { rdp_expuesto: "Sí" } } }, { red: 2 });
 es("el cap se dispara aunque solo una instancia sea critica",
    capMulti.hallazgos.some(h => h.id === "rdp"), true);
@@ -72,8 +78,11 @@ es("con dep cumplida si cuenta",
    dom(r({ red: "si" }, { red: { 0: { firewall: "Sí", firewall_soporte: "En soporte", utm: "Sí" } } }), "perimetro").criteriosEvaluados, 2);
 es("un dominio sin datos no arrastra la nota",
    r({ red: "si" }, { red: { 0: { rdp_expuesto: "No", utm: "Sí" } } }).nota, 100);
-es("la cobertura dice cuanto peso se ha podido evaluar",
-   r({ red: "si" }, { red: { 0: { rdp_expuesto: "No" } } }).cobertura, 18);
+// La `cobertura` vieja contaba peso de DOMINIOS tocados, y por eso este caso
+// daba 18 (el peso entero de perimetro) con un solo criterio contestado de dos.
+// La evidencia cuenta peso de CRITERIO: 3 de 5.
+es("la evidencia mide peso de criterio, no dominios tocados",
+   r({ red: "si" }, { red: { 0: { rdp_expuesto: "No" } } }).evidencia, 60);
 
 console.log("\nDeterminismo");
 const a = r({ red: "si" }, { red: { 0: { rdp_expuesto: "No", utm: "Sí" } } });
@@ -130,6 +139,63 @@ console.log("Fiabilidad de la nota (fallos hallados al revisar la fase 4)");
   const declarado = r2({ email: "si", red: "si", backup: "no" }, { email: { 0: { mfa: "Sí" } }, red: { 0: { rdp_expuesto: "No" } } });
   es("reconocer que no hay backup si da nota", declarado.nota !== null, true);
   es("capada a 59", declarado.nota, 59);
+}
+
+
+// ── Regla 1: lo que no se ha comprobado no puntua ───────────────────────
+//
+// Fijan la semantica que arreglo el caso Kishoa-Powen (backup 100/100 con UN
+// criterio contestado de diez) y, sobre todo, cierran las dos trampas que
+// aparecieron al disenar el arreglo: las dos subian la nota al esconder
+// informacion, que es el bug que este proyecto ya corrigio dos veces.
+console.log("\nRegla 1 — lo que no se ha comprobado no puntua");
+{
+  const soloUno = r({ red: "si" }, { red: { 0: { utm: "Sí" } } });
+  const pe = dom(soloUno, "perimetro");
+  es("un criterio bueno de dos no da 100", pe.nota, 40);
+  es("y el motor publica cuantos lo respaldan", [pe.criteriosEvaluados, pe.criteriosAplicables], [1, 2]);
+
+  // "No aplica" es una afirmacion sobre el CLIENTE; el hueco lo es sobre la
+  // VISITA. Solo lo primero sale del denominador.
+  const conDep = dom(r({ red: "si" }, { red: { 0: { firewall: "No", utm: "Sí", rdp_expuesto: "No" } } }), "perimetro");
+  es("un criterio con dep no cumplida sale del denominador", conDep.criteriosAplicables, 2);
+  es("y el dominio llega a 100 sin el", conDep.nota, 100);
+
+  // Declarar la ignorancia y callarla son el mismo estado de conocimiento: si
+  // valieran distinto, el tecnico aprenderia a no tocar el desplegable.
+  const declarada = dom(r({ red: "si" }, { red: { 0: { utm: "Sí", rdp_expuesto: "No revisado" } } }), "perimetro").nota;
+  const callada = dom(r({ red: "si" }, { red: { 0: { utm: "Sí" } } }), "perimetro").nota;
+  es("declarar 'No revisado' y dejar en blanco dan la misma nota", declarada, callada);
+
+  // ── La trampa del reparto ──
+  // Un dominio activado y vacio NO puede desaparecer: si desapareciera, su peso
+  // se repartiria entre los que si tienen datos —los que salieron bien— y
+  // borrar respuestas subiria la nota global.
+  const vacio = dom(r({ red: "si" }, { red: { 0: {} } }), "perimetro");
+  es("un dominio activado y vacio NO sale del reparto", vacio.evaluable, true);
+  es("y entra valiendo 0", vacio.nota, 0);
+
+  // Marcar "no" y no tocar la seccion dan la misma nota; lo unico que cambia es
+  // que sin decidirla no hay nota publicable. Asi no hay premio por declarar
+  // inexistente algo que si existe.
+  const sinTocar = r({ red: "si" }, { red: { 0: { utm: "Sí", rdp_expuesto: "No" } } });
+  const marcadaNo = r({ red: "si", servidores: "no" }, { red: { 0: { utm: "Sí", rdp_expuesto: "No" } } });
+  es("marcar una seccion 'no' da la misma nota que dejarla sin tocar", sinTocar.nota, marcadaNo.nota);
+  es("pero sin decidirla la nota no es fiable", sinTocar.fiable, false);
+
+  // Multi-instancia: tres servidores son tres comprobaciones.
+  const unoDeTres = dom(r({ servidores: "si" }, { servidores: { 0: { so_soporte: "En soporte" } } }, { servidores: 3 }), "endpoint");
+  es("tres servidores con uno contestado no dan evidencia plena", unoDeTres.evidencia, 33);
+  // ...salvo que el valor ya no pueda cambiar mirando las demas instancias.
+  const resuelto = dom(r({ servidores: "si" }, { servidores: { 0: { so_soporte: "Fuera de soporte (EOL)" } } }, { servidores: 3 }), "endpoint");
+  es("...salvo que el valor ya este resuelto (min con un 0)", resuelto.evidencia, 100);
+
+  // Un capador que aplicaba y nadie comprobo no toca la nota, pero se publica:
+  // el informe no puede decir "sin hallazgos criticos" por encima de el.
+  const pend = r({ red: "si" }, { red: { 0: { utm: "Sí" } } });
+  es("un capador aplicable sin contestar sale en capadoresPendientes",
+     pend.capadoresPendientes.map(x => x.id), ["rdp"]);
+  es("y no genera hallazgo", pend.hallazgos.length, 0);
 }
 
 console.log(`\n${ok} correctas, ${fallos} fallos\n`);

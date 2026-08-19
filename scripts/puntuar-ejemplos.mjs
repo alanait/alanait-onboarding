@@ -17,7 +17,7 @@ for (const f of readdirSync(DIR).filter(n => n.endsWith(".alanait")).sort()) {
   });
   console.log("");
   console.log(`${f}  ·  ${c.clientData.empresa}`);
-  console.log(`  nota ${r.nota}  ${r.tramo.etiqueta}${r.capadaGlobal ? "  [capada]" : ""}   cobertura ${r.cobertura}%`);
+  console.log(`  nota ${r.nota}  ${r.tramo.etiqueta}${r.capadaGlobal ? "  [capada]" : ""}${r.fiable ? "" : "  [no fiable]"}   evidencia ${r.evidencia}%`);
   const linea = r.dominios.filter(d => d.evaluable)
     .map(d => `${d.id} ${d.nota}${d.capado ? "*" : ""}`).join("  ");
   console.log("  " + linea);

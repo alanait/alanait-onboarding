@@ -95,15 +95,25 @@ export default function ReportPanel({ sectionEnabled, formData, instanceCounts, 
     <div style={{ padding: "16px 16px 28px" }}>
       <div style={titulo}>CiberScore</div>
       {score.nota !== null && !score.fiable ? (
+        // La nota se ensena igualmente, en gris y sin etiqueta de tramo. Con el
+        // denominador aplicable es una medida de progreso que sube segun se
+        // rellena, y ocultarla mataria el gradiente durante la visita, que es
+        // el unico momento en que el hueco tiene arreglo.
         <div style={{ marginBottom: 18 }}>
-          <div style={{ fontSize: 26, fontWeight: 500, color: C.textLight, lineHeight: 1 }}>—</div>
-          <div style={{ fontSize: 11.5, color: C.text, marginTop: 8, lineHeight: 1.45 }}>
-            Cobertura insuficiente para dar nota.
+          <div style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
+            <span style={{ fontSize: 38, fontWeight: 600, lineHeight: 1, color: C.textLight, fontVariantNumeric: "tabular-nums" }}>
+              {score.nota}
+            </span>
+            <span style={{ fontSize: 12, color: C.textLight }}>/ 100</span>
+            <span style={{ marginLeft: "auto", fontSize: 11, fontWeight: 500, color: C.textLight }}>Provisional</span>
           </div>
-          <div style={{ fontSize: 10.5, color: C.textLight, marginTop: 4, lineHeight: 1.45 }}>
+          <div style={{ height: 6, borderRadius: 3, background: C.border, overflow: "hidden", margin: "9px 0 4px" }}>
+            <div style={{ height: "100%", width: `${score.nota}%`, background: C.textLight, transition: "width 0.3s" }} />
+          </div>
+          <div style={{ fontSize: 10.5, color: C.textLight, lineHeight: 1.45 }}>
             {score.sinResponder.length > 0
-              ? `Falta responder ${score.sinResponder.join(" y ")}: sin eso la nota no significa nada.`
-              : `Evaluado el ${score.cobertura}% del modelo; hace falta al menos el ${score.coberturaMinima}%.`}
+              ? `Faltan ${score.sinResponder.length} secciones por responder: ${score.sinResponder.join(", ")}. Márcalas como "sí" o "no" antes de cerrar la visita.`
+              : `${score.evidencia}% comprobado; hace falta el ${score.evidenciaMinima}%. Sube según completas.`}
           </div>
         </div>
       ) : score.nota === null ? (
@@ -126,27 +136,35 @@ export default function ReportPanel({ sectionEnabled, formData, instanceCounts, 
           </div>
           <div style={{ fontSize: 10.5, color: C.textLight }}>
             {score.capadaGlobal && <b style={{ color: C.red }}>Limitada por un hallazgo crítico · </b>}
-            calculada sobre el {score.cobertura}% del modelo
+            evidencia {score.evidencia}% de lo que aplicaba a este cliente
           </div>
 
           <div style={{ marginTop: 12 }}>
-            {score.dominios.filter(d => d.evaluable).map(d => (
+            {/* Sin filtrar por evaluable: los dominios sin datos son justo los
+                que hay que ir a mirar, y esconderlos durante la visita es lo
+                que dejaba salir un cliente entero sin backup revisado. */}
+            {score.dominios.map(d => (
               <div key={d.id} style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
-                <span style={{ flex: 1, fontSize: 11.5, color: C.text, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                <span style={{ flex: 1, fontSize: 11.5, color: d.evaluable ? C.text : C.textLight, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
                   {d.nombre}
                 </span>
                 {d.capado && <span title="Limitado por un hallazgo crítico" style={{ fontSize: 9.5, color: C.red }}>▲</span>}
-                <span style={{ width: 44, height: 4, borderRadius: 2, background: C.border, overflow: "hidden", flexShrink: 0 }}>
-                  <span style={{ display: "block", height: "100%", width: `${d.nota}%`, background: COLOR_TRAMO[d.tramo.nivel] }} />
+                <span style={{ fontSize: 9.5, color: d.evidencia !== null && d.evidencia < 100 ? C.amber : C.textLight, fontVariantNumeric: "tabular-nums" }}>
+                  {d.criteriosAplicables > 0 ? `${d.criteriosEvaluados}/${d.criteriosAplicables}` : ""}
                 </span>
-                <span style={{ width: 22, textAlign: "right", fontSize: 11, color: C.textLight, fontVariantNumeric: "tabular-nums" }}>{d.nota}</span>
+                <span style={{ width: 44, height: 4, borderRadius: 2, background: C.border, overflow: "hidden", flexShrink: 0 }}>
+                  {d.evaluable && <span style={{ display: "block", height: "100%", width: `${d.nota}%`, background: COLOR_TRAMO[d.tramo.nivel] }} />}
+                </span>
+                <span style={{ width: 22, textAlign: "right", fontSize: 11, color: C.textLight, fontVariantNumeric: "tabular-nums" }}>
+                  {d.evaluable ? d.nota : "—"}
+                </span>
               </div>
             ))}
           </div>
         </div>
       )}
 
-      <div style={titulo}>Cobertura del formulario</div>
+      <div style={titulo}>Formulario relleno</div>
       <div style={{ display: "flex", gap: 10, marginBottom: 12 }}>
         <Cifra valor={`${r.respondidas}/${r.total}`} etiqueta="secciones respondidas" color={C.blue} />
         <Cifra valor={`${r.pctCampos}%`} etiqueta={`${r.rellenos} de ${r.campos} campos`} color={r.pctCampos >= 80 ? C.green : C.blue} />
@@ -154,6 +172,33 @@ export default function ReportPanel({ sectionEnabled, formData, instanceCounts, 
       <div style={{ height: 5, borderRadius: 3, background: C.border, overflow: "hidden", marginBottom: 18 }}>
         <div style={{ height: "100%", width: `${r.pctCampos}%`, background: r.pctCampos >= 80 ? C.green : C.blue, transition: "width 0.3s" }} />
       </div>
+
+      {/* Comprobaciones criticas que aplicaban y nadie ha hecho. No son
+          hallazgos —nadie ha visto el problema— pero son lo unico que impide
+          decir que el cliente esta limpio, asi que van antes que los avisos. */}
+      {score.capadoresPendientes?.length > 0 && (
+        <>
+          <div style={titulo}>Comprobaciones críticas pendientes</div>
+          <div style={{ marginBottom: 18 }}>
+            {[...score.capadoresPendientes]
+              .sort((a, b) => (a.capDominio ?? 100) - (b.capDominio ?? 100))
+              .map(cp => (
+                <button
+                  key={cp.id}
+                  onClick={() => onIrASeccion?.(cp.seccion)}
+                  style={{
+                    display: "block", width: "100%", textAlign: "left", cursor: "pointer",
+                    fontSize: 11.5, lineHeight: 1.4, color: C.text,
+                    background: C.amberLight, border: `1px solid ${C.amberBorder}`,
+                    borderRadius: 6, padding: "7px 10px", marginBottom: 5,
+                  }}>
+                  {cp.titular || `${cp.seccion}.${cp.campo}`}
+                  <span style={{ display: "block", fontSize: 10, color: C.amber, marginTop: 2 }}>sin comprobar</span>
+                </button>
+              ))}
+          </div>
+        </>
+      )}
 
       {/* Hallazgos */}
       <div style={titulo}>Hallazgos abiertos</div>

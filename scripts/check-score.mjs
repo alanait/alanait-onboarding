@@ -6,7 +6,7 @@
 // siempre y nadie se entera: la nota simplemente sale distinta. Esto lo caza.
 
 import { SECTIONS } from '../src/sections.js';
-import { CRITERIOS, PRECONDICIONES } from '../src/score/criterios.js';
+import { CRITERIOS, PRECONDICIONES, LITERALES_NO_APLICA, LITERALES_SIN_COMPROBAR } from '../src/score/criterios.js';
 import { DOMINIOS } from '../src/score/dominios.js';
 
 const campoDe = (sid, fid) => SECTIONS.find(s => s.id === sid)?.fields.find(f => f.id === fid);
@@ -31,6 +31,15 @@ for (const c of CRITERIOS) {
     }
     for (const k of (c.critico?.cuando ?? [])) {
       if (!f.options.includes(k)) mal(`${c.id}: el cap se dispara con "${k}", que no es una opcion del campo`);
+    }
+
+    // Toda opcion de un campo puntuado tiene que estar clasificada: en el mapa,
+    // o en una de las dos listas de literales. Una opcion suelta caeria en "sin
+    // comprobar" y restaria nota a un tecnico que contesto bien, en silencio.
+    for (const k of f.options) {
+      if (k in c.mapa) continue;
+      if (LITERALES_NO_APLICA.includes(k) || LITERALES_SIN_COMPROBAR.includes(k)) continue;
+      mal(`${c.id}: la opcion "${k}" de ${c.seccion}.${c.campo} no esta clasificada (ni en el mapa, ni como no-aplica, ni como sin-comprobar)`);
     }
   }
 

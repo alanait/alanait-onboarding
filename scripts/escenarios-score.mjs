@@ -6,7 +6,7 @@ const run = (sectionEnabled, formData, instanceCounts = {}) =>
 
 const pinta = (t, r) => {
   console.log("\n" + t);
-  console.log("  nota " + r.nota + " (" + (r.tramo?.etiqueta ?? "-") + ")" + (r.capadaGlobal ? " [capada]" : "") + "  cobertura " + r.cobertura + "%");
+  console.log("  nota " + r.nota + " (" + (r.tramo?.etiqueta ?? "-") + ")" + (r.capadaGlobal ? " [capada]" : "") + (r.fiable ? "" : " [no fiable]") + "  evidencia " + r.evidencia + "%");
   for (const d of r.dominios.filter(x => x.evaluable)) {
     console.log("    " + String(d.nota).padStart(3) + "  " + d.nombre + (d.capado ? "  [capado]" : "") + "  (" + d.criteriosEvaluados + " criterios)");
   }

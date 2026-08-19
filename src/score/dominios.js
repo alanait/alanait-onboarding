@@ -28,17 +28,27 @@ export const TRAMOS = [
 
 export const tramoDe = (nota) => TRAMOS.find(t => nota <= t.hasta) ?? TRAMOS[TRAMOS.length - 1];
 
-// Peso minimo de dominios que hay que haber evaluado para que la nota
-// signifique algo. Sin esto, un cliente que solo ha contestado "MFA: si" y nada
-// mas sale con 100 sobre 100 y "riesgo bajo", que es exactamente lo contrario
-// de lo que mide: no es que este bien, es que no se ha mirado.
+// Evidencia minima para publicar la nota: que fraccion del peso de criterio
+// APLICABLE hay que haber comprobado de verdad.
 //
-// 60 obliga a haber evaluado, como minimo, el equivalente a perimetro, backup e
-// identidad, que son los tres dominios donde un fallo se lleva la empresa por
-// delante. Por debajo de eso se devuelve la nota igualmente —el informe tiene
-// que seguir siendo util a medio rellenar— pero marcada como no fiable.
-export const COBERTURA_MINIMA = 60;
+// Sustituye a la COBERTURA_MINIMA anterior, que medía peso de dominios
+// TOCADOS: un dominio con un criterio evaluado de diez aportaba su peso
+// entero, asi que un cliente del que no se sabia nada pasaba por fiable. El
+// caso que lo destapo (Kishoa-Powen) daba cobertura 62% con evidencia real
+// del 12%, y contestando 7 campos de 149 se llegaba a cobertura 92% con
+// nota 100.
+//
+// 60 se mantiene porque en un formulario bien relleno la evidencia real ronda
+// el 93-100% (medido en los cinco ejemplos), asi que el umbral no roza el
+// trabajo bien hecho y corta en seco el que esta a medias. Por debajo se
+// devuelve la nota igualmente —durante la visita sirve de progreso— pero
+// marcada como no fiable.
+export const EVIDENCIA_MINIMA = 60;
 
 // Version del modelo. Una nota guardada con una version distinta no es
 // comparable con las de hoy: al cambiar pesos, criterios o literales, sube esto.
-export const SCORE_MODEL_VERSION = "1.0.0";
+//
+// 2.0.0: cambia la agregacion. El denominador de cada dominio pasa a ser el
+// peso APLICABLE en vez del peso evaluado, asi que un criterio que aplicaba y
+// nadie miro cuenta y vale 0. Las mismas respuestas dan otro numero.
+export const SCORE_MODEL_VERSION = "2.0.0";
