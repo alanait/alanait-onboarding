@@ -212,7 +212,7 @@ export default function App() {
         // arriba, dejando un fleco de una linea antes de repetirlo entero en la
         // pagina siguiente. 'legacy' con selector propio no mide nada: cada
         // elemento marcado es un salto exacto, sin arrastrar error.
-        pagebreak: { mode: ['avoid-all', 'legacy'], before: '.pdf-break-before', after: '.pdf-break-after' },
+        pagebreak: { mode: ['avoid-all', 'legacy'], before: '.pdf-break-before' },
       }).from(container).save();
 
       document.body.removeChild(container);

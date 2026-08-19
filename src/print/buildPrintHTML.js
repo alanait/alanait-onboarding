@@ -81,7 +81,10 @@ export function buildPrintFragment(clientData, sectionEnabled, formData, instanc
   body += bloqueOportunidades(sectionEnabled, formData, instanceCounts);
 
   // Header (index page)
-  body += `<div class="pdf-break-before" style="page-break-before:always;display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:20px;padding-bottom:14px;border-bottom:3px solid #1E3A6E;">
+  // Marcador vacio de 24px antes del salto de pagina real: ver la nota sobre
+  // "pdf-break-before" en informe.js.
+  body += `<div class="pdf-break-before" style="height:24px;"></div>
+  <div style="page-break-before:always;display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:20px;padding-bottom:14px;border-bottom:3px solid #1E3A6E;">
     <div>
       <div style="font-size:10px;letter-spacing:0.1em;color:#868686;text-transform:uppercase;margin-bottom:4px;">Informe de Onboarding Técnico</div>
       <h1 style="margin:0;font-size:24px;color:#1E3A6E;font-weight:800;">${esc(clientData.empresa || "—")}</h1>

@@ -23,6 +23,16 @@ const C = {
 
 const COLOR_TRAMO = { critico: C.magenta, alto: C.magenta, medio: C.ambar, bajo: C.turquesa };
 
+// Cada bloque empieza con un <div class="pdf-break-before"> vacio, separado del
+// contenido real. html2pdf calcula el salto midiendo ese marcador, y el calculo
+// llega corto por casi una linea (por que, no esta claro: probablemente una
+// diferencia de redondeo entre el pase que mide el DOM y el que rasteriza el
+// canvas a scale:2). Sin la reserva de 24px, ese margen de error deja un fleco
+// del primer elemento del bloque asomando en la pagina anterior. El marcador va
+// separado del contenido (y no el "page-break-before" puesto directamente en el
+// contenido) para que ese fleco sea siempre espacio en blanco, nunca texto ni
+// color de fondo.
+
 /** Ancho maximo de la barra de un dominio, proporcional a su peso. */
 const anchoPeso = (peso) => Math.round((peso / 18) * 100);
 
@@ -103,11 +113,12 @@ export function paginaDiagnostico(score, sectionEnabled, fecha) {
       <td style="padding:5px 8px 5px 0;font-size:11.5px;color:${C.tinta};width:44%;">${esc(d.nombre)}${capa}</td>
       <td style="padding:5px 8px;font-size:9.5px;color:${C.gris};width:16%;">${d.peso}% de la nota</td>
       <td style="padding:5px 8px;width:32%;">${cuerpo}</td>
-      <td style="padding:5px 0;font-size:12px;color:${notaColor};text-align:right;width:8%;">${nota}</td>
+      <td style="padding:5px 0;font-size:12px;color:${notaColor};text-align:right;width:8%;white-space:nowrap;">${nota}</td>
     </tr>`;
   }).join("");
 
-  return `<div class="pdf-break-before" style="page-break-before:always;">
+  return `<div class="pdf-break-before" style="height:24px;"></div>
+  <div style="page-break-before:always;">
     <h2 style="font-size:16px;font-weight:500;color:${C.azul};margin:0 0 4px;">Diagnóstico</h2>
     <p style="font-size:12.5px;color:${C.tinta};line-height:1.55;margin:0 0 18px;max-width:64ch;">${lectura}</p>
 
@@ -159,7 +170,8 @@ export function bloqueHallazgos(score) {
     </div>`;
   }).join("");
 
-  return `<div class="pdf-break-before" style="page-break-before:always;">
+  return `<div class="pdf-break-before" style="height:24px;"></div>
+  <div style="page-break-before:always;">
     <h2 style="font-size:16px;font-weight:500;color:${C.azul};margin:0 0 4px;">Hallazgos críticos</h2>
     <p style="font-size:11px;color:${C.gris};margin:0 0 12px;">
       ${lista.length} hallazgo${lista.length > 1 ? "s" : ""} que limita${lista.length > 1 ? "n" : ""} la puntuación por sí solo${lista.length > 1 ? "s" : ""}.
@@ -223,7 +235,8 @@ export function bloquePlan(score, sectionEnabled, formData, instanceCounts) {
     </div>`;
   }).join("");
 
-  return `<div class="pdf-break-before" style="page-break-before:always;">
+  return `<div class="pdf-break-before" style="height:24px;"></div>
+  <div style="page-break-before:always;">
     <h2 style="font-size:16px;font-weight:500;color:${C.azul};margin:0 0 4px;">Plan de acción</h2>
     <p style="font-size:11px;color:${C.gris};margin:0 0 12px;">
       Tareas de seguridad y de limpieza del proveedor anterior que siguen abiertas, en orden de prioridad.
@@ -257,7 +270,8 @@ export function bloqueOportunidades(sectionEnabled, formData, instanceCounts) {
       <div style="font-size:9.5px;color:${C.gris};margin-top:2px;">${esc(h.seccion)}</div>
     </div>`).join("");
 
-  return `<div class="pdf-break-before" style="page-break-before:always;">
+  return `<div class="pdf-break-before" style="height:24px;"></div>
+  <div style="page-break-before:always;">
     <div style="background:${C.magenta};color:#fff;font-size:10px;letter-spacing:0.08em;text-transform:uppercase;padding:5px 10px;border-radius:4px;display:inline-block;margin-bottom:10px;">
       Uso interno · no entregar al cliente
     </div>
