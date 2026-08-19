@@ -151,7 +151,7 @@ export function buildPrintFragment(clientData, sectionEnabled, formData, instanc
     if (imgs.length > 0) {
       imgHtml = `<div style="margin-top:12px;"><p style="font-size:11px;font-weight:700;color:#868686;margin:0 0 8px;text-transform:uppercase;">📷 Capturas</p>`;
       imgs.forEach(img => {
-        imgHtml += `<div style="margin-bottom:12px;border:1px solid #E4E6EA;border-radius:6px;overflow:hidden;page-break-inside:avoid;">
+        imgHtml += `<div class="pdf-avoid" style="margin-bottom:12px;border:1px solid #E4E6EA;border-radius:6px;overflow:hidden;page-break-inside:avoid;">
           <img src="${esc(img.src)}" style="max-width:100%;height:auto;display:block;" />
           ${img.caption ? `<p style="font-size:11px;color:#868686;padding:5px 8px;margin:0;background:#F9F9F9;">${esc(img.caption)}</p>` : ""}
         </div>`;
@@ -160,7 +160,7 @@ export function buildPrintFragment(clientData, sectionEnabled, formData, instanc
     }
 
     if (!tables && !imgHtml) return;
-    body += `<div style="margin-bottom:20px;page-break-inside:avoid;">
+    body += `<div class="pdf-avoid" style="margin-bottom:20px;page-break-inside:avoid;">
       <h2 style="${h2S}">${section.icon} ${section.label}</h2>${tables}${imgHtml}</div>`;
   });
 
@@ -182,7 +182,7 @@ export function buildPrintFragment(clientData, sectionEnabled, formData, instanc
       body += `<div style="background:#F9F9F9;border:1px solid #E4E6EA;border-radius:6px;padding:12px;margin-bottom:12px;font-size:12px;white-space:pre-wrap;">${esc(otherNotes)}</div>`;
     }
     otras.forEach(img => {
-      body += `<div style="margin-bottom:12px;border:1px solid #E4E6EA;border-radius:6px;overflow:hidden;page-break-inside:avoid;">
+      body += `<div class="pdf-avoid" style="margin-bottom:12px;border:1px solid #E4E6EA;border-radius:6px;overflow:hidden;page-break-inside:avoid;">
         <img src="${esc(img.src)}" style="max-width:100%;height:auto;display:block;" />
         ${img.caption ? `<p style="font-size:11px;color:#868686;padding:5px 8px;margin:0;background:#F9F9F9;">${esc(img.caption)}</p>` : ""}
       </div>`;

@@ -9,6 +9,7 @@ import { SECTIONS, lectorEfectivo, reindexarHints } from "./sections.js";
 import { C, inp, FUENTE } from "./theme.js";
 import { SiNoToggle, ImageZone, SectionFields } from "./components/fields.jsx";
 import { buildPrintFragment } from "./print/buildPrintHTML.js";
+import { exportarInformePdf } from "./print/exportarPdf.js";
 import { computeScore } from "./score/computeScore.js";
 import { CRITERIOS, PRECONDICIONES } from "./score/criterios.js";
 import { hintsVisibles, claveHint, TIPOS_HINT } from "./hints.js";
@@ -182,8 +183,6 @@ export default function App() {
   const handlePrint = async () => {
     setExporting(true);
     try {
-      const html2pdf = (await import('html2pdf.js')).default;
-
       const container = document.createElement('div');
       const score = computeScore({ formData, sectionEnabled, instanceCounts, criterios: CRITERIOS, precondiciones: PRECONDICIONES });
       container.innerHTML = buildPrintFragment(clientData, sectionEnabled, formData, instanceCounts, sectionImages, score);
@@ -197,23 +196,7 @@ export default function App() {
 
       const nombre = clientData.empresa ? clientData.empresa.replace(/[^a-zA-Z0-9áéíóúñÁÉÍÓÚÑ ]/g, "_") : "onboarding";
       const fecha = new Date().toISOString().split("T")[0];
-
-      await html2pdf().set({
-        margin: [10, 10, 10, 10],
-        filename: `${nombre}_${fecha}.pdf`,
-        image: { type: 'jpeg', quality: 0.95 },
-        html2canvas: { scale: 2, useCORS: true, letterRendering: true },
-        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
-        // El modo 'css' calcula los saltos midiendo getBoundingClientRect() del
-        // DOM fuente y traduciendolo a pixeles del canvas ya renderizado (con
-        // scale:2). Con varios "page-break-before:always" seguidos (el informe
-        // ejecutivo encadena cinco) ese calculo se va desalineando: mete una
-        // pagina en blanco de mas y corta el titulo del bloque siguiente por
-        // arriba, dejando un fleco de una linea antes de repetirlo entero en la
-        // pagina siguiente. 'legacy' con selector propio no mide nada: cada
-        // elemento marcado es un salto exacto, sin arrastrar error.
-        pagebreak: { mode: ['avoid-all', 'legacy'], before: '.pdf-break-before' },
-      }).from(container).save();
+      await exportarInformePdf(container, `${nombre}_${fecha}.pdf`);
 
       document.body.removeChild(container);
     } catch (err) {

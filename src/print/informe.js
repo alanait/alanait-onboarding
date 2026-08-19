@@ -164,7 +164,7 @@ export function bloqueHallazgos(score) {
   const filas = lista.map(h => {
     const dom = score.dominios.find(d => d.id === h.dominio);
     const efecto = efectoDe(h);
-    return `<div style="padding:7px 0;border-bottom:1px solid ${C.borde};page-break-inside:avoid;">
+    return `<div class="pdf-avoid" style="padding:7px 0;border-bottom:1px solid ${C.borde};page-break-inside:avoid;">
       <div style="font-size:12px;font-weight:500;color:${C.tinta};line-height:1.4;">${esc(titularDe(h))}</div>
       <div style="font-size:9.5px;color:${C.gris};margin-top:2px;">${esc(dom ? dom.nombre : h.dominio)}${efecto ? ` · ${esc(efecto)}` : ""}</div>
     </div>`;
@@ -225,7 +225,7 @@ export function bloquePlan(score, sectionEnabled, formData, instanceCounts) {
 
   const filas = mostrados.map((h, i) => {
     const col = h.tipo === "seguridad" ? C.magenta : C.ambar;
-    return `<div style="display:flex;gap:9px;padding:7px 0;border-bottom:1px solid ${C.borde};page-break-inside:avoid;">
+    return `<div class="pdf-avoid" style="display:flex;gap:9px;padding:7px 0;border-bottom:1px solid ${C.borde};page-break-inside:avoid;">
       <span style="flex:0 0 18px;font-size:11px;color:${C.gris};">${i + 1}</span>
       <span style="flex:0 0 3px;background:${col};border-radius:2px;"></span>
       <span style="flex:1;">
@@ -265,7 +265,7 @@ export function bloqueOportunidades(sectionEnabled, formData, instanceCounts) {
   }
   if (!lista.length) return "";
 
-  const filas = lista.map(h => `<div style="padding:6px 0;border-bottom:1px solid ${C.borde};page-break-inside:avoid;">
+  const filas = lista.map(h => `<div class="pdf-avoid" style="padding:6px 0;border-bottom:1px solid ${C.borde};page-break-inside:avoid;">
       <div style="font-size:11.5px;color:${C.tinta};line-height:1.5;">${esc(h.texto)}</div>
       <div style="font-size:9.5px;color:${C.gris};margin-top:2px;">${esc(h.seccion)}</div>
     </div>`).join("");
