@@ -11,6 +11,7 @@ import { readFileSync, readdirSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { buildPrintFragment } from "../src/print/buildPrintHTML.js";
+import { bloquePlan } from "../src/print/informe.js";
 import { computeScore } from "../src/score/computeScore.js";
 import { CRITERIOS, PRECONDICIONES } from "../src/score/criterios.js";
 
@@ -126,6 +127,23 @@ console.log("\nCasos límite");
 }
 
 console.log("");
+
+// ── Un aviso identico en varias instancias es UNA tarea ──────────────────
+// Visto en el cliente Benbros: seis aplicaciones ERP llenaban seis de las
+// dieciocho plazas del plan con la misma linea palabra por palabra, y el texto
+// ni siquiera dice de que aplicacion habla.
+console.log("\nAvisos repetidos en varias instancias");
+{
+  const se = { erp: "si" };
+  const fd = { erp: { 0: {}, 1: {}, 2: {}, 3: {}, 4: {}, 5: {} } };
+  const ic = { erp: 6 };
+  const sc = computeScore({ formData: fd, sectionEnabled: se, instanceCounts: ic, criterios: CRITERIOS, precondiciones: PRECONDICIONES });
+  const plan = bloquePlan(sc, se, fd, ic);
+  const veces = (plan.match(/Averigua cómo entra el proveedor del ERP/g) || []).length;
+  es("el aviso del ERP sale una sola vez", veces, 1);
+  es("y dice en cuantas instancias toca", plan.includes("6 instancias"), true);
+}
+
 console.log(`${ok} correctas, ${fallos} fallos`);
 console.log("");
 process.exit(fallos ? 1 : 0);

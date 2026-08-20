@@ -33,6 +33,18 @@ const COLOR_TRAMO = { critico: C.magenta, alto: C.magenta, medio: C.ambar, bajo:
 // contenido) para que ese fleco sea siempre espacio en blanco, nunca texto ni
 // color de fondo.
 
+/**
+ * Como se nombran las instancias de una tarea agrupada. Una sola instancia se
+ * nombra por su numero; varias se resumen, porque el texto del aviso es el
+ * mismo y listarlas una a una no anade nada.
+ */
+const etiquetaInstancias = (h) => {
+  const xs = h.instancias ?? (h.instancia === null || h.instancia === undefined ? [] : [h.instancia]);
+  if (!xs.length) return "";
+  if (xs.length === 1) return ` · ${xs[0]}`;
+  return ` · ${xs.length} instancias (${xs.join(", ")})`;
+};
+
 /** Ancho maximo de la barra de un dominio, proporcional a su peso. */
 const anchoPeso = (peso) => Math.round((peso / 18) * 100);
 
@@ -266,6 +278,21 @@ export function bloquePlan(score, sectionEnabled, formData, instanceCounts) {
 
   if (!abiertos.length) return "";
 
+  // Un aviso identico en varias instancias es UNA tarea, no varias. Un cliente
+  // con seis aplicaciones ERP llenaba seis de las dieciocho plazas del plan con
+  // la misma linea palabra por palabra, y el texto ni siquiera dice de que
+  // aplicacion habla, asi que no habia forma de repartirlas. Se colapsan en una
+  // y se dice en cuantas instancias toca.
+  const agrupados = new Map();
+  for (const a of abiertos) {
+    const clave = `${a.seccion}|${a.id}`;
+    const previo = agrupados.get(clave);
+    if (previo) previo.instancias.push(a.instancia);
+    else agrupados.set(clave, { ...a, instancias: a.instancia === null ? [] : [a.instancia] });
+  }
+  abiertos.length = 0;
+  abiertos.push(...agrupados.values());
+
   // Seguridad antes que legado; dentro de cada tipo, el orden del catalogo
   const peso = { seguridad: 0, legado: 1 };
   abiertos.sort((a, b) => (peso[a.tipo] ?? 9) - (peso[b.tipo] ?? 9));
@@ -280,7 +307,7 @@ export function bloquePlan(score, sectionEnabled, formData, instanceCounts) {
       <span style="flex:0 0 3px;background:${col};border-radius:2px;"></span>
       <span style="flex:1;">
         <span style="display:block;font-size:11.5px;color:${C.tinta};line-height:1.5;">${esc(h.texto)}</span>
-        <span style="display:block;font-size:9.5px;color:${C.gris};margin-top:2px;">${esc(h.seccion)}${h.instancia ? ` · ${h.instancia}` : ""}</span>
+        <span style="display:block;font-size:9.5px;color:${C.gris};margin-top:2px;">${esc(h.seccion)}${etiquetaInstancias(h)}</span>
       </span>
     </div>`;
   }).join("");
