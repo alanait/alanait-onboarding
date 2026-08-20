@@ -266,3 +266,19 @@ export const PRECONDICIONES = [
     titular: "Sin antivirus ni EDR desplegado",
     texto: "No hay solucion antivirus ni EDR desplegada en el parque de equipos." },
 ];
+
+// Campos del formulario que mueven la nota, como claves "seccion.campo".
+//
+// Incluye los campos de cada criterio Y los campos padre de los que cuelga un
+// criterio por su `dep`. Marcar solo los criterios diria que "AHay un
+// repositorio dedicado?" es inventario, cuando es justo lo contrario: ese campo
+// no puntua por si mismo pero decide si puntuan otros tres.
+//
+// Existe porque en pantalla un desplegable que decide la nota y una casilla de
+// numero de serie se ven exactamente igual. El caso que lo destapo: un cliente
+// con 108 de 234 campos rellenos y solo un 30% de evidencia, porque lo relleno
+// era casi todo inventario.
+export const CAMPOS_QUE_PUNTUAN = new Set([
+  ...CRITERIOS.map(c => `${c.seccion}.${c.campo}`),
+  ...CRITERIOS.filter(c => c.dep).map(c => `${c.seccion}.${c.dep.field}`),
+]);

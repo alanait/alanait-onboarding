@@ -8,7 +8,7 @@ import { computeScore } from "../src/score/computeScore.js";
 // El grueso de las pruebas usa modelos sinteticos para aislar el motor. El
 // bloque de deduccion del soporte necesita el modelo REAL: depende de ids
 // concretos y de la tabla de fin de soporte.
-import { CRITERIOS, PRECONDICIONES } from "../src/score/criterios.js";
+import { CRITERIOS, PRECONDICIONES, CAMPOS_QUE_PUNTUAN } from "../src/score/criterios.js";
 
 let ok = 0, fallos = 0;
 const es = (etiqueta, real, esperado) => {
@@ -240,6 +240,27 @@ console.log("\nDeduccion del soporte del sistema operativo");
   // Y lo que no se puede deducir sigue siendo un hueco.
   const mixto = end(rr({ pcs: "si" }, { pcs: { 0: { so: "Mixto" } } }, "2026-08-20"));
   es("un parque \"Mixto\" no se deduce: sigue sin evidencia", mixto.evidencia, 0);
+}
+
+
+// ── Que campos mueven la nota ───────────────────────────────────
+// El formulario los marca con una regla a la izquierda. Si esta lista se
+// quedara corta, el tecnico invertiria su tiempo en inventario -que fue
+// exactamente lo que paso en el cliente Benbros: 46% de campos rellenos y 30%
+// de evidencia.
+console.log("\nCampos que mueven la nota");
+{
+  es("incluye el campo de cada criterio",
+     CRITERIOS.every(c => CAMPOS_QUE_PUNTUAN.has(`${c.seccion}.${c.campo}`)), true);
+  // Un campo padre no puntua por si mismo pero decide si puntuan otros: dejarlo
+  // sin marcar diria que "AHay un repositorio dedicado?" es inventario.
+  es("y tambien los padres de los que cuelga un criterio",
+     CRITERIOS.filter(c => c.dep).every(c => CAMPOS_QUE_PUNTUAN.has(`${c.seccion}.${c.dep.field}`)), true);
+  es("backup.repo_dedicado esta marcado aunque no puntue solo",
+     CAMPOS_QUE_PUNTUAN.has("backup.repo_dedicado"), true);
+  // Y no marca de mas: una seccion sin criterios no tiene ni un campo marcado.
+  es("una seccion sin criterios no marca nada",
+     [...CAMPOS_QUE_PUNTUAN].some(k => k.startsWith("telefonia.")), false);
 }
 
 console.log(`\n${ok} correctas, ${fallos} fallos\n`);

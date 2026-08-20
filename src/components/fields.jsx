@@ -6,6 +6,7 @@ import { C, inp } from "../theme.js";
 import { hintsVisibles, claveHint } from "../hints.js";
 import { lectorEfectivo } from "../sections.js";
 import { soporteDe } from "../score/soporteSO.js";
+import { CAMPOS_QUE_PUNTUAN } from "../score/criterios.js";
 import HintBanner from "./HintBanner.jsx";
 
 function CidrField({ value, onChange, placeholder, style }) {
@@ -62,8 +63,19 @@ function Field({ section, field, instanceIdx, getVal, setVal, fechaVisita = "" }
     );
   }
 
+  // Una regla fina a la izquierda en los campos que mueven la nota. Dice UNA
+  // sola cosa -"esto puntua"- y no cambia al contestarse: si se volviera verde
+  // seria un segundo semaforo compitiendo con el del grupo, y el tecnico dejaria
+  // de leerla. El caso que lo motivo: un cliente con 108 de 234 campos rellenos
+  // y solo un 30% de evidencia, porque lo relleno era casi todo inventario y en
+  // pantalla no habia forma de distinguirlo.
+  const puntua = CAMPOS_QUE_PUNTUAN.has(`${sid}.${field.id}`);
+
   return (
-    <div style={{ marginBottom: "14px" }}>
+    <div style={{
+      marginBottom: "14px",
+      ...(puntua ? { borderLeft: `2px solid ${C.blueBorder}`, paddingLeft: 9, marginLeft: -11 } : null),
+    }}>
       <label style={{ display: "block", fontSize: "12px", fontWeight: "500", color: C.gray, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "5px" }}>
         {field.label}
       </label>
@@ -323,6 +335,15 @@ function Grupo({ section, titulo, campos, instanceIdx, getVal, setVal, hints, ge
   }).length;
   const completo = visibles.length > 0 && rellenos === visibles.length;
 
+  // Dos cuentas, no una. La de campos decia "13/13" en verde con cuatro
+  // criterios sin contestar, porque marca, modelo y numero de serie tambien
+  // cuentan como campos. La primera cifra es la que decide la nota.
+  const queCuentan = visibles.filter(f => CAMPOS_QUE_PUNTUAN.has(`${section.id}.${f.id}`));
+  const cuentanHechos = queCuentan.filter(f => {
+    const v = getVal(section.id, f.id, instanceIdx);
+    return Array.isArray(v) ? v.length > 0 : v !== "" && v !== undefined;
+  }).length;
+
   // Un grupo cuyos campos son todos condicionales y ninguno se cumple no pinta
   // nada: sin esto quedaria una cabecera de acordeon vacia con un "0/0".
   if (visibles.length === 0) return null;
@@ -344,12 +365,17 @@ function Grupo({ section, titulo, campos, instanceIdx, getVal, setVal, hints, ge
       >
         <span style={{ display: "inline-block", transform: abierto ? "rotate(90deg)" : "none", transition: "transform 0.15s", fontSize: 10 }}>▶</span>
         <span style={{ flex: 1 }}>{titulo}</span>
-        <span style={{
-          fontSize: 11, fontWeight: 500, letterSpacing: 0,
-          color: completo ? C.green : C.textLight,
-          fontVariantNumeric: "tabular-nums",
-        }}>
-          {rellenos}/{visibles.length}
+        <span style={{ fontSize: 11, fontWeight: 500, letterSpacing: 0, fontVariantNumeric: "tabular-nums", display: "flex", gap: 7, alignItems: "center" }}>
+          {queCuentan.length > 0 && (
+            <span
+              title="Campos que mueven el CiberScore"
+              style={{ color: cuentanHechos === queCuentan.length ? C.green : C.blue, borderLeft: `2px solid ${C.blueBorder}`, paddingLeft: 5 }}>
+              {cuentanHechos}/{queCuentan.length}
+            </span>
+          )}
+          <span style={{ color: completo ? C.green : C.textLight, fontWeight: 400 }}>
+            {rellenos}/{visibles.length}
+          </span>
         </span>
       </button>
       {abierto && <Rejilla section={section} campos={campos} instanceIdx={instanceIdx} getVal={getVal} setVal={setVal} hints={hints} getHint={getHint} setHint={setHint} />}

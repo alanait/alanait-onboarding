@@ -164,13 +164,23 @@ export default function ReportPanel({ sectionEnabled, formData, instanceCounts, 
         </div>
       )}
 
-      <div style={titulo}>Formulario relleno</div>
+      {/* Dos cifras separadas, no una mezclada. La de campos respondia a una
+          pregunta que el tecnico no se hace ("cuanto formulario queda?") y
+          escondia la que si ("cuanto me falta para tener nota?"): un cliente
+          con el 46% de campos rellenos tenia un 30% de evidencia y nadie podia
+          explicar la diferencia, porque lo relleno era casi todo inventario. */}
+      <div style={titulo}>Avance hacia la nota</div>
       <div style={{ display: "flex", gap: 10, marginBottom: 12 }}>
-        <Cifra valor={`${r.respondidas}/${r.total}`} etiqueta="secciones respondidas" color={C.blue} />
-        <Cifra valor={`${r.pctCampos}%`} etiqueta={`${r.rellenos} de ${r.campos} campos`} color={r.pctCampos >= 80 ? C.green : C.blue} />
+        <Cifra valor={`${score.evidencia}%`} etiqueta={`comprobado · hace falta ${score.evidenciaMinima}%`} color={score.fiable ? C.green : C.blue} />
+        <Cifra valor={`${r.respondidas}/${r.total}`} etiqueta="secciones decididas" color={C.blue} />
       </div>
-      <div style={{ height: 5, borderRadius: 3, background: C.border, overflow: "hidden", marginBottom: 18 }}>
-        <div style={{ height: "100%", width: `${r.pctCampos}%`, background: r.pctCampos >= 80 ? C.green : C.blue, transition: "width 0.3s" }} />
+      <div style={{ height: 5, borderRadius: 3, background: C.border, overflow: "hidden", marginBottom: 6, position: "relative" }}>
+        <div style={{ height: "100%", width: `${score.evidencia}%`, background: score.fiable ? C.green : C.blue, transition: "width 0.3s" }} />
+        {/* La marca del umbral: sin ella el tecnico no sabe donde esta la meta. */}
+        <div style={{ position: "absolute", top: 0, bottom: 0, left: `${score.evidenciaMinima}%`, width: 1, background: C.textLight }} />
+      </div>
+      <div style={{ fontSize: 10.5, color: C.textLight, marginBottom: 18, lineHeight: 1.45 }}>
+        Inventario documentado: {r.pctCampos}% ({r.rellenos} de {r.campos} campos). No mueve la nota.
       </div>
 
       {/* Comprobaciones criticas que aplicaban y nadie ha hecho. No son
