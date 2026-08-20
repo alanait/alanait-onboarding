@@ -294,7 +294,7 @@ function ImageZone({ sectionId, images, addImage, removeImage, updateCaption }) 
  * Rejilla de dos columnas; textarea y checks ocupan el ancho completo.
  * Los avisos anclados a un campo se pintan justo debajo, a ancho completo.
  */
-function Rejilla({ section, campos, instanceIdx, getVal, setVal, hints = [], getHint, setHint }) {
+function Rejilla({ section, campos, instanceIdx, getVal, setVal, hints = [], getHint, setHint, fechaVisita = "" }) {
   const porAncla = new Map();
   for (const h of hints) {
     if (!h.anchor) continue;
@@ -324,7 +324,7 @@ function Rejilla({ section, campos, instanceIdx, getVal, setVal, hints = [], get
   );
 }
 
-function Grupo({ section, titulo, campos, instanceIdx, getVal, setVal, hints, getHint, setHint }) {
+function Grupo({ section, titulo, campos, instanceIdx, getVal, setVal, hints, getHint, setHint, fechaVisita = "" }) {
   const [abierto, setAbierto] = useState(true);
 
   // Un campo condicional que no se cumple no cuenta: si no se ve, no se puede rellenar.
@@ -378,7 +378,7 @@ function Grupo({ section, titulo, campos, instanceIdx, getVal, setVal, hints, ge
           </span>
         </span>
       </button>
-      {abierto && <Rejilla section={section} campos={campos} instanceIdx={instanceIdx} getVal={getVal} setVal={setVal} hints={hints} getHint={getHint} setHint={setHint} />}
+      {abierto && <Rejilla section={section} campos={campos} instanceIdx={instanceIdx} getVal={getVal} setVal={setVal} hints={hints} getHint={getHint} setHint={setHint} fechaVisita={fechaVisita} />}
     </div>
   );
 }
@@ -395,7 +395,7 @@ function SectionFields({ section, instanceIdx, getVal, setVal, getHint, setHint,
 
   const hints = hintsVisibles(section.id, lectorEfectivo(section.id, getVal, instanceIdx));
   const sueltos = hints.filter(h => !h.anchor);
-  const comun = { section, instanceIdx, getVal, setVal, hints, getHint, setHint };
+  const comun = { section, instanceIdx, getVal, setVal, hints, getHint, setHint, fechaVisita };
 
   const avisosSueltos = sueltos.length > 0 && (
     <div style={{ marginTop: 4 }}>
