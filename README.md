@@ -42,9 +42,22 @@ que no encajan en ninguna de las anteriores.
 - Guardado en la nube con base de datos
 - Historial de versiones (restaurar cualquier estado anterior)
 - Exportar/importar archivos `.alanait` como backup
-- Exportar informe a PDF
+- **CiberScore**: nota 0-100 sobre 7 dominios ponderados, calculada en vivo
+  mientras se rellena (`src/score/`). Solo se publica como fiable cuando hay
+  evidencia suficiente detras.
+- **Avisos de buenas practicas** contextuales segun lo que se va contestando
+  (`src/hints.js`), marcables como Hecho / Pendiente / N/A.
+- Exportar informe a PDF, con **parte ejecutiva interna**: diagnostico por
+  dominios, hallazgos criticos, preguntas criticas sin contestar, plan de accion
+  y oportunidades comerciales
 - Login con email y contrasena (restringido a dominio corporativo)
 - Dashboard con listado y busqueda de clientes
+
+## Para desarrollar
+
+Antes de tocar el motor de puntuacion o el informe, leer `CLAUDE.md` y
+`.claude/handoff/`: ahi estan las decisiones de modelo, los agujeros conocidos y
+los experimentos que ya se probaron y no funcionaron.
 
 ## Arquitectura
 

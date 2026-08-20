@@ -1,7 +1,12 @@
 node_modules/
 build/
 dist/
-.claude/
+# Config local de Claude Code, pero NO el handoff entre sesiones: ahi vive el
+# porque de las decisiones del modelo de puntuacion y tiene que viajar con el
+# repo. Se excluye el CONTENIDO de .claude/ y no la carpeta, porque git no
+# puede reincluir nada dentro de un directorio ya excluido.
+.claude/*
+!.claude/handoff/
 .env.local
 .env*.local
 

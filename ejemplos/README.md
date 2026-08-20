@@ -12,9 +12,13 @@ real, y como banco de pruebas cuando se toquen los criterios.
 |---|---|---:|---|
 | `01-bien-protegido` | Garrigues Assessors · asesoría, 18 empleados | 99 | Riesgo bajo |
 | `02-medio-alto` | Tècnics Vallès · ingeniería, 32 empleados | 78 | Riesgo medio |
-| `03-medio` | Distribucions Bages · distribución, 45 empleados | 53 | Riesgo alto |
-| `04-medio-bajo` | Mecanitzats Serra · taller, 24 empleados | 32 | Riesgo crítico |
-| `05-riesgo-critico` | Construccions Pla i Fills · obra, 12 empleados | 6 | Riesgo crítico |
+| `03-medio` | Distribucions Bages · distribución, 45 empleados | 51 | Riesgo alto |
+| `04-medio-bajo` | Mecanitzats Serra · taller, 24 empleados | 30 | Riesgo crítico |
+| `05-riesgo-critico` | Construccions Pla i Fills · obra, 12 empleados | 5 | Riesgo crítico |
+
+> Las notas de arriba corresponden al modelo **CiberScore 2.1.0**. Cambian cuando
+> cambia el modelo: recalcularlas con `node scripts/puntuar-ejemplos.mjs` y
+> reetiquetar los ficheros con `node scripts/etiquetar-ejemplos.mjs`.
 
 ## Qué representa cada uno
 
