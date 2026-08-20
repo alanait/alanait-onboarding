@@ -91,7 +91,7 @@ export const SECTIONS = [
       { id: "so_windows_cliente", label: "Versión de Windows", type: "select", options: ["Windows 11", "Windows 10", "Windows 8.1", "Windows 7", "Anterior a Windows 7"], dep: { field: "so_familia", value: "Windows (escritorio)" }, group: "Sistema operativo" },
       { id: "so_linux", label: "Distribución de Linux", type: "select", options: ["Ubuntu Server LTS", "Ubuntu Server (no LTS)", "Debian", "Red Hat Enterprise Linux", "Rocky Linux / AlmaLinux", "CentOS 7 o anterior", "SUSE", "Otra"], dep: { field: "so_familia", value: "Linux" }, group: "Sistema operativo" },
       { id: "so", label: "Versión exacta / notas del sistema", type: "text", placeholder: "Ej: Windows Server 2022 Standard 21H2", group: "Sistema operativo" },
-      { id: "so_soporte", label: "¿El sistema operativo está en soporte?", type: "select", options: ["En soporte", "Fuera de soporte (EOL)", "No revisado"], group: "Sistema operativo" },
+      { id: "so_soporte", label: "¿El sistema operativo está en soporte?", type: "select", deducible: { desde: (leer) => ({ "Windows Server": "so_windows_server", "Windows (escritorio)": "so_windows_cliente", "Linux": "so_linux" })[leer("so_familia")] ?? "" }, options: ["En soporte", "Fuera de soporte (EOL)", "No revisado"], group: "Sistema operativo" },
       { id: "so_parcheo", label: "Nivel de parches", type: "select", options: ["Al día", "Parches pendientes", "Muy desactualizado", "No revisado"], group: "Sistema operativo" },
       { id: "so_licencia_titular", label: "Titularidad de la licencia del SO y CALs", type: "radio", options: ["A nombre del cliente", "A nombre del proveedor anterior", "No revisado"], group: "Sistema operativo" },
 
@@ -128,7 +128,7 @@ export const SECTIONS = [
 
       // ── Sistema operativo y parcheo ──────────────────────────────────────
       { id: "so", label: "Sistema Operativo predominante", type: "select", options: ["Windows 11", "Windows 10", "macOS", "Linux", "Mixto"], group: "Sistema operativo y parcheo" },
-      { id: "so_soporte", label: "¿Los sistemas operativos están en soporte?", type: "select", options: ["En soporte", "Mixto", "Fuera de soporte (EOL)", "No revisado"], group: "Sistema operativo y parcheo" },
+      { id: "so_soporte", label: "¿Los sistemas operativos están en soporte?", type: "select", deducible: { desde: () => "so" }, options: ["En soporte", "Mixto", "Fuera de soporte (EOL)", "No revisado"], group: "Sistema operativo y parcheo" },
       { id: "parcheo_gestion", label: "Gestión de actualizaciones del sistema", type: "select", options: ["Centralizada por RMM", "WSUS / Intune / GPO", "Windows Update automático sin control", "Manual por el usuario", "Sin gestión", "No revisado"], group: "Sistema operativo y parcheo" },
       { id: "parcheo_terceros", label: "Actualizaciones de terceros (Chrome, Adobe, Java...)", type: "select", options: ["Centralizada por RMM", "Automática de cada aplicación", "Manual", "Sin gestión", "No revisado"], group: "Sistema operativo y parcheo" },
       { id: "software_licencias", label: "¿El software instalado está licenciado?", type: "select", options: ["Todo con licencia", "Hay software sin licencia", "No revisado"], group: "Sistema operativo y parcheo" },

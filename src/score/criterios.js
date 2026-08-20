@@ -118,7 +118,7 @@ export const CRITERIOS = [
     porQue: "Proxy observable de cuenta nominal: sin directorio central los equipos tiran de cuentas locales compartidas, y entonces no hay quien hizo que ni forma fiable de dar de baja a quien se va." },
 
   // ── Endpoint y servidores ───────────────────────────────
-  { id: "pcs_so_soporte", dominio: "endpoint", seccion: "pcs", campo: "so_soporte", peso: 3, mapa: { "En soporte": 1, Mixto: 0.5, "Fuera de soporte (EOL)": 0 }, agregacion: "min",
+  { id: "pcs_so_soporte", dominio: "endpoint", seccion: "pcs", campo: "so_soporte", peso: 3, deducibleDe: "so", mapa: { "En soporte": 1, Mixto: 0.5, "Fuera de soporte (EOL)": 0 }, agregacion: "min",
     porQue: "Un parque con sistemas fuera de soporte no recibe parches: cualquier vulnerabilidad publicada queda abierta para siempre (CIS 2.2 / ENS op.exp.4)" },
   { id: "pcs_parcheo_sistema", dominio: "endpoint", seccion: "pcs", campo: "parcheo_gestion", peso: 3, mapa: { "Centralizada por RMM": 1, "WSUS / Intune / GPO": 1, "Windows Update automático sin control": 0.5, "Manual por el usuario": 0, "Sin gestión": 0 }, agregacion: "min",
     porQue: "Sin gestión centralizada de actualizaciones nadie sabe qué equipo está sin parchear ni cuánto tarda en estarlo (CIS 7.3)" },
@@ -146,7 +146,7 @@ export const CRITERIOS = [
     porQue: "Una detección que nadie lee no es una detección; el ransomware avisa horas antes en la consola y nadie la mira (CIS 8.11 / 17.x)" },
   { id: "av_consola_control", dominio: "endpoint", seccion: "antivirus", campo: "consola_acceso", peso: 2, mapa: { "El cliente": 1, "El proveedor anterior": 0, Ambos: 0.5, "Nadie / credenciales perdidas": 0 }, agregacion: "min",
     porQue: "Si la consola la controla el proveedor anterior o nadie, el antivirus no se puede configurar, excluir ni desinstalar: la protección existe pero es ingobernable" },
-  { id: "srv_so_soporte", dominio: "endpoint", seccion: "servidores", campo: "so_soporte", peso: 3, mapa: { "En soporte": 1, "Fuera de soporte (EOL)": 0 }, agregacion: "min", critico: { cuando: ["Fuera de soporte (EOL)"], capDominio: 45 },
+  { id: "srv_so_soporte", dominio: "endpoint", seccion: "servidores", campo: "so_soporte", peso: 3, redundanteSi: ["so_windows_server", "so_windows_cliente", "so_linux"], mapa: { "En soporte": 1, "Fuera de soporte (EOL)": 0 }, agregacion: "min", critico: { cuando: ["Fuera de soporte (EOL)"], capDominio: 45 },
     titular: "Servidor con sistema operativo fuera de soporte",
     porQue: "Un servidor fuera de soporte no recibirá nunca el parche de la próxima vulnerabilidad crítica y suele ser justo el que guarda los datos (CIS 2.2)" },
   { id: "srv_so_version_windows_server", dominio: "endpoint", seccion: "servidores", campo: "so_windows_server", peso: 2, mapa: { "Windows Server 2025": 1, "Windows Server 2022": 1, "Windows Server 2019": 1, "Windows Server 2016": 0.5, "Windows Server 2012 R2": 0, "Windows Server 2012": 0, "Windows Server 2008 R2": 0, "Windows Server 2008": 0, "Anterior a 2008": 0 }, dep: { field: "so_familia", value: "Windows Server" }, agregacion: "min", critico: { cuando: ["Windows Server 2012 R2", "Windows Server 2012", "Windows Server 2008 R2", "Windows Server 2008", "Anterior a 2008"], capDominio: 45 },

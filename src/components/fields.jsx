@@ -5,6 +5,7 @@ import React, { useState } from "react";
 import { C, inp } from "../theme.js";
 import { hintsVisibles, claveHint } from "../hints.js";
 import { lectorEfectivo } from "../sections.js";
+import { soporteDe } from "../score/soporteSO.js";
 import HintBanner from "./HintBanner.jsx";
 
 function CidrField({ value, onChange, placeholder, style }) {
@@ -24,14 +25,41 @@ function CidrField({ value, onChange, placeholder, style }) {
   );
 }
 
-function Field({ section, field, instanceIdx, getVal, setVal }) {
+function Field({ section, field, instanceIdx, getVal, setVal, fechaVisita = "" }) {
   const sid = section.id;
   const v = instanceIdx !== null ? getVal(sid, field.id, instanceIdx) : getVal(sid, field.id, null);
   const set = (val) => instanceIdx !== null ? setVal(sid, field.id, val, instanceIdx) : setVal(sid, field.id, val, null);
+  const [forzado, setForzado] = useState(false);
 
   if (field.dep) {
     const depV = instanceIdx !== null ? getVal(sid, field.dep.field, instanceIdx) : getVal(sid, field.dep.field, null);
     if (depV !== field.dep.value) return null;
+  }
+
+  // Lo que la aplicacion puede deducir no se pregunta. Si el tecnico ya ha dicho
+  // "Windows Server 2025", pedirle ademas que confirme si esta en soporte es
+  // trabajo de mas y una ocasion de equivocarse. Se muestra deducido y en gris;
+  // el enlace de al lado deja contestarlo a mano para los casos legitimos que la
+  // tabla no cubre (soporte extendido de pago).
+  const leerCampo = (id) => instanceIdx !== null ? getVal(sid, id, instanceIdx) : getVal(sid, id, null);
+  const deduccion = field.deducible
+    ? soporteDe(leerCampo(field.deducible.desde(leerCampo)), fechaVisita)
+    : null;
+  if (deduccion !== null && !v && !forzado) {
+    return (
+      <div style={{ marginBottom: "14px" }}>
+        <label style={{ display: "block", fontSize: "12px", fontWeight: "500", color: C.gray, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "5px" }}>
+          {field.label}
+        </label>
+        <div style={{ ...inp, background: C.grayLight, color: C.text, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
+          <span>{deduccion}</span>
+          <span style={{ fontSize: 11, color: C.textLight }}>deducido de la versión</span>
+        </div>
+        <button onClick={() => setForzado(true)} style={{ marginTop: 4, background: "none", border: "none", padding: 0, fontSize: 11, color: C.blue, cursor: "pointer", fontFamily: "inherit" }}>
+          Contestar a mano
+        </button>
+      </div>
+    );
   }
 
   return (
@@ -267,7 +295,7 @@ function Rejilla({ section, campos, instanceIdx, getVal, setVal, hints = [], get
       {campos.map(f => (
         <React.Fragment key={f.id}>
           <div style={f.type === "textarea" || f.type === "checks" ? { gridColumn: "1 / -1" } : {}}>
-            <Field section={section} field={f} instanceIdx={instanceIdx} getVal={getVal} setVal={setVal} />
+            <Field section={section} field={f} instanceIdx={instanceIdx} getVal={getVal} setVal={setVal} fechaVisita={fechaVisita} />
           </div>
           {(porAncla.get(f.id) || []).map(h => (
             <div key={h.id} style={{ gridColumn: "1 / -1", marginTop: -4 }}>
@@ -329,7 +357,7 @@ function Grupo({ section, titulo, campos, instanceIdx, getVal, setVal, hints, ge
   );
 }
 
-function SectionFields({ section, instanceIdx, getVal, setVal, getHint, setHint }) {
+function SectionFields({ section, instanceIdx, getVal, setVal, getHint, setHint, fechaVisita = "" }) {
   // Agrupar preservando el orden de aparicion del esquema
   const orden = [];
   const porGrupo = new Map();

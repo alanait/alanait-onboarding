@@ -51,4 +51,9 @@ export const EVIDENCIA_MINIMA = 60;
 // 2.0.0: cambia la agregacion. El denominador de cada dominio pasa a ser el
 // peso APLICABLE en vez del peso evaluado, asi que un criterio que aplicaba y
 // nadie miro cuenta y vale 0. Las mismas respuestas dan otro numero.
-export const SCORE_MODEL_VERSION = "2.0.0";
+//
+// 2.1.0: el soporte del sistema operativo se deduce de la version en vez de
+// preguntarse. En servidores eso quita un doble conteo -la version y "esta en
+// soporte" eran el mismo hecho puntuando dos veces en el mismo dominio, con el
+// mismo tope disparandose por duplicado- asi que algunas notas bajan un punto.
+export const SCORE_MODEL_VERSION = "2.1.0";

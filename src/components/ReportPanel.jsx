@@ -81,9 +81,9 @@ function Cifra({ valor, etiqueta, color }) {
   );
 }
 
-export default function ReportPanel({ sectionEnabled, formData, instanceCounts, getVal, getCount, getHint, onIrASeccion }) {
+export default function ReportPanel({ sectionEnabled, formData, instanceCounts, getVal, getCount, getHint, onIrASeccion, fechaVisita = "" }) {
   const r = resumir({ sectionEnabled, getVal, getCount, getHint });
-  const score = computeScore({ formData, sectionEnabled, instanceCounts, criterios: CRITERIOS, precondiciones: PRECONDICIONES });
+  const score = computeScore({ formData, sectionEnabled, instanceCounts, criterios: CRITERIOS, precondiciones: PRECONDICIONES, fecha: fechaVisita });
   const seguridadAbiertos = r.abiertos.filter(h => h.tipo === "seguridad").length;
 
   const titulo = {

@@ -27,6 +27,7 @@
 
 import { DOMINIOS, tramoDe, SCORE_MODEL_VERSION, EVIDENCIA_MINIMA } from "./dominios.js";
 import { LITERALES_NO_APLICA, LITERALES_SIN_COMPROBAR } from "./criterios.js";
+import { FIN_SOPORTE, soporteDe } from "./soporteSO.js";
 
 const vacio = (v) => v === undefined || v === null || v === "" || (Array.isArray(v) && v.length === 0);
 
@@ -43,7 +44,7 @@ const vacio = (v) => v === undefined || v === null || v === "" || (Array.isArray
  *                   miro, que es siempre el valor mas optimista disponible.
  *   "valor"         comprobado, con lo que diga el mapa.
  */
-function estadoEnInstancia(criterio, leer) {
+function estadoEnInstancia(criterio, leer, fecha) {
   // Un condicional que no se cumple ni siquiera aparece en pantalla. Con el
   // padre en blanco tampoco se puede exigir: no sabemos si el cliente tiene
   // eso, y contarlo como pendiente haria que contestar "No" al padre SUBIERA
@@ -51,7 +52,32 @@ function estadoEnInstancia(criterio, leer) {
   // reves.
   if (criterio.dep && leer(criterio.dep.field) !== criterio.dep.value) return { tipo: "noaplica" };
 
+  // El mismo hecho no puede puntuar dos veces. "El SO esta en soporte" se
+  // deduce de la version, y la version YA tiene su propio criterio, con mas
+  // matiz ademas (Windows Server 2016 vale 0.5, no 0 ni 1). Contar las dos
+  // cosas sumaba 5 puntos de peso al mismo dominio por un unico dato y hacia
+  // saltar el mismo tope por duplicado: el informe listaba "servidor fuera de
+  // soporte" y "Windows Server sin parches desde hace anos" como dos hallazgos.
+  //
+  // Cuando la version no decide -macOS, "Otro", o una distribucion de Linux
+  // cuya version menor no recoge el desplegable- la pregunta sigue haciendo
+  // falta y el criterio se comporta como cualquier otro.
+  if (criterio.redundanteSi?.some(c => FIN_SOPORTE[leer(c)] !== undefined)) return { tipo: "noaplica" };
+
   const v = leer(criterio.campo);
+
+  // Si el campo esta en blanco pero otro ya lo determina, no es un hueco: es un
+  // dato que la aplicacion puede deducir. Preguntar "esta en soporte?" a quien
+  // acaba de contestar "Windows 10" es trabajo de mas y una ocasion de
+  // equivocarse. Una respuesta explicita siempre manda sobre la deduccion: hay
+  // clientes con soporte extendido de pago (ESU) que son la excepcion legitima.
+  if (vacio(v) && criterio.deducibleDe) {
+    const deducido = soporteDe(leer(criterio.deducibleDe), fecha);
+    if (deducido !== null && criterio.mapa && deducido in criterio.mapa) {
+      return { tipo: "valor", valor: criterio.mapa[deducido], deducido };
+    }
+  }
+
   if (vacio(v)) return { tipo: "sincomprobar" };
   if (Array.isArray(v)) return { tipo: "noaplica" }; // los checks no se resuelven con un mapa literal
   if (LITERALES_NO_APLICA.includes(v)) return { tipo: "noaplica" };
@@ -95,7 +121,7 @@ function agregar(valores, modo) {
  * @param {Array}  p.criterios       reglas del modelo
  * @param {Array}  p.precondiciones  reglas de seccion entera (p.ej. no hay backup)
  */
-export function computeScore({ formData = {}, sectionEnabled = {}, instanceCounts = {}, criterios = [], precondiciones = [] }) {
+export function computeScore({ formData = {}, sectionEnabled = {}, instanceCounts = {}, criterios = [], precondiciones = [], fecha = "" }) {
   const porDominio = {};
   // `pesoAplicable` (el denominador de la nota) es el peso de los criterios que
   // le tocaban a este cliente, contestados o no. `pesoEvaluado` es el de los
@@ -142,7 +168,7 @@ export function computeScore({ formData = {}, sectionEnabled = {}, instanceCount
 
     for (let i = 0; i < n; i++) {
       const leer = (campo) => formData[c.seccion]?.[i]?.[campo] ?? "";
-      const e = estadoEnInstancia(c, leer);
+      const e = estadoEnInstancia(c, leer, fecha);
       if (e.tipo === "noaplica") { valores.push(null); continue; }
       aplicables++;
       if (e.tipo === "valor") { evaluadas++; valores.push(e.valor); }

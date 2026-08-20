@@ -5,6 +5,10 @@
 // pueden maquillar, y en multi-instancia manda quien diga la agregacion.
 
 import { computeScore } from "../src/score/computeScore.js";
+// El grueso de las pruebas usa modelos sinteticos para aislar el motor. El
+// bloque de deduccion del soporte necesita el modelo REAL: depende de ids
+// concretos y de la tabla de fin de soporte.
+import { CRITERIOS, PRECONDICIONES } from "../src/score/criterios.js";
 
 let ok = 0, fallos = 0;
 const es = (etiqueta, real, esperado) => {
@@ -196,6 +200,46 @@ console.log("\nRegla 1 — lo que no se ha comprobado no puntua");
   es("un capador aplicable sin contestar sale en capadoresPendientes",
      pend.capadoresPendientes.map(x => x.id), ["rdp"]);
   es("y no genera hallazgo", pend.hallazgos.length, 0);
+}
+
+
+// ── Lo que la aplicacion puede deducir, no lo pregunta ──────────────────
+// Reportado por el dueno: "esto se deberia determinar segun la version y si
+// tiene soporte oficial, no preguntarlo". Ademas de trabajo de mas, preguntarlo
+// hacia que el MISMO HECHO puntuara dos veces en el dominio endpoint.
+console.log("\nDeduccion del soporte del sistema operativo");
+{
+  const rr = (se, fd, fecha) => computeScore({ criterios: CRITERIOS, precondiciones: PRECONDICIONES, sectionEnabled: se, formData: fd, instanceCounts: {}, fecha });
+  const end = (r) => r.dominios.find(d => d.id === "endpoint");
+
+  // Servidores: la version ya tiene su propio criterio, asi que preguntar
+  // ademas "esta en soporte?" contaba el mismo hecho dos veces.
+  const ws2012 = rr({ servidores: "si" }, { servidores: { 0: { so_familia: "Windows Server", so_windows_server: "Windows Server 2012", so_soporte: "Fuera de soporte (EOL)" } } }, "2026-08-20");
+  es("un servidor EOL genera UN hallazgo, no dos", ws2012.hallazgos.map(h => h.id), ["srv_so_version_windows_server"]);
+
+  // ...pero donde la version NO decide, la pregunta sigue haciendo falta.
+  const mac = rr({ servidores: "si" }, { servidores: { 0: { so_familia: "macOS" } } }, "2026-08-20");
+  es("en macOS el soporte se sigue preguntando",
+     mac.capadoresPendientes.some(p => p.campo === "so_soporte"), true);
+
+  // Parque de PCs: no hay criterio de version, asi que el dato hace falta y se
+  // deduce en vez de preguntarse.
+  const w10 = end(rr({ pcs: "si" }, { pcs: { 0: { so: "Windows 10" } } }, "2026-08-20"));
+  es("Windows 10 hoy se deduce fuera de soporte", w10.nota, 0);
+  es("y cuenta como evidencia, no como hueco", w10.evidencia > 0, true);
+
+  // La deduccion depende de la fecha de la VISITA, no del reloj de hoy: un
+  // informe de hace un ano tiene que seguir diciendo lo que era cierto aquel dia.
+  const w10antes = end(rr({ pcs: "si" }, { pcs: { 0: { so: "Windows 10" } } }, "2025-01-01"));
+  es("el mismo parque en enero de 2025 estaba en soporte", w10antes.nota, 20);
+
+  // Una respuesta explicita manda sobre la deduccion (clientes con ESU de pago).
+  const esu = end(rr({ pcs: "si" }, { pcs: { 0: { so: "Windows 10", so_soporte: "En soporte" } } }, "2026-08-20"));
+  es("contestar a mano gana a la deduccion (caso ESU)", esu.nota, 20);
+
+  // Y lo que no se puede deducir sigue siendo un hueco.
+  const mixto = end(rr({ pcs: "si" }, { pcs: { 0: { so: "Mixto" } } }, "2026-08-20"));
+  es("un parque \"Mixto\" no se deduce: sigue sin evidencia", mixto.evidencia, 0);
 }
 
 console.log(`\n${ok} correctas, ${fallos} fallos\n`);

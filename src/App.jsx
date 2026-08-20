@@ -21,7 +21,7 @@ import SectionRail from "./components/SectionRail.jsx";
 // PDF, asi que informe y PDF nunca pueden divergir. El contenido va escapado en
 // buildPrintFragment, por eso es seguro inyectarlo.
 function PrintView({ clientData, sectionEnabled, formData, instanceCounts, sectionImages }) {
-  const score = computeScore({ formData, sectionEnabled, instanceCounts, criterios: CRITERIOS, precondiciones: PRECONDICIONES });
+  const score = computeScore({ formData, sectionEnabled, instanceCounts, criterios: CRITERIOS, precondiciones: PRECONDICIONES, fecha: clientData.fecha });
   const html = buildPrintFragment(clientData, sectionEnabled, formData, instanceCounts, sectionImages, score);
   return <div dangerouslySetInnerHTML={{ __html: html }} />;
 }
@@ -184,7 +184,7 @@ export default function App() {
     setExporting(true);
     try {
       const container = document.createElement('div');
-      const score = computeScore({ formData, sectionEnabled, instanceCounts, criterios: CRITERIOS, precondiciones: PRECONDICIONES });
+      const score = computeScore({ formData, sectionEnabled, instanceCounts, criterios: CRITERIOS, precondiciones: PRECONDICIONES, fecha: clientData.fecha });
       container.innerHTML = buildPrintFragment(clientData, sectionEnabled, formData, instanceCounts, sectionImages, score);
       // 190mm = A4 (210mm) menos los margenes de 10mm que aplica html2pdf a cada
       // lado. Asi el contenido se mapea 1:1 con el area imprimible y no se corta.
@@ -811,7 +811,7 @@ export default function App() {
                               }} style={{ background: "transparent", border: "none", color: "#ef4444", cursor: "pointer", fontSize: 12, padding: "2px 6px", fontWeight: 500 }}>✕ Eliminar</button>
                             </div>
                           )}
-                          <SectionFields section={section} instanceIdx={i} getVal={getVal} setVal={setVal} getHint={getHint} setHint={setHint} />
+                          <SectionFields section={section} instanceIdx={i} getVal={getVal} setVal={setVal} getHint={getHint} setHint={setHint} fechaVisita={clientData.fecha} />
                         </div>
                       ))}
                       <button onClick={() => { addInstance(section.id); setIsDirty(true); }} style={{ marginTop: 8, padding: "7px 16px", border: `1.5px dashed ${C.blue}`, background: C.blueLight, color: C.blue, borderRadius: 7, fontSize: 13, fontWeight: 500, cursor: "pointer" }}>
@@ -901,6 +901,7 @@ export default function App() {
               getCount={getCount}
               getHint={getHint}
               onIrASeccion={irASeccion}
+              fechaVisita={clientData.fecha}
             />
           )}
         </div>
