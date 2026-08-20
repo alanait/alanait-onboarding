@@ -29,10 +29,18 @@ Negar Correo vale ~+28 puntos y no cuesta nada.
   reproducir**: mi reconstrucción da 36 y `fiable=false`. La cifra exacta depende
   de cuánto se conteste en las dos secciones restantes. **Lo estructural (los 4
   dominios desaparecen) sí está confirmado.**
-- **Arreglo previsto:** precondiciones para `email`, `red`, `wifi`, `servidores`,
-  `sai`. Cambia notas → sube versión de modelo.
+- **CÓMO COMPROBARLO, que tiene trampa:** los 4 dominios **siguen apareciendo en
+  el array `dominios`** que devuelve `computeScore`, con `nota: null`. No
+  desaparecen del objeto, desaparecen **del reparto**. Verificar mirando
+  `pesoAplicable === 0`, nunca la presencia en la lista. (Comprobarlo por
+  presencia da un falso «esto ya está arreglado».) La causa está en una sola
+  línea: `computeScore.js:162`, `if (sectionEnabled[c.seccion] !== "si") continue;`.
+- **Arreglo previsto:** precondiciones de sección. **Son 8 las secciones que hoy
+  se pueden negar gratis**, no 5 como decía una versión anterior de este
+  documento: `red`, `wifi`, `email`, `vpn`, `licenciamiento`, `pcs`, `servidores`
+  y `sai`. Cambia notas → sube versión de modelo.
 
-### A2. Fuga por campos padre (`dep`): 29 puntos de denominador
+### A2. Fuga por campos padre (`dep`): 25 puntos de denominador
 
 6 campos que no puntúan por sí mismos deciden si puntúan otros:
 
@@ -66,11 +74,24 @@ que existe y no lo he mirado», que genuinamente es menos evidencia.
 **Consecuencia operativa:** mientras exista este comportamiento, **no publicar un
 contador de «faltan N comprobaciones»**. Publicar la cuenta atrás es publicar el atajo.
 
-### A3. 12 capadores sin salida honesta
+### A3. Capadores sin salida honesta
 
-`red_firewall`, `wifi_cifrado`, `backup_ultimo_job`, `backup_pruebas`,
-`identidad_email_mfa`, `srv_so_soporte`, `sai_existe` y 5 más no ofrecen «No
-aplica» ni equivalente. El técnico solo puede dejarlos en blanco o mentir.
+Hay **22 capadores** (21 de dominio, 1 global). El problema es real, pero **la
+cifra depende de la definición de «salida honesta», así que hay que fijarla antes
+de tocar nada.** Medido sobre `CRITERIOS` × `SECTIONS`:
+
+| definición | cuántos | quiénes |
+|---|---|---|
+| sin ninguna salida (ni «No aplica» ni «No revisado»): contestar o mentir | **5** | `red_firewall`, `backup_pruebas`, `identidad_email_mfa`, `srv_so_version_windows_server`, `srv_so_version_windows_cliente` |
+| sin opción «No aplica» | **20** | los 5 de arriba + `red_firewall_soporte`, `red_rdp`, `wifi_cifrado`, `backup_ultimo_job`, `backup_prueba_resultado`, `backup_repo_expuesto`, `identidad_email_mfa_admins`, `identidad_pcs_admin_local_password`, `srv_so_soporte`, `sai_existe` y los 5 `san_*` |
+| ídem, descontando los que sí tienen salida por su `mapa` | **15** | los 20 menos los 5 `san_*`, que ofrecen «No existían» → 1 |
+
+Una versión anterior de este documento decía «12» sin registrar con qué
+definición. **No es reproducible con ninguna de las tres**; se deja constancia
+para que nadie intente cuadrarla. También nombraba `srv_so_soporte` sin el matiz
+de que D5 lo dejó **condicionalmente inerte** (`redundanteSi`): cuando la versión
+del SO decide, ese criterio sale del denominador y no capa.
+
 Sin arreglarlo, **`capadoresPendientes = 0` nunca es exigible**.
 
 ### A4. La media global deja esconder un dominio entero

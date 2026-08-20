@@ -89,9 +89,12 @@
 1. **¿Se implementan las precondiciones de sección?** (punto 1 de «Qué falta»).
    Cierra el agujero más grande pero **cambia notas y sube versión de modelo**. Se
    le avisó de que llevaba tres cambios de nota en un día y prefirió validar antes.
-2. **¿Se limpian las ramas antiguas?** `fase0/modularizar`, `fase1/…`, `fase2/hints`,
-   `fase3/ciberscore`, `rediseno/marca-e-informe-vivo`, `fase4/informe` siguen en el
-   remoto. Se le ofreció borrarlas y no contestó.
+2. **¿Se limpian las ramas antiguas?** Quedan **dos**, no seis:
+   `fase0/modularizar` y `fase4/informe`. **Ambas son ancestros de `main`**, o sea
+   que están fusionadas del todo y borrarlas no pierde nada. Las otras cuatro que
+   este documento daba por vivas (`fase1/…`, `fase2/hints`, `fase3/ciberscore`,
+   `rediseno/marca-e-informe-vivo`) ya no existen en el remoto. Se le ofreció
+   borrarlas y no contestó.
 3. **Calibración de Perímetro por tamaño de cliente** — decisión de negocio suya.
 4. **Licencia de Centra No2.**
 
@@ -116,7 +119,9 @@ Todos verificados ejecutando el motor real.
 **Sobre el tamaño del formulario (clave para clientes pequeños):**
 - Cliente pequeño: **200 campos visibles, solo ~70 puntúan**. 134 son inventario.
 - Secciones con **cero** criterios puntuables: Almacenamiento (14 campos),
-  Telefonía (10), Impresión (11), ERP (10) = **45 campos que no mueven la nota**.
+  Telefonía (10), Impresión (11), ERP (10) y Otros dispositivos (7) = **52 campos
+  que no mueven la nota**. (Una versión anterior decía 4 secciones y 45 campos:
+  se dejaba fuera `otros_dispositivos`.)
 - `CAMPOS_QUE_PUNTUAN` tiene **99 claves** (93 criterios + 6 campos padre).
 - Un cliente pequeño contestando todo lo visible llega a **evidencia 100 %, nota 84**
   (medido antes del cambio de la deducción del SO).

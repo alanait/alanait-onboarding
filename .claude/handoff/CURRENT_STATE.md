@@ -16,11 +16,15 @@ calcula un **CiberScore** 0–100 y genera un **informe PDF interno**.
 
 ## Dónde estamos exactamente
 
-**Todo el trabajo está fusionado en `main` y desplegado en producción.** El árbol
-está limpio salvo el propio handoff. No hay trabajo a medias en el código.
+**Todo el trabajo está fusionado en `main` y desplegado en producción.** No hay
+trabajo a medias en el código: lo que queda son huecos del modelo, no código
+incompleto.
+
+`4dbfbe5` es el último commit que **toca código** y es lo que sirve producción;
+encima solo va el commit de documentación de este handoff.
 
 ```
-4dbfbe5  Arregla pantalla en blanco: fechaVisita no llegaba a Rejilla/Grupo   <- HEAD
+4dbfbe5  Arregla pantalla en blanco: fechaVisita no llegaba a Rejilla/Grupo   <- ultimo commit de codigo
 d76ff6e  Marca en el formulario que campos mueven la nota
 be190be  Deduce el soporte del SO de la version en vez de preguntarlo
 c9caebc  Una pregunta sin contestar se nombra con su pregunta, no acusando
@@ -68,7 +72,7 @@ Este orden viene de un análisis multiagente con fase adversarial y está ordena
 por daño, no por esfuerzo. Los puntos 1–3 se refuerzan entre sí: **hacer el 4
 antes que el 3 bloquearía a clientes legítimos.**
 
-1. **Precondiciones para `email`, `red`, `wifi`, `servidores` y `sai`.**
+1. **Precondiciones de sección.**
    Es el agujero más grande y está medido: negar secciones es gratis. Hoy solo
    `backup` y `antivirus` tienen precondición (negarlas genera hallazgo).
    Marcando 13 de 15 secciones como «no» desaparecen 4 dominios enteros —
@@ -77,7 +81,14 @@ antes que el 3 bloquearía a clientes legítimos.**
    El dueño lo sabe y dejó la decisión pendiente para no acumular tres cambios de
    nota el mismo día.
 
-2. **La fuga de los campos padre (`dep`): 29 puntos de denominador.**
+   **Ojo: son 8 secciones, no 5.** Las que tienen criterios y NO tienen
+   precondición son `red`, `wifi`, `email`, `vpn`, `licenciamiento`, `pcs`,
+   `servidores` y `sai`. Una versión anterior de este documento solo listaba
+   cinco. Antes de implementar hay que decidir qué se hace con las tres que
+   faltaban: `pcs` casi seguro no debería poder negarse nunca (todo cliente tiene
+   equipos), mientras que `vpn` y `licenciamiento` sí pueden faltar de verdad.
+
+2. **La fuga de los campos padre (`dep`): 25 puntos de denominador.**
    6 campos que no puntúan por sí mismos deciden si puntúan otros:
    `backup.repo_dedicado` pesa 0 y abre 10; `servidores.so_familia` pesa 0 y abre
    6; también `licenciamiento.tipo_servicio` (4), `servidores.tipo` (2),
@@ -87,11 +98,12 @@ antes que el 3 bloquearía a clientes legítimos.**
    **Mientras esto siga así, NO publicar ningún contador de «faltan N
    comprobaciones»**: publicar la cuenta atrás es publicar el atajo.
 
-3. **Salida honesta para los 12 capadores que no la tienen.**
-   `red_firewall`, `wifi_cifrado`, `backup_ultimo_job`, `backup_pruebas`,
-   `identidad_email_mfa`, `srv_so_soporte`, `sai_existe` y 5 más: hoy el técnico
-   solo puede dejarlos en blanco o mentir. Sin esto no se puede exigir nunca
-   `capadoresPendientes = 0`.
+3. **Salida honesta para los capadores que no la tienen.**
+   Hay **22 capadores**. Cuántos carecen de salida depende de qué se considere
+   salida, y hay que fijar ese criterio antes de tocar nada (medición en
+   `KNOWN_ISSUES.md` § A3): **5** no ofrecen ninguna opción distinta de contestar
+   o mentir; **15** no ofrecen «No aplica». Hoy el técnico solo puede dejarlos en
+   blanco o mentir. Sin esto no se puede exigir nunca `capadoresPendientes = 0`.
 
 4. **Umbral por dominio, no solo global.** Diagnóstico verificado: la media global
    deja esconder un dominio entero (dejando Perímetro 18 + Backup 18 sin tocar y
@@ -128,9 +140,10 @@ antes que el 3 bloquearía a clientes legítimos.**
 | `src/components/fields.jsx` | Formulario; marcado de campos que puntúan. |
 | `src/components/ReportPanel.jsx` | Panel lateral en vivo. |
 
-## Cambios sin commit
+## De dónde sale esta documentación
 
-Solo documentación; **ningún cambio de funcionalidad**:
+Entró en `main` por el PR #14, en un único commit encima de `4dbfbe5`. Solo
+documentación; **ningún fichero de `src/` ni de `scripts/` cambió**:
 
 | Fichero | Qué |
 |---|---|
@@ -139,6 +152,15 @@ Solo documentación; **ningún cambio de funcionalidad**:
 | `.claude/handoff/*` | **Nuevo.** Este handoff + `analisis/` con las dos síntesis multiagente rescatadas del scratchpad. |
 | `README.md` | Añadidos CiberScore, avisos e informe ejecutivo a «Funcionalidades» (faltaban: el README era anterior) + puntero al handoff. |
 | `ejemplos/README.md` | Notas obsoletas corregidas (53→51, 32→30, 6→5) y nota de mantenimiento. |
+
+Antes de fusionarlo se contrastó **contra el código, ejecutándolo**, y aparecieron
+cinco cifras mal que van corregidas en ese mismo commit: la fuga de campos padre
+(25, no 29), el recuento de capadores sin salida (no reproducible, ver § A3), las
+secciones que se pueden negar gratis (8, no 5), las secciones sin criterios (5 y
+52 campos, no 4 y 45) y las ramas antiguas que quedan (2, no 6).
+
+**Lección: las cifras de este handoff se escribieron de memoria de una sesión
+larga. Si vas a apoyar una decisión en una, vuelve a medirla.**
 
 ## Deuda de documentación detectada (no corregida)
 
