@@ -9,7 +9,7 @@
 // campos de notas libres y las propias capturas, que pueden ser la consola del
 // proveedor saliente. Es una fase propia, no un interruptor.
 
-import { SECTIONS, lectorEfectivo } from "../sections.js";
+import { SECTIONS, lectorEfectivo, preguntaDe } from "../sections.js";
 import { hintsVisibles, TIPOS_HINT, claveHint } from "../hints.js";
 import { CRITERIOS, PRECONDICIONES } from "../score/criterios.js";
 import { esc } from "./buildPrintHTML.js";
@@ -184,20 +184,24 @@ export function bloqueHallazgos(score) {
   // mirado". Se imprime el bloque con la lista de lo que falta.
   if (!score.hallazgos.length) {
     if (!pendientes.length) return "";
+    // Se imprime LA PREGUNTA del campo, no el `titular` del criterio. El titular
+    // afirma el problema ("Servidor con sistema operativo fuera de soporte") y
+    // vale para un hallazgo confirmado; sobre un campo que solo esta en blanco
+    // se lee como una acusacion que el informe no puede sostener.
     const filasP = pendientes.map(p => {
-      const dom = score.dominios.find(d => d.id === p.dominio);
+      const q = preguntaDe(p.seccion, p.campo);
       return `<div class="pdf-avoid" style="padding:7px 0;border-bottom:1px solid ${C.borde};page-break-inside:avoid;">
-        <div style="font-size:12px;font-weight:500;color:${C.tinta};line-height:1.4;">${esc(p.titular || p.campo)}</div>
-        <div style="font-size:9.5px;color:${C.gris};margin-top:2px;">${esc(dom ? dom.nombre : p.dominio)} · sin comprobar</div>
+        <div style="font-size:12px;font-weight:500;color:${C.tinta};line-height:1.4;">${esc(q.pregunta)}</div>
+        <div style="font-size:9.5px;color:${C.gris};margin-top:2px;">${esc(q.seccion)} · sin contestar</div>
       </div>`;
     }).join("");
     return `<div class="pdf-break-before" style="height:24px;"></div>
     <div style="page-break-before:always;">
-      <h2 style="font-size:16px;font-weight:500;color:${C.azul};margin:0 0 4px;">Comprobaciones críticas pendientes</h2>
+      <h2 style="font-size:16px;font-weight:500;color:${C.azul};margin:0 0 4px;">Preguntas críticas sin contestar</h2>
       <p style="font-size:11px;color:${C.gris};margin:0 0 12px;">
-        Ningún criterio de los comprobados ha disparado un hallazgo crítico, pero quedan
-        ${pendientes.length} comprobación${pendientes.length > 1 ? "es" : ""} que sí pueden darlo y que nadie ha hecho.
-        Hasta cerrarlas, este informe no afirma que el cliente esté limpio.
+        Ningún criterio de los comprobados ha disparado un hallazgo crítico, pero
+        ${pendientes.length} pregunta${pendientes.length > 1 ? "s" : ""} que sí pueden darlo quedó${pendientes.length > 1 ? "aron" : ""} sin contestar en la visita.
+        No son hallazgos: son huecos. Hasta cerrarlos, este informe no afirma que el cliente esté limpio.
       </p>
       <div style="border-top:2px solid ${C.ambar};">${filasP}</div>
     </div>`;

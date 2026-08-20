@@ -104,7 +104,15 @@ console.log("\nCliente a medias (el caso que destapo el fallo)");
   es("y hay comprobaciones criticas sin hacer", score.capadoresPendientes.length > 0, true);
   es("el informe NO dice que se comprobo todo", html.includes("Se comprobaron todos los criterios que aplicaban"), false);
   es("y NO dice 'Sin hallazgos críticos'", html.includes("Sin hallazgos críticos"), false);
-  es("las publica como pendientes", html.includes("Comprobaciones críticas pendientes"), true);
+  es("las publica como pendientes", html.includes("Preguntas críticas sin contestar"), true);
+  // Reportado por el dueno: el aviso decia "Servidor con sistema operativo fuera
+  // de soporte" al lado de un "Windows Server 2025" recien escrito. Una pregunta
+  // sin contestar se nombra con SU PREGUNTA, no con el titular del hallazgo, que
+  // afirma un problema que nadie ha visto.
+  es("y las nombra con la pregunta del campo, no con el titular del hallazgo",
+     html.includes("¿Se realizan pruebas de restauración?"), true);
+  es("sin afirmar el problema que nadie ha comprobado",
+     html.includes("Nunca se ha probado una restauración"), false);
 }
 
 // ── Casos limite ────────────────────────────────────────────────────────────

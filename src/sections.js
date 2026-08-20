@@ -503,6 +503,23 @@ export function lectorEfectivo(sectionId, getVal, idx) {
   };
 }
 
+/**
+ * Como se le nombra un campo al tecnico: "Seccion · Pregunta del campo".
+ *
+ * Lo usan las listas de comprobaciones pendientes. Ahi NO se puede usar el
+ * `titular` del criterio: ese texto afirma el problema ("Servidor con sistema
+ * operativo fuera de soporte") y sirve para un hallazgo confirmado, pero puesto
+ * sobre un campo que solo esta en blanco se lee como una acusacion falsa -el
+ * dueno lo reporto viendo "fuera de soporte" al lado de un "Windows Server
+ * 2025" recien escrito, cuando lo que faltaba era otro campo. Una pregunta sin
+ * contestar se nombra con su pregunta.
+ */
+export function preguntaDe(sectionId, campoId) {
+  const seccion = SECTIONS.find(s => s.id === sectionId);
+  const campo = seccion?.fields.find(f => f.id === campoId);
+  return { seccion: seccion?.label ?? sectionId, pregunta: campo?.label ?? campoId };
+}
+
 /** Reindexa las claves `hintId@idx` al eliminar la instancia `idx` de una seccion. */
 export function reindexarHints(hints, sectionId, idxBorrado, total) {
   const ids = (SECTIONS.find(s => s.id === sectionId)?.fields ?? []) && Object.keys(hints);

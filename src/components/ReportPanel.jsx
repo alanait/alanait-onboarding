@@ -8,7 +8,7 @@
 
 import React from "react";
 import { C } from "../theme.js";
-import { SECTIONS, lectorEfectivo } from "../sections.js";
+import { SECTIONS, preguntaDe, lectorEfectivo } from "../sections.js";
 import { hintsVisibles, TIPOS_HINT } from "../hints.js";
 import { computeScore } from "../score/computeScore.js";
 import { CRITERIOS, PRECONDICIONES } from "../score/criterios.js";
@@ -178,7 +178,10 @@ export default function ReportPanel({ sectionEnabled, formData, instanceCounts, 
           decir que el cliente esta limpio, asi que van antes que los avisos. */}
       {score.capadoresPendientes?.length > 0 && (
         <>
-          <div style={titulo}>Comprobaciones críticas pendientes</div>
+          <div style={titulo}>Preguntas críticas sin contestar</div>
+          <div style={{ fontSize: 10.5, color: C.textLight, lineHeight: 1.45, marginBottom: 8 }}>
+            No son tareas: son campos del formulario. Pulsa para ir a la sección; al contestarlos desaparecen.
+          </div>
           <div style={{ marginBottom: 18 }}>
             {[...score.capadoresPendientes]
               .sort((a, b) => (a.capDominio ?? 100) - (b.capDominio ?? 100))
@@ -192,8 +195,10 @@ export default function ReportPanel({ sectionEnabled, formData, instanceCounts, 
                     background: C.amberLight, border: `1px solid ${C.amberBorder}`,
                     borderRadius: 6, padding: "7px 10px", marginBottom: 5,
                   }}>
-                  {cp.titular || `${cp.seccion}.${cp.campo}`}
-                  <span style={{ display: "block", fontSize: 10, color: C.amber, marginTop: 2 }}>sin comprobar</span>
+                  {preguntaDe(cp.seccion, cp.campo).pregunta}
+                  <span style={{ display: "block", fontSize: 10, color: C.amber, marginTop: 2 }}>
+                    {preguntaDe(cp.seccion, cp.campo).seccion} · sin contestar
+                  </span>
                 </button>
               ))}
           </div>
