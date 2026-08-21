@@ -26,7 +26,7 @@
 //      basta con una buena (`max`, para backup fuera de sede).
 
 import { DOMINIOS, tramoDe, SCORE_MODEL_VERSION, EVIDENCIA_MINIMA } from "./dominios.js";
-import { LITERALES_NO_APLICA, LITERALES_SIN_COMPROBAR } from "./criterios.js";
+import { LITERALES_NO_APLICA, LITERALES_SIN_COMPROBAR, CAMPOS_PADRE_SIN_CRITERIO } from "./criterios.js";
 import { FIN_SOPORTE, soporteDe } from "./soporteSO.js";
 
 const vacio = (v) => v === undefined || v === null || v === "" || (Array.isArray(v) && v.length === 0);
@@ -59,10 +59,16 @@ function estadoEnInstancia(criterio, leer, fecha) {
   // saltar el mismo tope por duplicado: el informe listaba "servidor fuera de
   // soporte" y "Windows Server sin parches desde hace anos" como dos hallazgos.
   //
+  // Cada entrada exige TAMBIEN que su propio dep se cumpla ahora mismo, no solo
+  // que el campo tenga un valor. Sin eso, un tecnico que cambia so_familia de
+  // "Windows Server" a "Linux" deja un valor fosil en so_windows_server; leerlo
+  // sin comprobar el dep colaba ese fosil como si decidiera, y silenciaba
+  // srv_so_soporte por un dato que ya no aplica.
+  //
   // Cuando la version no decide -macOS, "Otro", o una distribucion de Linux
   // cuya version menor no recoge el desplegable- la pregunta sigue haciendo
   // falta y el criterio se comporta como cualquier otro.
-  if (criterio.redundanteSi?.some(c => FIN_SOPORTE[leer(c)] !== undefined)) return { tipo: "noaplica" };
+  if (criterio.redundanteSi?.some(r => leer(r.dep.field) === r.dep.value && FIN_SOPORTE[leer(r.campo)] !== undefined)) return { tipo: "noaplica" };
 
   const v = leer(criterio.campo);
 
@@ -148,6 +154,12 @@ export function computeScore({ formData = {}, sectionEnabled = {}, instanceCount
   // "No tiene backup" no es un dato que falte: es el hallazgo.
   for (const p of precondiciones) {
     if (sectionEnabled[p.seccion] !== p.cuando) continue;
+    // Una precondicion se puede eximir si OTRA respuesta hace que el "no" sea
+    // legitimo en vez de una carencia: sin servidores ni NAS que proteger, no
+    // tener SAI no es un hallazgo (ver sin_sai). Sin esta salida, "sin SAI"
+    // pesaria igual para la nave con un rack lleno que para la oficina 100%
+    // cloud, y el proyecto ya penalizo una vez de mas a ese segundo caso.
+    if (p.salvoSi && sectionEnabled[p.salvoSi.seccion] === p.salvoSi.cuando) continue;
     hallazgos.push({ id: p.id, dominio: p.dominio, gravedad: "critico", texto: p.texto });
     if (p.capDominio !== undefined) porDominio[p.dominio].cap = Math.min(porDominio[p.dominio].cap, p.capDominio);
     if (p.capGlobal !== undefined) capGlobal = Math.min(capGlobal, p.capGlobal);
@@ -196,12 +208,20 @@ export function computeScore({ formData = {}, sectionEnabled = {}, instanceCount
       d.evaluados++;
     }
 
-    // Un cap se dispara si CUALQUIER instancia esta en el estado critico.
+    // El disparo del cap sigue la MISMA logica de agregacion que la nota, no
+    // "cualquier instancia" a secas. Con `min` (peor manda) basta una instancia
+    // critica: sai_existe agrega por `max` a proposito -"basta un armario
+    // bueno"- y antes CUALQUIER instancia en "No" capaba el dominio igual que
+    // con `min`, contradiciendo su propio porQue: un armario secundario sin SAI
+    // no puede capar el dominio si el principal si lo tiene.
     // Se lee con el mismo filtro que el resto: un valor fosil de un campo
     // oculto por su `dep` no puede capar un dominio entero.
     if (c.critico) {
-      const disparado = Array.from({ length: n }, (_, i) => valorCrudoEfectivo(c, (campo) => formData[c.seccion]?.[i]?.[campo] ?? ""))
-        .some(v => v !== null && c.critico.cuando.includes(v));
+      const crudos = Array.from({ length: n }, (_, i) => valorCrudoEfectivo(c, (campo) => formData[c.seccion]?.[i]?.[campo] ?? ""))
+        .filter(v => v !== null);
+      const disparado = crudos.length > 0 && (c.agregacion === "max"
+        ? crudos.every(v => c.critico.cuando.includes(v))
+        : crudos.some(v => c.critico.cuando.includes(v)));
       if (disparado) {
         hallazgos.push({ id: c.id, dominio: c.dominio, gravedad: "critico", texto: c.porQue });
         if (c.critico.capDominio !== undefined) d.cap = Math.min(d.cap, c.critico.capDominio);
@@ -252,6 +272,25 @@ export function computeScore({ formData = {}, sectionEnabled = {}, instanceCount
     }
   }
 
+  // ── Campos padre sin decidir ─────────────────────────────────────────────
+  // backup.repo_dedicado, servidores.so_familia, licenciamiento.tipo_servicio,
+  // servidores.tipo, email.proveedor y pcs.moviles no puntuan por si mismos
+  // -solo deciden si puntuan otros campos-, asi que dejarlos en blanco no
+  // tocaba ni la nota ni la fiabilidad: quedaba igual que contestarlos. No se
+  // toca la nota aqui -el orden de incentivos de los campos hijos ya es el
+  // correcto, ver KNOWN_ISSUES A2- pero silencio en el padre deja de ser
+  // gratis del todo: retrasa el sello de fiable igual que una seccion sin
+  // decidir.
+  let padresSinDecidir = 0;
+  for (const clave of CAMPOS_PADRE_SIN_CRITERIO) {
+    const [seccion, campo] = clave.split(".");
+    if (sectionEnabled[seccion] !== "si") continue;
+    const n = Math.max(1, instanceCounts[seccion] || 1);
+    for (let i = 0; i < n; i++) {
+      if (vacio(formData[seccion]?.[i]?.[campo] ?? "")) padresSinDecidir++;
+    }
+  }
+
   const global = pesoTotal ? Math.round(Math.min(numerador / pesoTotal, capGlobal)) : null;
 
   // Evidencia global: que parte del modelo aplicable se ha comprobado de
@@ -268,13 +307,14 @@ export function computeScore({ formData = {}, sectionEnabled = {}, instanceCount
   // segun se completa— pero solo es fiable con evidencia suficiente y sin
   // secciones sin decidir. La interfaz decide como presentarla; el motor solo
   // lo declara.
-  const fiable = global !== null && evidencia >= EVIDENCIA_MINIMA && sinResponder.length === 0;
+  const fiable = global !== null && evidencia >= EVIDENCIA_MINIMA && sinResponder.length === 0 && padresSinDecidir === 0;
 
   return {
     version: SCORE_MODEL_VERSION,
     nota: global,
     fiable,
     sinResponder,
+    padresSinDecidir,
     evidenciaMinima: EVIDENCIA_MINIMA,
     tramo: global === null ? null : tramoDe(global),
     capadaGlobal: global !== null && capGlobal < 100,

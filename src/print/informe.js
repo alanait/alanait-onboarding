@@ -87,6 +87,12 @@ export function paginaDiagnostico(score, sectionEnabled, fecha) {
   // blanco es que no existe o que no se miro.
   const sinServicio = SECTIONS.filter(s => (sectionEnabled || {})[s.id] === "no").map(s => s.label);
 
+  // Mismo filtro pero solo con las secciones que de verdad mueven la nota:
+  // negar una seccion sin ningun criterio (almacenamiento, telefonia...) no
+  // quita nada del denominador y no merece la advertencia de mas abajo.
+  const seccionesConModelo = new Set([...CRITERIOS.map(c => c.seccion), ...PRECONDICIONES.map(p => p.seccion)]);
+  const sinServicioRelevante = SECTIONS.filter(s => (sectionEnabled || {})[s.id] === "no" && seccionesConModelo.has(s.id)).map(s => s.label);
+
   // Lectura de la nota, construida con los datos y no a mano
   const criticos = score.hallazgos.length;
   const peor = evaluables.length ? evaluables.reduce((a, b) => (a.nota <= b.nota ? a : b)) : null;
@@ -105,7 +111,14 @@ export function paginaDiagnostico(score, sectionEnabled, fecha) {
       ? `Sin nota: quedan ${score.sinResponder.length} secciones sin responder (${esc(score.sinResponder.join(", "))}). Mientras no se decida si el cliente tiene esos servicios, cualquier puntuación sería engañosa.`
       : `Sin nota: sólo se ha comprobado el ${score.evidencia}% de lo que aplicaba a este cliente, por debajo del ${score.evidenciaMinima}% necesario. La nota provisional sería ${score.nota} sobre 100, y sólo puede subir a medida que se complete la visita.`;
   } else if (criticos === 0 && pendientes === 0) {
-    lectura = `Nota ${score.nota} sobre 100, ${score.tramo.etiqueta.toLowerCase()}. Se comprobaron todos los criterios que aplicaban a este cliente y ninguno ha dado un hallazgo crítico.`;
+    // "Se comprobo todo" solo es exacto si nada de lo que puntua se declaro
+    // inexistente: negar una seccion la saca del denominador tan limpiamente
+    // como comprobarla entera, y sin este matiz la frase sonaria igual de
+    // rotunda en los dos casos. El caso que lo destapo: negar 8 secciones sin
+    // precondicion podia dar nota 94 fiable con esta misma frase encima.
+    lectura = sinServicioRelevante.length
+      ? `Nota ${score.nota} sobre 100, ${score.tramo.etiqueta.toLowerCase()}. Se comprobó el ${score.evidencia}% del modelo que aplicaba a este cliente —quedan fuera ${sinServicioRelevante.length} ${sinServicioRelevante.length > 1 ? "secciones declaradas inexistentes" : "sección declarada inexistente"} (${esc(sinServicioRelevante.join(", "))})— y ninguno de los criterios comprobados ha dado un hallazgo crítico.`
+      : `Nota ${score.nota} sobre 100, ${score.tramo.etiqueta.toLowerCase()}. Se comprobaron todos los criterios que aplicaban a este cliente y ninguno ha dado un hallazgo crítico.`;
   } else if (criticos === 0) {
     lectura = `Nota ${score.nota} sobre 100, ${score.tramo.etiqueta.toLowerCase()}. Ninguno de los criterios comprobados ha dado un hallazgo crítico, pero quedan ${pendientes} comprobación${pendientes > 1 ? "es" : ""} crítica${pendientes > 1 ? "s" : ""} sin hacer: hasta que se hagan, la ausencia de hallazgos no es una afirmación sobre el cliente.`;
   } else {
