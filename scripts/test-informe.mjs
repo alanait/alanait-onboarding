@@ -138,6 +138,27 @@ console.log("\nCliente a medias (el caso que destapo el fallo)");
      html.includes("Nunca se ha probado una restauración"), false);
 }
 
+// ── Un campo padre en blanco no puede sonar a "evidencia insuficiente" ──
+// Reportado probando la app: con evidencia YA al 100%, un campo padre en
+// blanco (aqui, la fuga de licenciamiento.tipo_servicio) hacia caer al texto
+// generico "sólo se ha comprobado el 100%... por debajo del 60% necesario",
+// una contradiccion literal (100 no esta por debajo de 60). Necesita su
+// propio texto, tanto en el sello de portada como en la lectura del
+// diagnostico.
+console.log("\nCampo padre en blanco: el texto no puede contradecirse (100% no es 'insuficiente')");
+{
+  const c = JSON.parse(readFileSync(join(dir, "01-bien-protegido.alanait"), "utf8"));
+  delete c.formData.licenciamiento[0].tipo_servicio;
+  const { html, score } = informe(c);
+  es("evidencia sigue al 100%", score.evidencia, 100);
+  es("pero no es fiable", score.fiable, false);
+  es("y dice cuales campos padre faltan", score.padresSinDecidir.length, 1);
+  es("no imprime la frase contradictoria de evidencia baja",
+     html.includes("por debajo del"), false);
+  es("imprime la pregunta real del campo que falta",
+     html.includes("Tipo de servicio"), true);
+}
+
 // ── El inventario no imprime valores fosiles ─────────────────────────────
 // buildPrintHTML.js leia form_data en crudo para el inventario, sin pasar por
 // lectorEfectivo. Un campo oculto por su dep (firewall_soporte solo existe si

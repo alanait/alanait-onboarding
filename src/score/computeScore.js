@@ -281,13 +281,16 @@ export function computeScore({ formData = {}, sectionEnabled = {}, instanceCount
   // correcto, ver KNOWN_ISSUES A2- pero silencio en el padre deja de ser
   // gratis del todo: retrasa el sello de fiable igual que una seccion sin
   // decidir.
-  let padresSinDecidir = 0;
+  //
+  // Lista, no contador: sin saber CUALES faltan, ni el informe ni el panel
+  // pueden explicar por que no hay nota cuando la evidencia ya llega al 100%.
+  const padresSinDecidir = [];
   for (const clave of CAMPOS_PADRE_SIN_CRITERIO) {
     const [seccion, campo] = clave.split(".");
     if (sectionEnabled[seccion] !== "si") continue;
     const n = Math.max(1, instanceCounts[seccion] || 1);
     for (let i = 0; i < n; i++) {
-      if (vacio(formData[seccion]?.[i]?.[campo] ?? "")) padresSinDecidir++;
+      if (vacio(formData[seccion]?.[i]?.[campo] ?? "")) padresSinDecidir.push({ seccion, campo, instancia: n > 1 ? i + 1 : null });
     }
   }
 
@@ -307,7 +310,7 @@ export function computeScore({ formData = {}, sectionEnabled = {}, instanceCount
   // segun se completa— pero solo es fiable con evidencia suficiente y sin
   // secciones sin decidir. La interfaz decide como presentarla; el motor solo
   // lo declara.
-  const fiable = global !== null && evidencia >= EVIDENCIA_MINIMA && sinResponder.length === 0 && padresSinDecidir === 0;
+  const fiable = global !== null && evidencia >= EVIDENCIA_MINIMA && sinResponder.length === 0 && padresSinDecidir.length === 0;
 
   return {
     version: SCORE_MODEL_VERSION,

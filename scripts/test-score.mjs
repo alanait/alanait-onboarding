@@ -312,8 +312,9 @@ console.log("\nUn campo padre en blanco retrasa 'fiable' sin tocar la nota");
   const rr = (se, fd) => computeScore({ criterios: CRITERIOS, precondiciones: PRECONDICIONES, sectionEnabled: se, formData: fd, instanceCounts: {} });
   const blanco = rr({ backup: "si" }, { backup: { 0: { frecuencia: "Continuo" } } });
   const contestado = rr({ backup: "si" }, { backup: { 0: { frecuencia: "Continuo", repo_dedicado: "No (solo cloud)" } } });
-  es("backup.repo_dedicado en blanco cuenta como padre sin decidir", blanco.padresSinDecidir > 0, true);
-  es("contestado ya no cuenta", contestado.padresSinDecidir, 0);
+  es("backup.repo_dedicado en blanco cuenta como padre sin decidir", blanco.padresSinDecidir.length > 0, true);
+  es("y dice cual es", blanco.padresSinDecidir[0], { seccion: "backup", campo: "repo_dedicado", instancia: null });
+  es("contestado ya no cuenta", contestado.padresSinDecidir.length, 0);
   es("y no mueve la nota del dominio", blanco.dominios.find(d => d.id === "backup").nota,
      contestado.dominios.find(d => d.id === "backup").nota);
 }
