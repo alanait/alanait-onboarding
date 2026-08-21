@@ -44,7 +44,13 @@ la visita**. React + Vite + Supabase, desplegada en Vercel. Calcula un **CiberSc
 1. **Lo que no se ha comprobado no puntúa**: cuenta en el denominador y vale 0.
    Solo sale del denominador lo que **no aplica** al cliente.
 2. **Caps críticos**: hay hallazgos que capan su dominio, y algunos la nota global.
+   Son además la **única** palanca capaz de mover la nota global más de lo que
+   permite el peso de un dominio: el peso de un criterio está acotado por el de su
+   dominio (`DECISIONS.md` D15 y D17).
 3. **Multi-instancia**: `min` (manda la peor) o `max` (basta una buena).
+4. **Un cliente perfecto tiene que dar exactamente 100.** Restricción explícita del
+   dueño. Es gratis mantenerla —el reparto es suma cero dentro de cada dominio— pero
+   **hay que verificarla** después de tocar pesos, dominios o mapas.
 
 `computeScore()` es **pura y determinista**: no lee el reloj ni estado de React.
 La fecha de la visita entra por parámetro. **Si cambian pesos, criterios,
@@ -55,8 +61,8 @@ No hace falta migración: la nota no se guarda en BD, se recalcula.
 
 ```bash
 npm run build     # 5 guardarraíles encadenados + vite build
-node scripts/test-score.mjs          # 55 pruebas del motor
-node scripts/test-informe.mjs        # 37 pruebas del informe
+node scripts/test-score.mjs          # 81 pruebas del motor
+node scripts/test-informe.mjs        # 52 pruebas del informe
 node scripts/puntuar-ejemplos.mjs    # notas de las 5 fichas de ejemplo
 node scripts/etiquetar-ejemplos.mjs  # reetiquetar tras cambiar el modelo
 ```

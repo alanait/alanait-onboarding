@@ -57,17 +57,22 @@ encima de lo que ya da la media.
   cap. **Probar cualquiera comparando entradas distintas del mismo motor**, y
   contra el barrido de monotonía completo, no contra un caso suelto.
 
-Todos están **medidos**, no son sospechas. Ninguno lo introdujo el trabajo de hoy;
-son preexistentes y salieron a la luz al auditar.
+Todos están **medidos**, no son sospechas.
 
-### A1. Negar una sección es gratis (el más grande)
+### A1. Negar una sección era gratis — CERRADO EN PARTE el 21/08
 
-Marcando 13 de las 15 secciones como «no», **desaparecen 4 dominios enteros** —
-perímetro (18), identidad (16), correo (12), física (8) = **54 % del peso del
-modelo** — sin generar un solo hallazgo y sin afectar a `sinResponder`.
+**Estado: parcialmente resuelto.** Se añadieron precondiciones para `email`, `red`
+y `pcs` (modelo 2.2.0). **Siguen negables sin coste** `servidores`, `wifi`,
+`licenciamiento`, `vpn` y `sai`, por decisión de negocio explícita del dueño
+(DECISIONS.md D13), no por olvido.
 
-Solo `backup` y `antivirus` tienen precondición que convierte el «no» en hallazgo.
-Negar Correo vale ~+28 puntos y no cuesta nada.
+**Lo que había antes, para que no se pierda la medida.** Negar las 8 secciones sin
+precondición hacía desaparecer el **73 % del peso de la nota** sin generar un solo
+hallazgo. Y lo peor no era la nota: con `fiable: true` y evidencia 100 %, porque al
+negar una sección sus criterios pasan a «no aplicaban» y entonces sí es cierto que
+se comprobó todo lo aplicable. El informe llegaba a imprimir *«Nota 94, riesgo
+bajo. Se comprobaron todos los criterios que aplicaban»*. **El atajo hacía que el
+informe pareciera MÁS fiable, no menos.**
 
 - **Reproducción exacta (verificada):** `sectionEnabled` con las 13 secciones
   restantes a `"no"`, `backup` y `antivirus` a `"si"` con sus campos bien
@@ -91,9 +96,17 @@ Negar Correo vale ~+28 puntos y no cuesta nada.
   documento: `red`, `wifi`, `email`, `vpn`, `licenciamiento`, `pcs`, `servidores`
   y `sai`. Cambia notas → sube versión de modelo.
 
-### A2. Fuga por campos padre (`dep`): 25 puntos de denominador
+### A2. Fuga por campos padre (`dep`)
 
-6 campos que no puntúan por sí mismos deciden si puntúan otros:
+**Mitigado en parte desde 2.2.0:** dejarlos en blanco ya no toca la nota pero
+**bloquea el sello de `fiable`**. La lista `CAMPOS_PADRE_SIN_CRITERIO` se **deriva**
+de los `dep`, así que recoge sola cualquier campo padre nuevo — lo hizo con
+`servidores.dominio` al añadir criterios de AD en 2.4.0. La fuga de nota sigue:
+aparece en el barrido de monotonía (0,7 %, 6 casos de 804).
+
+**Hoy son 7 campos** (`servidores.dominio` se sumó en 2.4.0). Los pesos de esta
+tabla son los de antes de la reponderación del 21/08, valen como orden de
+magnitud, no al dedillo:
 
 | campo padre | peso propio | peso que abre |
 |---|---|---|
@@ -127,7 +140,9 @@ contador de «faltan N comprobaciones»**. Publicar la cuenta atrás es publicar
 
 ### A3. Capadores sin salida honesta
 
-Hay **22 capadores** (21 de dominio, 1 global). El problema es real, pero **la
+Hay **24 capadores** (la cuenta subió en 2.4.0-2.5.0 con los criterios nuevos y el
+cap del antivirus de firmas). **Va junto con A0**: son las dos caras del mismo
+mecanismo, y conviene rediseñarlos a la vez. El problema es real, pero **la
 cifra depende de la definición de «salida honesta», así que hay que fijarla antes
 de tocar nada.** Medido sobre `CRITERIOS` × `SECTIONS`:
 
@@ -162,6 +177,57 @@ todos los clientes pequeños. **Decisión de negocio, no técnica.**
 
 Peso 2. Pregunta si ALANA ya desplegó su RMM, que en un onboarding vale 0 para
 todos por definición. Está mal colocado.
+
+---
+
+## A-bis. Seguridad y privacidad (auditoría del 2026-08-21)
+
+15 agentes en paralelo con pase adversarial: 99 hallazgos, **92 confirmados, 7
+refutados, 78 de ellos nuevos**. Los 4 críticos se resolvieron ese mismo día. Lo
+que queda abierto:
+
+### AS1. Las políticas RLS dan acceso total a cualquier cuenta autenticada
+
+`supabase-setup.sql:78` y siguientes: `FOR ALL TO authenticated USING (true)` sobre
+`clients`, `client_versions`, `client_images` y `storage.objects`. **Cualquier
+empleado puede leer y BORRAR la cartera entera**, y no hay registro de quién.
+
+Era el multiplicador del alta abierta: convertía «alguien se coló» en «alguien
+tiene todo». El alta ya está cerrada, pero esto sigue igual.
+
+### AS2. `deleteClient` ignora los errores del Storage
+
+La supresión queda **silenciosamente incompleta**: la ficha desaparece y las
+capturas pueden quedarse. Choca de frente con el derecho de supresión del RGPD —
+las capturas contienen, según la documentación del propio repo, credenciales y
+datos bancarios.
+
+### AS3. Sin trazabilidad de accesos
+
+No hay log de quién abre o modifica qué. `created_by`/`changed_by` son TEXT libre
+y el historial atribuye cada versión **a quien la sobrescribió, no a quien la
+escribió**. Ante una brecha, no se podría acotar el alcance — que es lo que agrava
+la posición frente a la AEPD.
+
+### AS4. `client_versions` crece sin límite
+
+Una copia completa de la ficha en cada guardado, para siempre, sin poda ni forma de
+borrar una versión concreta.
+
+### AS5. Las previews de Vercel apuntan a la base de producción
+
+Cada rama genera una URL pública contra los datos reales. Riesgo conocido y
+aceptado, pero sigue ahí.
+
+### AS6. El PDF no dice que es interno
+
+Salvo una etiqueta condicional a dos tercios del documento, y solo si hay
+oportunidades comerciales. La primera página es la que se reenvía suelta.
+
+### AS7. Cero media queries
+
+Los dos paneles laterales suman 536 px fijos que no encogen. El técnico trabaja de
+pie, y en tablet el formulario queda inservible.
 
 ---
 
@@ -222,6 +288,51 @@ persiste** antes de seguir.
 
 La carpeta se había borrado a propósito en `7b4685a` al retirar el botón «Cargar
 ejemplos» de producción. El script seguía escribiendo ahí. Corregido.
+
+---
+
+### C5. Puse `sai` como precondición crítica y el dueño lo revirtió (21/08)
+
+Implementé una precondición para «sin armario/rack/SAI» razonando que un corte de
+luz apaga los servidores en seco. El dueño lo probó contra un cliente real y lo
+tumbó: **«el que haya armario o no debería ser una recomendación, no una cosa
+crítica»**.
+
+**La lección no es sobre el SAI.** Es que cuando el cambio decide **qué cuenta como
+hallazgo crítico**, eso es criterio de negocio del dueño y hay que preguntarlo,
+aunque técnicamente esté bien fundado. Se llegó a construir el mecanismo `salvoSi`
+para ese caso; quedó sin uso.
+
+### C6. Invertí la prioridad de dos mensajes y tapé el problema real (21/08)
+
+Al añadir `padresSinDecidir` como bloqueo de `fiable` (2.2.0), le di prioridad
+sobre el mensaje de evidencia insuficiente. En Kishoa-Powen —**evidencia 13 %**— el
+PDF decía *«faltan 4 campos... la nota sería 10»*, dando a entender que contestar
+esos 4 bastaba. El problema real era el **87 % del modelo sin mirar**.
+
+Corregido: la evidencia manda siempre que sea ella la que no llegue al mínimo. Hay
+prueba de regresión con los dos casos (evidencia baja, y evidencia 100 % con un
+campo padre suelto).
+
+**Lección:** al añadir una causa nueva a un mensaje que ya tenía varias, el orden
+de prioridad **es parte del diseño**, no un detalle de implementación.
+
+### C7. Un `sed` demasiado ancho tocó lo que no debía (21/08)
+
+Al partir el dominio `endpoint` usé `sed` para renombrarlo a `servidores` en las
+pruebas. Cambió también las que probaban el parque de PCs, que va a `puestos`:
+5 fallos. **Salieron los tests, no se coló** — pero refuerza C3: tras editar por
+script, verificar con `grep` y correr la batería antes de seguir.
+
+### C8. Pruebas con números mágicos que caducan al reponderar (21/08)
+
+Dos aserciones fijaban `nota === 20`, un valor que dependía del peso del criterio
+dentro de su dominio. Al reponderar en 2.4.0 pasaron a dar 27 y fallaron sin que
+nada estuviera roto. Reescritas para comparar notas entre sí
+(`w10antes.nota > w10.nota`), que es lo que la prueba quería fijar.
+
+**Regla:** una prueba del motor debe fijar **comportamiento**, no aritmética,
+salvo que el número sea el objeto de la prueba.
 
 ---
 

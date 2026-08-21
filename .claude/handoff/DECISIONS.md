@@ -243,3 +243,165 @@ que volvía a servir datos de ejemplo desde la web sin que nadie los pidiera.
 **Motivo.** El porqué de las decisiones del modelo tiene que viajar con el repo.
 Se usa `.claude/*` y no `.claude/` porque **git no puede reincluir nada dentro de
 un directorio ya excluido**. `launch.json` sigue siendo local.
+
+---
+
+# Sesión del 2026-08-21 (modelo 2.2.0 → 2.5.0)
+
+## D13. Qué significa el «no» de una sección: tres respuestas, no una
+
+**Decisión.** `email`, `red` y `pcs` pasan a tener precondición: marcarlas «no» es
+un hallazgo crítico. `servidores`, `wifi`, `licenciamiento`, `vpn` y `sai` siguen
+siendo negables **sin coste**.
+
+**Motivo.** Medido antes de tocar nada: negar las 8 secciones sin precondición
+hacía desaparecer el **73 % del peso de la nota** sin generar un solo hallazgo, y
+—lo peor— con `fiable: true` y evidencia 100 %, porque al negar una sección sus
+criterios pasan a «no aplicaban» y entonces sí es cierto que se comprobó todo lo
+aplicable. El informe llegaba a imprimir *«Nota 94, riesgo bajo. Se comprobaron
+todos los criterios que aplicaban»*. **El atajo hacía que el informe pareciera más
+fiable, no menos.**
+
+El corte entre los dos grupos es de negocio: ningún cliente real carece de correo,
+red o equipos; sí puede carecer legítimamente de servidores (todo-cloud), wifi
+(nave), VPN (nadie teletrabaja) o licencias propias.
+
+**`sai` se implementó como precondición y se revirtió el mismo día.** Se probó con
+un cliente real y el dueño decidió que tener armario o rack es **una recomendación,
+no algo que deba capar un dominio**. Se llegó a construir un mecanismo `salvoSi`
+(exenta si no hay servidores) que quedó sin uso al revertir. **No volver a
+proponerlo sin preguntar.**
+
+**Consecuencia de cambiarlo.** Reaparece el 73 %.
+
+---
+
+## D14. Se gradúa la calidad de la respuesta, pero solo donde hay calidad distinta
+
+**Decisión.** 12 criterios pasan de valores {0, 0.5, 1} a escalones finos. Los
+otros 26 con empates **se dejan como están**.
+
+**Motivo.** Lo reportó el dueño: *«no puede valer igual de nota un antivirus
+normal, que edr, xdr, mdr gestionado»*. Al revisar los 93 criterios, 38 tenían
+empates — **pero solo 12 escondían calidad distinta**.
+
+**Lo importante es la otra mitad:** 26 empates son equivalencias deliberadas y
+CORRECTAS. `"No hay VPNs"` vale lo mismo que `"Auditadas"` porque no hay nada que
+auditar; `"No existían"` lo mismo que `"Revocados"`; los tres tipos de rack valen
+igual porque el tipo no cambia el riesgo. **Aplanarlas habría metido ruido en vez
+de precisión.** Hay pruebas que ahora las fijan para que nadie las «arregle».
+
+**Las dos reglas que hacen que graduar sea seguro**, ambas con prueba propia:
+1. Ninguna respuesta real puede quedar por debajo de callarse. Callar vale 0, así
+   que bajar un valor nunca cruza ese suelo.
+2. El mismo hecho no puede puntuar dos veces. Por eso en `av_tipo_solucion` los
+   saltos EDR→MDR son cortos: el gran diferencial del MDR (que alguien vigile la
+   consola 24×7) **ya lo mide `av_alertas_vigiladas`**.
+
+---
+
+## D15. `endpoint` se parte en `puestos` y `servidores`
+
+**Decisión.** El dominio `endpoint` (16 puntos) desaparece. Nacen `puestos` (13) y
+`servidores` (11). El resto de dominios cede 8 puntos para financiarlo.
+
+**Motivo, y es el hallazgo estructural de la sesión.** El peso de un dominio **se
+reparte entre sus criterios**: es suma cero, cuantos más criterios tiene, menos
+vale cada uno. `endpoint` tenía 24 criterios y 53 unidades en 16 puntos porque
+dentro convivían tres subsistemas (puestos, antivirus, servidores):
+
+| dominio | criterios | unidades | %nota | valor de 1 unidad |
+|---|---|---|---|---|
+| identidad | 8 | 19 | 16 | **0,842 pts** |
+| endpoint | 24 | 53 | 16 | **0,302 pts** |
+
+**Una unidad de peso valía 2,8× menos por el mismo número.** Síntoma: elegir MDR
+gestionado en vez de antivirus de firmas movía 0,45 puntos sobre 100.
+
+**Beneficio que no se buscaba:** un cliente todo-cloud sin servidores perdía 21 de
+53 unidades **en silencio**. Ahora `servidores` simplemente no aplica y su peso se
+reparte, que es lo honesto. Y en el informe se ve: en el ejemplo 03, puestos 27
+frente a servidores 63, que antes era un único «endpoint 45».
+
+**La cuenta que importa** no es el `peso` de un criterio sino
+`peso / suma_pesos_del_dominio × peso_del_dominio`. Está escrito en la cabecera de
+`dominios.js`.
+
+---
+
+## D16. La escala de peso pasa de 1–3 a 1–5
+
+**Decisión.** `check-score.mjs` acepta pesos 1 a 5.
+
+**Motivo.** Con tres niveles, «esto decide la seguridad del puesto» y «esto importa
+bastante» tenían que ser los dos un 3, y no había forma de decir que el tipo de
+solución antivirus manda más que el titular de una licencia. Suben a 4
+`av_tipo_solucion`, `av_cobertura_parque`, `av_alertas_vigiladas`,
+`pcs_so_soporte`, `pcs_parcheo_sistema` y `srv_so_parcheo`. **Bajan a 1 los que
+medían el trabajo de ALANA o riesgo legal en vez de riesgo del cliente**:
+`pcs_rmm_agente`, `pcs_software_licenciado`, `srv_licencia_titular`.
+
+**Seguro por construcción:** el reparto sigue siendo suma cero dentro del dominio,
+así que un cliente perfecto sigue dando exactamente 100.
+
+---
+
+## D17. El antivirus de firmas capa el dominio, porque el peso no podía llegar
+
+**Decisión.** `av_tipo_solucion` con «Antivirus básico» puntúa 0 **y capa
+`puestos` a 65**.
+
+**Motivo — el techo que obligó a ello.** Tras partir el dominio y subir el peso a
+4, el dueño insistió: *«el edr, xdr y mdr siguen pesando lo mismo globalmente»*.
+Tenía razón, y al medirlo apareció un límite que no se había visto:
+
+> **El peso de un criterio está acotado por el de su dominio.** `puestos` entero
+> vale 13 puntos: aunque `av_tipo_solucion` fuera el único criterio del dominio, no
+> podría mover más de 13. Siendo 1 de 13 criterios, su techo real eran ~2 puntos.
+
+Medido: cliente perfecto salvo el antivirus daba 100 con MDR+SOC y 97 con firmas
+sin vigilar. **Ningún reparto de pesos podía arreglarlo**, porque el problema no
+era cómo se reparte sino cuánto hay que repartir.
+
+El único mecanismo del modelo que escapa a ese techo es el **cap** — que es además
+donde este modelo ya concentra toda su no linealidad. Con el cap, la diferencia
+global pasa de 3 a 5 puntos y la del dominio a 35, y sale una tarjeta «Puestos 65»
+en ámbar junto al resto en verde.
+
+**Por qué NO una curva sobre la media del dominio.** Se consideró (elevar la nota
+del dominio a un exponente preserva el 100). Se descartó: **el informe lo lee un
+comercial**. «Tienes un 62 porque te falta X» se entiende; «porque la media era 71
+elevada a 1,3» no. La no linealidad tiene que venir de pesos y caps, que se
+explican solos.
+
+---
+
+## D18. «Exportar a local» exporta lo que hay en pantalla, no lo guardado
+
+**Decisión.** `handleExportFile` deja de leer de la nube. Y con Supabase
+configurado **ya no apaga el aviso de «cambios sin guardar»**.
+
+**Motivo.** Era una trampa: el técnico con cambios sin guardar pulsaba exportar,
+se descargaba la versión ANTERIOR de la nube, y encima se apagaba el aviso. Creía
+haber salvaguardado su trabajo y había hecho lo contrario.
+
+Se sigue apagando el aviso cuando **no** hay Supabase, porque ahí exportar a
+fichero *es* el guardado (`handleSave` lo usa como fallback).
+
+Las imágenes se convierten a base64 al exportar: las URLs firmadas del bucket
+caducan a las 8 h y un `.alanait` con esas URLs se rompe solo.
+
+---
+
+## D19. Un fallo al subir una captura es un error visible, no un silencio
+
+**Decisión.** `syncImages` acumula los fallos y lanza; `saveClient` adjunta el
+`clientId` al error antes de propagarlo.
+
+**Motivo.** Antes, si `upload` fallaba, la imagen no se añadía a la tabla y
+`saveClient` devolvía éxito igual: la app decía «Guardado» y la captura —que puede
+llevar credenciales o datos bancarios— desaparecía para siempre.
+
+**El detalle del `clientId` importa:** la ficha ya está guardada cuando falla la
+imagen. Sin propagar el id, el reintento crearía un cliente duplicado. Y `isDirty`
+se deja en `true` a propósito: no se guardó todo.

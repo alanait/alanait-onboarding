@@ -52,18 +52,45 @@ Están documentadas en la cabecera de `computeScore.js`. Resumen:
 3. **Multi-instancia.** Con varios servidores o redes, cada criterio dice si manda
    la peor instancia (`min`) o si basta una buena (`max`).
 
-**Las 2 precondiciones que existen hoy** (`PRECONDICIONES` en `criterios.js`):
+**Las 5 precondiciones que existen hoy** (`PRECONDICIONES` en `criterios.js`):
 
 | id | sección | cuando | efecto |
 |---|---|---|---|
-| `sin_backup` | `backup` | `"no"` | `capGlobal: 59`, `capDominio: 0`, `exigida: true` |
-| `sin_antivirus` | `antivirus` | `"no"` | `capDominio: 30`, `exigida: true` |
+| `sin_backup` | `backup` | `"no"` | `capGlobal: 59`, `capDominio: 0` |
+| `sin_antivirus` | `antivirus` | `"no"` | `capDominio: 30` (dominio `puestos`) |
+| `sin_email` | `email` | `"no"` | `capDominio: 0` |
+| `sin_red` | `red` | `"no"` | `capDominio: 0` |
+| `sin_pcs` | `pcs` | `"no"` | `capDominio: 0` |
 
-Son las **únicas** secciones donde declarar «no» genera hallazgo. Las otras 13 se
-pueden negar gratis (ver KNOWN_ISSUES § A1).
+Todas con `exigida: true`. Son las **únicas** secciones donde declarar «no» genera
+hallazgo: `servidores`, `wifi`, `licenciamiento`, `vpn` y `sai` siguen siendo
+negables sin coste, y eso es **decisión de negocio del dueño**, no un olvido
+(DECISIONS.md D13).
+
+Existe un mecanismo `salvoSi` en `computeScore` que exime una precondición si otra
+sección la hace legítima. **Hoy no lo usa nadie**: se construyó para `sin_sai`
+(exenta si no hay servidores) y esa precondición se revirtió el mismo día. Se deja
+porque es la forma correcta de expresar «este "no" solo es carencia si existe algo
+que proteger».
 
 **Estados de un criterio** (`estadoEnInstancia`): `noaplica` / `sincomprobar` / `valor`.
 Es la distinción que hace que el modelo funcione; ver DECISIONS.md D1.
+
+### El peso de un criterio es relativo a su dominio — la cuenta que se olvida
+
+`peso` (1 a 5) **no es puntos de la nota**. El peso del dominio se reparte entre
+sus criterios, así que es suma cero: **cuantos más criterios tiene un dominio,
+menos vale cada uno**. La cuenta real es:
+
+```
+% de la nota = peso_criterio / suma_pesos_del_dominio × peso_del_dominio
+```
+
+Consecuencia práctica que costó una sesión entera descubrir: **añadir criterios a
+un dominio diluye a todos los demás**, y **el impacto de cualquier criterio está
+acotado por el peso de su dominio**. Si hace falta que un solo control mueva la
+nota global más de lo que permite su dominio, la palanca **no es el peso: es un
+cap** (DECISIONS.md D15 y D17).
 
 ---
 
@@ -92,9 +119,9 @@ avisan.
 |---|---|
 | `check-ids.mjs` | El contrato de datos (ids y opciones). |
 | `check-imports.mjs` | Símbolos usados pero no importados. Nació de dos bugs reales. |
-| `check-score.mjs` | Que los literales de los criterios existan en el esquema, y que **toda opción de un campo puntuado esté clasificada** (en el mapa, o en `LITERALES_NO_APLICA` / `LITERALES_SIN_COMPROBAR`). |
-| `test-score.mjs` | 55 pruebas del motor. |
-| `test-informe.mjs` | 37 pruebas del informe, sin navegador. |
+| `check-score.mjs` | Que los literales de los criterios existan en el esquema, que **toda opción de un campo puntuado esté clasificada** (en el mapa, o en `LITERALES_NO_APLICA` / `LITERALES_SIN_COMPROBAR`), y que el peso esté entre 1 y 5. |
+| `test-score.mjs` | 81 pruebas del motor. |
+| `test-informe.mjs` | 52 pruebas del informe, sin navegador. |
 
 **Lo que NO cubren:** identificadores fuera de ámbito en JSX (causó una pantalla en
 blanco en producción — ver KNOWN_ISSUES C1) y la paginación real del PDF.

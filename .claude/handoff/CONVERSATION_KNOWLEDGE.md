@@ -86,9 +86,9 @@
 
 ## 7. Preguntas abiertas para el dueño
 
-1. **¿Se implementan las precondiciones de sección?** (punto 1 de «Qué falta»).
-   Cierra el agujero más grande pero **cambia notas y sube versión de modelo**. Se
-   le avisó de que llevaba tres cambios de nota en un día y prefirió validar antes.
+1. **CONTESTADA EN PARTE el 21/08.** Se implementaron para `email`, `red` y `pcs`.
+   **Queda decidir** qué hacer con `servidores`, `wifi`, `licenciamiento` y `vpn`,
+   que siguen negables sin coste. (`sai` ya se decidió: no capa, es recomendación.)
 2. **¿Se limpian las ramas antiguas?** Quedan **dos**, no seis:
    `fase0/modularizar` y `fase4/informe`. **Ambas son ancestros de `main`**, o sea
    que están fusionadas del todo y borrarlas no pierde nada. Las otras cuatro que
@@ -129,10 +129,16 @@ Todos verificados ejecutando el motor real.
 - Benbros: 108 de 234 campos rellenos (46 %) pero **30 % de evidencia**, porque lo
   relleno era casi todo inventario.
 
-**Pesos por dominio** (suman 100): perímetro 18, backup 18, identidad 16,
-endpoint 16, correo 12, saneamiento 12, física 8.
+**Pesos por dominio ANTES del 21/08** (suman 100): perímetro 18, backup 18,
+identidad 16, endpoint 16, correo 12, saneamiento 12, física 8.
 **Peso de criterio por dominio:** perimetro 32, backup 25, identidad 19,
 endpoint 53, correo 21, saneamiento 23, fisica 24.
+
+> **Obsoleto desde 2.4.0.** `endpoint` se partió y todos los pesos se movieron.
+> Los actuales están en `src/score/dominios.js`, que es la fuente de verdad; se
+> dejan los viejos aquí solo para poder leer notas y mediciones anteriores.
+> Hoy: perímetro 16, backup 17, identidad 15, **puestos 13**, **servidores 11**,
+> correo 11, saneamiento 10, física 7.
 
 ## 9. Método de trabajo que funcionó (merece repetirse)
 
@@ -178,3 +184,74 @@ Tipografía: **Jost** (sustituto libre de Centra No2), pesos 300–500, nunca 70
   ficheros originales (no están en el repo). Los números son fieles (Benbros
   reproduce exactamente 75 / cobertura 74 % con el motor viejo) pero no son los
   datos reales guardados en Supabase.
+
+---
+
+## 12. Sesión del 2026-08-21 — lo que decidió el dueño
+
+Cinco decisiones de producto suyas, con sus palabras. **Son criterio de negocio: no
+las revierta nadie razonando técnicamente.**
+
+1. **«El que haya armario o no debería ser una recomendación, no una cosa
+   crítica.»** Tener rack o SAI **no capa** ningún dominio. Se implementó como
+   precondición y se revirtió el mismo día tras probarlo con un cliente real.
+2. **«Me estás llenando todo de información… aquí tienen que salir las cosas
+   importantes como antes.»** El panel lateral se satura fácil. Las listas se
+   cortan en 6 con «y N más». **Añadir un bloque nuevo al panel tiene un coste**;
+   no es gratis por ser información cierta.
+3. **«No puede valer igual de nota un antivirus normal, que edr, xdr, mdr
+   gestionado.»** Origen de la graduación de calidad (2.3.0).
+4. **«Un XDR o MDR debería tener más peso que un punto solo en ciberscore.»**
+   Origen de partir `endpoint` (2.4.0) y del cap del antivirus de firmas (2.5.0).
+5. **«Si fuera perfecto debería dar 100, pero tampoco tiene por qué ser lineal.»**
+   Restricción dura y explícita. **Verificar el invariante del 100 después de
+   cualquier cambio de pesos.** La no linealidad sale de pesos y caps, no de curvas.
+
+**Y una instrucción de método que conviene respetar:** *«piensa sobre esto antes de
+hacer cambios»*. Cuando la pregunta es de diseño y no de implementación, quiere
+análisis y recomendación **antes** de que se toque el código. Interrumpió una vez
+para insistir en ello.
+
+## 13. Datos medidos el 21/08 que costaría reproducir
+
+**La dilución de dominios** (lo que destapó todo):
+
+| dominio | criterios | unidades | %nota | valor de 1 unidad |
+|---|---|---|---|---|
+| identidad | 8 | 19 | 16 | 0,842 pts |
+| endpoint (antes de partirse) | 24 | 53 | 16 | **0,302 pts** |
+
+**El techo del peso por dominio.** `puestos` entero a cero deja la nota global en
+87. Cualquier criterio de dentro está acotado por eso: `av_tipo_solucion` tenía un
+techo real de ~2 puntos por mucho que se le subiera el peso. **Por eso hizo falta
+un cap y no una reponderación.**
+
+**El agujero de negar secciones (antes de 2.2.0):** las 8 secciones sin
+precondición sumaban el **73 %** del peso de la nota. Sobre el ejemplo 02, el atajo
+completo daba **94 con `fiable: true`, evidencia 100 % y cero hallazgos**, frente a
+78 contestando honestamente.
+
+**El cliente pequeño — el diagnóstico anterior era FALSO.** El handoff decía
+«perímetro 37–57». Medido: una oficina de 6 personas con router del operador, sin
+UTM ni VLANs, pero con backup, antivirus, MFA y parches perfectos saca **perímetro
+64 y nota global 93**. No hay problema de calibración medible. Ese 93 estaba además
+inflado por el agujero A1 (sin SAI, el dominio *física* desaparecía del reparto):
+con precondición habría sido 86.
+
+**Seguridad, verificado contra producción:** `GET /auth/v1/settings` devolvía
+`disable_signup: false`. Y lo que **sí** estaba bien: sin sesión, `clients` y
+`client_images` devuelven `[]` y el bucket rechaza el listado. La exposición era
+exclusivamente el alta de cuentas, no la anon key.
+
+## 14. Cómo se verifica un deploy sin CLI de Vercel
+
+No hay `vercel` instalado ni token. La preview se encuentra por la API de GitHub:
+
+```bash
+gh api "repos/alanait/alanait-onboarding/deployments?per_page=1" --jq '.[0].id'
+gh api "repos/alanait/alanait-onboarding/deployments/<ID>/statuses" --jq '.[0].environment_url'
+```
+
+Abrir esa URL en el navegador y leer la consola **antes de dar nada por bueno**.
+Ojo: abrir la URL del panel de Vercel (`vercel.com/...`) pide login y no sirve; la
+que vale es la `*.vercel.app` que devuelve `environment_url`.
