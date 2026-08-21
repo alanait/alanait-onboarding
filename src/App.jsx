@@ -866,11 +866,25 @@ export default function App() {
                   </div>
                 )}
 
-                {enabled === "no" && (
-                  <div style={{ padding: "10px 20px", fontSize: 13, color: C.red, fontStyle: "italic" }}>
-                    Sin servicio — no se documentará esta sección.
-                  </div>
-                )}
+                {enabled === "no" && (() => {
+                  // Algunas secciones capan por precondicion al marcarse "no"
+                  // (backup, antivirus, y desde 2.2.0 tambien email, red, pcs
+                  // y sai salvo que no haya servidores): eso es un hallazgo
+                  // critico, no un simple "no se documenta". Decirlo aqui
+                  // mismo, donde el tecnico acaba de marcar el "no", es donde
+                  // de verdad hace falta verlo.
+                  const pre = PRECONDICIONES.find(p => p.seccion === section.id && p.cuando === "no"
+                    && !(p.salvoSi && sectionEnabled[p.salvoSi.seccion] === p.salvoSi.cuando));
+                  return pre ? (
+                    <div style={{ padding: "10px 20px", fontSize: 13, color: C.red, background: C.redLight, borderTop: `1px solid ${C.redBorder}` }}>
+                      <b>Hallazgo crítico:</b> {pre.texto}
+                    </div>
+                  ) : (
+                    <div style={{ padding: "10px 20px", fontSize: 13, color: C.red, fontStyle: "italic" }}>
+                      Sin servicio — no se documentará esta sección.
+                    </div>
+                  );
+                })()}
               </div>
             );
           })}

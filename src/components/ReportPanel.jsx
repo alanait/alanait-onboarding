@@ -113,7 +113,11 @@ export default function ReportPanel({ sectionEnabled, formData, instanceCounts, 
           <div style={{ fontSize: 10.5, color: C.textLight, lineHeight: 1.45 }}>
             {score.sinResponder.length > 0
               ? `Faltan ${score.sinResponder.length} secciones por responder: ${score.sinResponder.join(", ")}. Márcalas como "sí" o "no" antes de cerrar la visita.`
-              : `${score.evidencia}% comprobado; hace falta el ${score.evidenciaMinima}%. Sube según completas.`}
+              : score.padresSinDecidir?.length > 0
+                // Puede pasar con evidencia ya al 100%: el texto generico de
+                // "hace falta el X%" seria una contradiccion (100% ya lo pasa).
+                ? `Falta${score.padresSinDecidir.length > 1 ? "n" : ""} ${score.padresSinDecidir.length} campo${score.padresSinDecidir.length > 1 ? "s que deciden" : " que decide"} otras respuestas: ${score.padresSinDecidir.map(p => preguntaDe(p.seccion, p.campo).pregunta).join(", ")}.`
+                : `${score.evidencia}% comprobado; hace falta el ${score.evidenciaMinima}%. Sube según completas.`}
           </div>
         </div>
       ) : score.nota === null ? (
@@ -182,6 +186,40 @@ export default function ReportPanel({ sectionEnabled, formData, instanceCounts, 
       <div style={{ fontSize: 10.5, color: C.textLight, marginBottom: 18, lineHeight: 1.45 }}>
         Inventario documentado: {r.pctCampos}% ({r.rellenos} de {r.campos} campos). No mueve la nota.
       </div>
+
+      {/* Hallazgos del motor de puntuacion: sin backup, sin correo, RDP
+          expuesto... Antes solo salian en el PDF exportado, asi que un
+          hallazgo que ya habia bajado la nota podia no verse en ningun sitio
+          durante la visita. Deliberadamente antes de "Hallazgos abiertos"
+          (avisos): estos si limitan la nota, los avisos son independientes. */}
+      {score.hallazgos.length > 0 && (
+        <>
+          <div style={titulo}>Hallazgos del CiberScore</div>
+          <div style={{ fontSize: 10.5, color: C.textLight, lineHeight: 1.45, marginBottom: 8 }}>
+            Limitan la nota por si solos. No son los avisos de mas abajo.
+          </div>
+          <div style={{ marginBottom: 18 }}>
+            {score.hallazgos.map(h => {
+              const c = CRITERIOS.find(x => x.id === h.id);
+              const p = PRECONDICIONES.find(x => x.id === h.id);
+              const seccion = c?.seccion ?? p?.seccion;
+              return (
+                <button
+                  key={h.id}
+                  onClick={() => onIrASeccion?.(seccion)}
+                  style={{
+                    display: "block", width: "100%", textAlign: "left", cursor: "pointer",
+                    fontSize: 11.5, lineHeight: 1.4, color: C.text,
+                    background: C.redLight, border: `1px solid ${C.redBorder}`,
+                    borderRadius: 6, padding: "7px 10px", marginBottom: 5,
+                  }}>
+                  {(c ?? p)?.titular || h.texto}
+                </button>
+              );
+            })}
+          </div>
+        </>
+      )}
 
       {/* Comprobaciones criticas que aplicaban y nadie ha hecho. No son
           hallazgos —nadie ha visto el problema— pero son lo unico que impide
