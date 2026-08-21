@@ -138,6 +138,24 @@ console.log("\nCliente a medias (el caso que destapo el fallo)");
      html.includes("Nunca se ha probado una restauración"), false);
 }
 
+// ── El inventario no imprime valores fosiles ─────────────────────────────
+// buildPrintHTML.js leia form_data en crudo para el inventario, sin pasar por
+// lectorEfectivo. Un campo oculto por su dep (firewall_soporte solo existe si
+// firewall="Sí") conserva su valor si alguna vez se contesto asi; imprimirlo
+// tal cual contradice al propio inventario, que ya dice "Sin firewall".
+console.log("\nEl inventario no imprime un campo oculto por su dep");
+{
+  const c = {
+    clientData: { empresa: "Fosil SL" },
+    sectionEnabled: { red: "si" },
+    formData: { red: { 0: { firewall: "No", firewall_soporte: "En soporte" } } },
+    instanceCounts: {}, sectionImages: {},
+  };
+  const { html } = informe(c);
+  es("no imprime el valor fosil de un campo oculto", html.includes("En soporte"), false);
+  es("pero si imprime el campo que si esta vigente", html.includes(">No<"), true);
+}
+
 // ── Casos limite ────────────────────────────────────────────────────────────
 console.log("\nCasos límite");
 {

@@ -96,8 +96,15 @@ export async function saveClient(id, { clientData, sectionEnabled, formData, ins
     clientId = data.id;
   }
 
-  // Sync images
-  await syncImages(clientId, sectionImages || {});
+  // Sync images. Si falla, la ficha del cliente YA esta guardada: hay que
+  // avisar del fallo sin perder el id, para que reintentar actualice el mismo
+  // cliente en vez de crear uno duplicado.
+  try {
+    await syncImages(clientId, sectionImages || {});
+  } catch (err) {
+    err.clientId = clientId;
+    throw err;
+  }
 
   return clientId;
 }
@@ -243,6 +250,11 @@ async function syncImages(clientId, sectionImages) {
 
   const existingPaths = new Set((existing || []).map(e => e.storage_path));
   const newPaths = new Set();
+  // Una subida fallida NO puede desaparecer en silencio: antes, si `upload`
+  // fallaba, la imagen simplemente no se anadia a newPaths ni a la tabla, y
+  // saveClient devolvia exito igual. El tecnico veia "Guardado" con una
+  // captura -a veces con credenciales o datos bancarios- perdida para siempre.
+  const fallos = [];
 
   // Upload new images, track all current paths
   for (const [sectionId, images] of Object.entries(sectionImages)) {
@@ -276,17 +288,24 @@ async function syncImages(clientId, sectionImages) {
             file_name: img.name || '',
             sort_order: i,
           });
+        } else {
+          fallos.push(img.name || `imagen ${i + 1} de ${sectionId}`);
         }
       }
     }
   }
 
-  // Delete removed images
+  // Delete removed images. Se hace igual aunque haya fallos arriba: lo que si
+  // se pudo sincronizar no debe quedarse a medias por lo que no se pudo.
   for (const ex of (existing || [])) {
     if (!newPaths.has(ex.storage_path)) {
       await supabase.storage.from('client-images').remove([ex.storage_path]);
       await supabase.from('client_images').delete().eq('id', ex.id);
     }
+  }
+
+  if (fallos.length) {
+    throw new Error(`No se pudieron subir ${fallos.length} captura${fallos.length > 1 ? "s" : ""}: ${fallos.join(", ")}. El resto del cliente sí se ha guardado; vuelve a intentarlo para esa${fallos.length > 1 ? "s" : ""} imagen${fallos.length > 1 ? "es" : ""}.`);
   }
 }
 
@@ -302,18 +321,20 @@ export async function importFromFile(fileData) {
   });
 }
 
-// ─── Export to .alanait format (with base64 images) ──
-
-export async function exportToFile(id) {
-  const client = await loadClient(id);
-
-  // Convert storage URLs back to base64 for the file
-  const sectionImages = {};
-  for (const [sectionId, images] of Object.entries(client.sectionImages || {})) {
-    sectionImages[sectionId] = [];
+// ─── Imagenes para .alanait (con base64, no URLs firmadas) ──
+//
+// Las URLs firmadas del bucket caducan a las 8 horas: un .alanait exportado
+// con esas URLs se rompe en cuanto caducan. Recibe las imagenes que esten EN
+// PANTALLA -no las vuelve a leer de la nube- para que "Exportar a local"
+// exporte siempre lo que el tecnico esta viendo, con cambios sin guardar
+// incluidos.
+export async function resolveImagesToBase64(sectionImages) {
+  const resultado = {};
+  for (const [sectionId, images] of Object.entries(sectionImages || {})) {
+    resultado[sectionId] = [];
     for (const img of images) {
       let src = img.src;
-      // If it's a URL (not base64), fetch and convert
+      // Si ya es una URL (no base64), se descarga y se convierte.
       if (src && !src.startsWith('data:')) {
         try {
           const resp = await fetch(src);
@@ -327,15 +348,8 @@ export async function exportToFile(id) {
           src = img.src; // fallback
         }
       }
-      sectionImages[sectionId].push({ src, caption: img.caption, name: img.name });
+      resultado[sectionId].push({ src, caption: img.caption, name: img.name });
     }
   }
-
-  return {
-    clientData: client.clientData,
-    sectionEnabled: client.sectionEnabled,
-    formData: client.formData,
-    instanceCounts: client.instanceCounts,
-    sectionImages,
-  };
+  return resultado;
 }

@@ -4,14 +4,14 @@ import VersionHistory from "./components/VersionHistory.jsx";
 import LoginPage from "./components/LoginPage.jsx";
 import { isSupabaseConfigured } from "./lib/supabase.js";
 import { getSession, onAuthChange, signOut, getUserName } from "./lib/auth.js";
-import { saveClient as saveToCloud, loadClient, exportToFile, searchClients } from "./lib/clientService.js";
+import { saveClient as saveToCloud, loadClient, resolveImagesToBase64, searchClients } from "./lib/clientService.js";
 import { SECTIONS, lectorEfectivo, reindexarHints } from "./sections.js";
 import { C, inp, FUENTE } from "./theme.js";
 import { SiNoToggle, ImageZone, SectionFields } from "./components/fields.jsx";
 import { buildPrintFragment } from "./print/buildPrintHTML.js";
 import { exportarInformePdf } from "./print/exportarPdf.js";
 import { computeScore } from "./score/computeScore.js";
-import { CRITERIOS, PRECONDICIONES } from "./score/criterios.js";
+import { CRITERIOS, PRECONDICIONES, CAMPOS_QUE_PUNTUAN } from "./score/criterios.js";
 import { hintsVisibles, claveHint, TIPOS_HINT } from "./hints.js";
 import ReportPanel from "./components/ReportPanel.jsx";
 import SectionRail from "./components/SectionRail.jsx";
@@ -161,20 +161,36 @@ export default function App() {
   const [informeOpen, setInformeOpen] = useState(true);
   const [seccionActiva, setSeccionActiva] = useState(null);
 
-  /** Campos visibles y rellenos de una seccion, sumando instancias. */
+  /**
+   * Campos que PUNTUAN, visibles y rellenos, sumando instancias.
+   *
+   * Antes contaba todo campo visible por igual, marca de firewall o numero de
+   * serie. Es la tercera aparicion del mismo porcentaje enganoso -las otras
+   * dos, cabecera de grupo y panel lateral, ya cuentan solo lo que mueve la
+   * nota- asi que esta barra queda igual de ciega hasta ahora.
+   */
   const avanceSeccion = (sectionId) => {
     const sec = SECTIONS.find(s => s.id === sectionId);
-    let total = 0, rellenos = 0;
+    let total = 0, rellenos = 0, totalBruto = 0, rellenosBruto = 0;
     if (!sec || sectionEnabled[sectionId] !== "si") return { total, rellenos };
     for (let i = 0; i < getCount(sectionId); i++) {
       for (const f of sec.fields) {
         if (f.dep && getVal(sectionId, f.dep.field, i) !== f.dep.value) continue;
-        total++;
         const v = getVal(sectionId, f.id, i);
-        if (Array.isArray(v) ? v.length > 0 : v !== "" && v !== undefined) rellenos++;
+        const relleno = Array.isArray(v) ? v.length > 0 : v !== "" && v !== undefined;
+        totalBruto++;
+        if (relleno) rellenosBruto++;
+        if (!CAMPOS_QUE_PUNTUAN.has(`${sectionId}.${f.id}`)) continue;
+        total++;
+        if (relleno) rellenos++;
       }
     }
-    return { total, rellenos };
+    // Una seccion sin ningun criterio (almacenamiento, telefonia, impresion,
+    // erp, otros_dispositivos) no puede quedarse fija en 0% pase lo que pase:
+    // ahi no hay nota que medir, asi que se muestra el avance del inventario
+    // en vez de fingir que algo puntua. Mismo criterio que el contador doble
+    // de fields.jsx cuando un grupo no tiene ningun campo que puntue.
+    return total > 0 ? { total, rellenos } : { total: totalBruto, rellenos: rellenosBruto };
   };
   const [confirmDelete, setConfirmDelete] = useState(null);
   const [showUnsaved, setShowUnsaved] = useState(false);
@@ -226,6 +242,13 @@ export default function App() {
         loadRecent();
         setIsDirty(false);
       } catch (err) {
+        // Ficha guardada, imagen(es) no: se conserva el id para que reintentar
+        // actualice este cliente en vez de crear uno duplicado. isDirty se
+        // deja en true a proposito: no todo se guardo de verdad.
+        if (err.clientId) {
+          setCurrentClientId(err.clientId);
+          setCurrentFilePath(clientData.empresa || "proyecto");
+        }
         alert("Error al guardar: " + err.message);
       }
       setSaving(false);
@@ -236,16 +259,18 @@ export default function App() {
   };
 
   const handleExportFile = async () => {
-    let projectData;
-    if (isSupabaseConfigured() && currentClientId) {
-      try {
-        projectData = await exportToFile(currentClientId);
-      } catch {
-        projectData = { clientData, sectionEnabled, formData, instanceCounts, sectionImages };
-      }
-    } else {
-      projectData = { clientData, sectionEnabled, formData, instanceCounts, sectionImages };
+    // SIEMPRE lo que hay en pantalla, nunca lo ultimo guardado en la nube: un
+    // export que descartara cambios sin guardar mientras apaga el aviso de
+    // "sin guardar" es la peor combinacion posible (bug real, corregido aqui).
+    let exportImages = sectionImages;
+    try {
+      exportImages = await resolveImagesToBase64(sectionImages);
+    } catch {
+      // Si falla la conversion de alguna imagen, se exporta igualmente con
+      // las URLs firmadas que hubiera: dejar caer el export entero por una
+      // foto perderia el formulario completo.
     }
+    const projectData = { clientData, sectionEnabled, formData, instanceCounts, sectionImages: exportImages };
     const json = JSON.stringify(projectData, null, 2);
     const blob = new Blob([json], { type: "application/json" });
     const url = URL.createObjectURL(blob);
@@ -259,7 +284,12 @@ export default function App() {
     setTimeout(() => URL.revokeObjectURL(url), 3000);
     addToRecent(nombre, currentClientId);
     setCurrentFilePath(nombre);
-    setIsDirty(false);
+    // Sin Supabase configurado, exportar a fichero ES el guardado (lo usa
+    // handleSave como fallback mas abajo): ahi si hay que apagar el aviso. Con
+    // Supabase configurado, exportar es una copia aparte y la nube sigue
+    // teniendo la version antigua: el aviso de "cambios sin guardar" tiene que
+    // seguir en pie.
+    if (!isSupabaseConfigured()) setIsDirty(false);
     loadRecent();
   };
 
@@ -327,6 +357,20 @@ export default function App() {
     window.addEventListener('focus', onFocus);
     return () => window.removeEventListener('focus', onFocus);
   }, []);
+
+  // Cerrar la pestana o el navegador con cambios sin guardar perdia la visita
+  // entera sin un solo aviso: no hay borrador local ni autoguardado, todo vive
+  // en memoria de React. Esto no lo evita -sigue sin haber autoguardado- pero
+  // hace que hacerlo sea una decision del tecnico, no un accidente.
+  useEffect(() => {
+    const onBeforeUnload = (e) => {
+      if (!isDirty) return;
+      e.preventDefault();
+      e.returnValue = "";
+    };
+    window.addEventListener("beforeunload", onBeforeUnload);
+    return () => window.removeEventListener("beforeunload", onBeforeUnload);
+  }, [isDirty]);
 
   const doNewProject = () => {
     setClientData({ empresa: "", sector: "", trabajadores: "", sedes: "", contacto: "", telefono: "", email: "", web: "", direccion: "", fecha: new Date().toISOString().split("T")[0], responsable: "" });
