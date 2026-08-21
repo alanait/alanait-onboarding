@@ -344,7 +344,16 @@ console.log("\nLa calidad de la respuesta se gradua, no se aplana");
      av["MDR gestionado"] > av["XDR"] && av["XDR"] > av["EDR"] && av["EDR"] > av["Antivirus básico"], true);
   // El antivirus de firmas no es "media proteccion": no ve el ransomware
   // moderno, que es de lo que va este criterio.
-  es("y el antivirus de firmas no llega a la mitad", av["Antivirus básico"] < 0.5, true);
+  es("y el antivirus de firmas puntua cero", av["Antivirus básico"], 0);
+
+  // Y CAPA el dominio. Es la unica forma de que la eleccion de solucion se
+  // note en la nota global: el peso de cualquier criterio esta acotado por el
+  // de su dominio -puestos entero vale 13 puntos- asi que subir el peso no
+  // podia hacer que MDR frente a firmas moviera ni dos puntos. Medido: con el
+  // cap la diferencia global pasa de 3 a 5 puntos, y la del dominio a 35.
+  const avCrit = CRITERIOS.find(c => c.id === "av_tipo_solucion").critico;
+  es("el antivirus de firmas capa el dominio de puestos", avCrit?.capDominio, 65);
+  es("y solo lo dispara el antivirus de firmas", avCrit?.cuando, ["Antivirus básico"]);
 
   const bk = mapaDe("backup_frecuencia");
   es("copia continua puntua mas que diaria", bk["Continuo"] > bk["Diario"], true);
