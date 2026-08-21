@@ -113,11 +113,17 @@ export default function ReportPanel({ sectionEnabled, formData, instanceCounts, 
           <div style={{ fontSize: 10.5, color: C.textLight, lineHeight: 1.45 }}>
             {score.sinResponder.length > 0
               ? `Faltan ${score.sinResponder.length} secciones por responder: ${score.sinResponder.join(", ")}. Márcalas como "sí" o "no" antes de cerrar la visita.`
-              : score.padresSinDecidir?.length > 0
-                // Puede pasar con evidencia ya al 100%: el texto generico de
-                // "hace falta el X%" seria una contradiccion (100% ya lo pasa).
-                ? `Falta${score.padresSinDecidir.length > 1 ? "n" : ""} ${score.padresSinDecidir.length} campo${score.padresSinDecidir.length > 1 ? "s que deciden" : " que decide"} otras respuestas: ${score.padresSinDecidir.map(p => preguntaDe(p.seccion, p.campo).pregunta).join(", ")}.`
-                : `${score.evidencia}% comprobado; hace falta el ${score.evidenciaMinima}%. Sube según completas.`}
+              // La evidencia manda siempre que sea ella la que no llega: con
+              // un cliente al 13% el problema de verdad es el 87% sin mirar,
+              // no los 2-3 campos padre sueltos. El mensaje de campos padre
+              // solo tiene sentido cuando la evidencia YA esta al dia y lo
+              // unico que falta son esos campos -si no, sonaria a "contesta
+              // estos 3 y ya tienes nota" siendo falso.
+              : score.evidencia < score.evidenciaMinima
+                ? `${score.evidencia}% comprobado; hace falta el ${score.evidenciaMinima}%. Sube según completas.`
+                : score.padresSinDecidir?.length > 0
+                  ? `Falta${score.padresSinDecidir.length > 1 ? "n" : ""} ${score.padresSinDecidir.length} campo${score.padresSinDecidir.length > 1 ? "s que deciden" : " que decide"} otras respuestas: ${score.padresSinDecidir.map(p => preguntaDe(p.seccion, p.campo).pregunta).join(", ")}.`
+                  : `${score.evidencia}% comprobado; hace falta el ${score.evidenciaMinima}%. Sube según completas.`}
           </div>
         </div>
       ) : score.nota === null ? (
@@ -231,8 +237,12 @@ export default function ReportPanel({ sectionEnabled, formData, instanceCounts, 
             No son tareas: son campos del formulario. Pulsa para ir a la sección; al contestarlos desaparecen.
           </div>
           <div style={{ marginBottom: 18 }}>
+            {/* Igual que "Hallazgos abiertos" mas abajo: en un cliente muy
+                incompleto esta lista puede tener 10-15 preguntas, y sacarlas
+                todas de golpe entierra las importantes. Mismo tope de 6. */}
             {[...score.capadoresPendientes]
               .sort((a, b) => (a.capDominio ?? 100) - (b.capDominio ?? 100))
+              .slice(0, 6)
               .map(cp => (
                 <button
                   key={cp.id}
@@ -249,6 +259,11 @@ export default function ReportPanel({ sectionEnabled, formData, instanceCounts, 
                   </span>
                 </button>
               ))}
+            {score.capadoresPendientes.length > 6 && (
+              <div style={{ fontSize: 11, color: C.textLight, paddingLeft: 10, marginTop: 4 }}>
+                y {score.capadoresPendientes.length - 6} más
+              </div>
+            )}
           </div>
         </>
       )}

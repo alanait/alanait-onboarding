@@ -60,16 +60,21 @@ export function selloNota(score) {
     ? esc(score.tramo.etiqueta)
     : (score.sinResponder?.length || score.padresSinDecidir?.length ? "Sin datos suficientes" : "Sin nota");
   // Tres motivos posibles de "no fiable", no dos: evidencia insuficiente,
-  // secciones sin decidir, o campos padre sin decidir. El tercero puede pasar
-  // con evidencia ya al 100% -"sólo se ha comprobado el 100%" seria una
-  // contradiccion literal- asi que necesita su propio texto.
+  // secciones sin decidir, o campos padre sin decidir. La evidencia manda
+  // siempre que sea ella la que no llega -con un cliente al 13% el problema
+  // de verdad es el 87% sin mirar, no dos o tres campos padre sueltos-. El
+  // texto de campos padre solo tiene sentido cuando la evidencia YA esta al
+  // dia y lo unico que falta son esos campos ("sólo se ha comprobado el
+  // 100%... por debajo del 60%" seria una contradiccion literal).
   const pie = hayNota
     ? `evidencia ${score.evidencia}% · modelo ${esc(score.version)}`
     : score.sinResponder?.length
       ? `faltan ${score.sinResponder.length} secciones por responder`
-      : score.padresSinDecidir?.length
-        ? `faltan ${score.padresSinDecidir.length} campo${score.padresSinDecidir.length > 1 ? "s que deciden" : " que decide"} otras respuestas`
-        : `sólo se ha comprobado el ${score.evidencia}% del modelo`;
+      : score.evidencia < score.evidenciaMinima
+        ? `sólo se ha comprobado el ${score.evidencia}% del modelo`
+        : score.padresSinDecidir?.length
+          ? `faltan ${score.padresSinDecidir.length} campo${score.padresSinDecidir.length > 1 ? "s que deciden" : " que decide"} otras respuestas`
+          : `sólo se ha comprobado el ${score.evidencia}% del modelo`;
 
   return `<div style="display:inline-block;border:2px solid ${color};border-radius:8px;padding:14px 20px;min-width:150px;text-align:center;">
     <div style="font-size:40px;font-weight:500;color:${color};line-height:1;">${valor}${hayNota ? '<span style="font-size:15px;color:#868686;font-weight:400;"> / 100</span>' : ""}</div>
@@ -115,11 +120,13 @@ export function paginaDiagnostico(score, sectionEnabled, fecha) {
   if (!score.fiable) {
     if (score.sinResponder?.length) {
       lectura = `Sin nota: quedan ${score.sinResponder.length} secciones sin responder (${esc(score.sinResponder.join(", "))}). Mientras no se decida si el cliente tiene esos servicios, cualquier puntuación sería engañosa.`;
-    } else if (score.padresSinDecidir?.length) {
-      // Puede pasar con evidencia ya al 100%: estos campos no puntuan, asi que
-      // no bajan la evidencia, pero mientras esten en blanco no se sabe si
-      // decidian que puntuaran otros tres. El texto de "evidencia baja" seria
-      // literalmente falso aqui (100% no esta "por debajo" de nada).
+    } else if (score.evidencia >= score.evidenciaMinima && score.padresSinDecidir?.length) {
+      // Solo entra aqui cuando la evidencia YA llega al minimo: si un cliente
+      // esta al 13%, el problema de verdad es el 87% sin mirar, no dos o tres
+      // campos padre sueltos, y decir "contesta estos y ya tienes nota" seria
+      // falso. El texto de "evidencia baja" de mas abajo seria ademas una
+      // contradiccion literal con evidencia al 100% (100 no esta "por debajo"
+      // de nada), por eso este caso necesita su propio texto.
       const nombres = score.padresSinDecidir.map(p => preguntaDe(p.seccion, p.campo).pregunta);
       lectura = `Sin nota: queda${nombres.length > 1 ? "n" : ""} ${nombres.length} campo${nombres.length > 1 ? "s" : ""} sin contestar que decide${nombres.length > 1 ? "n" : ""} si puntúan otras respuestas (${esc(nombres.join(", "))}). La nota provisional sería ${score.nota} sobre 100.`;
     } else {

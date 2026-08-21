@@ -288,15 +288,12 @@ export const PRECONDICIONES = [
   { id: "sin_pcs", seccion: "pcs", cuando: "no", dominio: "endpoint", capDominio: 0, exigida: true,
     titular: "Sin ordenadores de trabajo",
     texto: "El cliente declara no tener ordenadores de trabajo. Es una respuesta atipica que conviene confirmar en la visita: si es asi, el dominio de endpoint no tiene nada que proteger en este cliente." },
-  // Exenta si no hay servidores: sin nada que proteger electricamente, no
-  // tener SAI no es una carencia. Residual conocido: como "servidores" sigue
-  // siendo una seccion negable sin precondicion propia, declarar "no" en
-  // servidores tambien exime esta. No se cierra ahora porque exige la misma
-  // decision de negocio que "servidores" en general (ver CURRENT_STATE.md).
-  { id: "sin_sai", seccion: "sai", cuando: "no", dominio: "fisica", capDominio: 0, exigida: true,
-    salvoSi: { seccion: "servidores", cuando: "no" },
-    titular: "Sin armario de comunicaciones, rack ni SAI",
-    texto: "El cliente tiene servidores pero no tiene armario de comunicaciones, rack ni SAI: un corte de luz los apaga en seco sin ningun control fisico que lo evite." },
+  // sai se probo como precondicion (capDominio 0, exenta si no hay
+  // servidores) y se revirtio el mismo dia: probado en vivo contra un cliente
+  // real, el dueno decidio que tener o no armario/rack es una recomendacion,
+  // no algo que deba capar un dominio ni marcarse como hallazgo critico. Igual
+  // que servidores, wifi, licenciamiento y vpn: queda como seccion negable sin
+  // coste, decision de negocio explicita.
 ];
 
 // Campos del formulario que mueven la nota, como claves "seccion.campo".

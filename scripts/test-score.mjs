@@ -260,10 +260,11 @@ console.log("\nPrecondiciones nuevas: email, red, pcs y sai (con salvoSi)");
   es("negar red genera hallazgo", rr({ red: "no" }).hallazgos.some(h => h.id === "sin_red"), true);
   es("negar pcs genera hallazgo", rr({ pcs: "no" }).hallazgos.some(h => h.id === "sin_pcs"), true);
 
-  es("negar sai CON servidores genera hallazgo",
-     rr({ sai: "no", servidores: "si" }).hallazgos.some(h => h.id === "sin_sai"), true);
-  es("negar sai SIN servidores no genera hallazgo (salvoSi)",
-     rr({ sai: "no", servidores: "no" }).hallazgos.some(h => h.id === "sin_sai"), false);
+  // sai se probo como precondicion y se revirtio el mismo dia: probado contra
+  // un cliente real, tener armario/rack es una recomendacion, no un hallazgo
+  // que deba capar un dominio. Fija la decision de negocio, no un olvido.
+  es("negar sai NO genera hallazgo (decision de negocio, revertido tras probarlo)",
+     rr({ sai: "no", servidores: "si" }).hallazgos.length, 0);
 
   // Documenta la decision pendiente, no la esconde: servidores sigue siendo
   // negable gratis hasta que el dueno decida su precondicion.
