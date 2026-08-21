@@ -4,7 +4,7 @@
 // (html2pdf) como la vista de impresion del navegador (Ctrl+P). Antes habia
 // dos implementaciones paralelas que habia que mantener en paralelo.
 
-import { SECTIONS } from "../sections.js";
+import { SECTIONS, lectorEfectivo } from "../sections.js";
 import { LOGO_ALANA } from "../assets/logo.js";
 import { selloNota, paginaDiagnostico, bloqueHallazgos, bloquePlan, bloqueOportunidades } from "./informe.js";
 
@@ -110,12 +110,17 @@ export function buildPrintFragment(clientData, sectionEnabled, formData, instanc
     let tables = "";
 
     const makeRows = (idx) => {
+      // lectorEfectivo, no getVal a secas: un campo oculto por su `dep` (el
+      // firewall se marco "No" pero firewall_soporte conserva un valor de
+      // cuando era "Sí") no puede aparecer en el inventario como si siguiera
+      // vigente. Ver PROJECT_KNOWLEDGE.md §6.
+      const leer = lectorEfectivo(section.id, getVal, idx);
       // Agrupa por `group` preservando el orden del esquema. Un grupo sin
       // ningun campo relleno no imprime ni su cabecera.
       const orden = [];
       const porGrupo = new Map();
       section.fields.forEach(f => {
-        const v = getVal(section.id, f.id, idx);
+        const v = leer(f.id);
         if (!v || v === "" || (Array.isArray(v) && v.length === 0)) return;
         const g = f.group || "";
         if (!porGrupo.has(g)) { porGrupo.set(g, []); orden.push(g); }
