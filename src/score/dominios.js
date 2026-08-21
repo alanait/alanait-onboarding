@@ -147,4 +147,30 @@ export const EVIDENCIA_MINIMA = 60;
 //
 // Verificado: un cliente perfecto sigue dando EXACTAMENTE 100 (el reparto es
 // suma cero dentro de cada dominio y los pesos de dominio siguen sumando 100).
-export const SCORE_MODEL_VERSION = "2.4.0";
+// 2.5.0: el antivirus de firmas pasa a capar el dominio de puestos (65) y a
+// puntuar 0 en vez de 0,25; EDR baja a 0,7 para separarlo de XDR.
+//
+// Viene de medir la queja del dueno ("el edr, xdr y mdr siguen pesando lo
+// mismo globalmente") y encontrar un techo que no habia visto: el peso de un
+// criterio esta acotado por el de su dominio. Puestos entero vale 13 puntos,
+// asi que aunque av_tipo_solucion fuera el unico criterio del dominio, elegir
+// MDR en vez de firmas no podria mover mas de 13; siendo 1 de 13 criterios,
+// su techo real eran ~2 puntos. Medido antes del cambio: cliente perfecto
+// salvo el antivirus daba 100 con MDR+SOC y 97 con firmas sin vigilar.
+//
+// NINGUN reparto de pesos puede arreglar eso, porque el problema no es como
+// se reparte sino cuanto hay que repartir. El unico mecanismo del modelo que
+// escapa a ese techo es el cap, que es ademas donde este modelo ya pone toda
+// su no linealidad (sin MFA en correo capa la global a 79, RDP publicado capa
+// perimetro a 30). Con el cap, la diferencia global pasa de 3 a 5 puntos y la
+// del dominio a 35, y la tarjeta "Puestos 65" sale en ambar junto al resto en
+// verde, que es la lectura que hace falta.
+//
+// EFECTO SECUNDARIO CONOCIDO, comun a todos los caps y por tanto no nuevo:
+// contestar "Antivirus basico" puntua algo peor que dejar el campo en blanco,
+// porque el hueco no dispara el cap. Se comprobo que el cap de red_firewall ya
+// se comportaba asi desde antes (97 contestando la verdad, 98 callando). Lo
+// contiene `capadoresPendientes`, que impide que el informe afirme que no hay
+// hallazgos criticos. Cerrarlo de verdad exige rediseñar los caps, no este
+// criterio.
+export const SCORE_MODEL_VERSION = "2.5.0";
