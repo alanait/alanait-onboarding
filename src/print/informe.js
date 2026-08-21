@@ -12,6 +12,7 @@
 import { SECTIONS, lectorEfectivo, preguntaDe } from "../sections.js";
 import { hintsVisibles, TIPOS_HINT, claveHint } from "../hints.js";
 import { CRITERIOS, PRECONDICIONES } from "../score/criterios.js";
+import { DOMINIOS } from "../score/dominios.js";
 import { esc } from "./buildPrintHTML.js";
 
 // Paleta de marca. El informe no puede leer theme.js porque el PDF se rasteriza
@@ -46,7 +47,11 @@ const etiquetaInstancias = (h) => {
 };
 
 /** Ancho maximo de la barra de un dominio, proporcional a su peso. */
-const anchoPeso = (peso) => Math.round((peso / 18) * 100);
+// Se deriva del peso mayor que haya, no de un 18 escrito a mano: al partir
+// "endpoint" en 2.4.0 el maximo dejo de ser 18 y las barras se habrian quedado
+// cortas para siempre sin que nada avisara.
+const PESO_DOMINIO_MAX = Math.max(...Object.values(DOMINIOS).map(d => d.peso));
+const anchoPeso = (peso) => Math.round((peso / PESO_DOMINIO_MAX) * 100);
 
 // ── Sello de la nota, para la portada ───────────────────────────────────────
 // Contenido y encuadrado, no titular: la primera pagina es lo que se reenvia

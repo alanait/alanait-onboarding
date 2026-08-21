@@ -7,15 +7,29 @@
 //
 // Alineado de forma pragmatica con CIS Controls v8 IG1 y el ENS basico: solo
 // entra lo que un tecnico puede observar en una visita de un par de horas.
-
+//
+// EL PESO DE UN DOMINIO SE REPARTE ENTRE SUS CRITERIOS. Es un juego de suma
+// cero: cuantos mas criterios tiene un dominio, menos vale cada uno. Por eso
+// la cuenta que importa no es el `peso` de un criterio sino
+// `peso / suma_de_pesos_del_dominio * peso_del_dominio`, y por eso partir un
+// dominio sobrecargado sube el valor de todo lo que hay dentro sin tocar
+// ningun criterio.
+//
+// Ese era el caso de "endpoint" hasta la version 2.4.0: 24 criterios y 53
+// unidades de peso metidas en 16 puntos, porque dentro convivian tres
+// subsistemas (puestos, antivirus y servidores). Una unidad de peso alli valia
+// 0,302 puntos frente a los 0,842 de identidad: 2,8 veces menos por el mismo
+// numero. El sintoma que lo destapo: elegir MDR gestionado en vez de un
+// antivirus de firmas movia 0,45 puntos sobre 100, que es ruido.
 export const DOMINIOS = {
-  perimetro:   { nombre: "Red y perímetro",            peso: 18 },
-  backup:      { nombre: "Backup y resiliencia",       peso: 18 },
-  identidad:   { nombre: "Identidad y accesos",        peso: 16 },
-  endpoint:    { nombre: "Endpoint y servidores",      peso: 16 },
-  correo:      { nombre: "Correo y colaboración",      peso: 12 },
-  saneamiento: { nombre: "Saneamiento del onboarding", peso: 12 },
-  fisica:      { nombre: "Infraestructura física",     peso: 8 },
+  perimetro:   { nombre: "Red y perímetro",            peso: 16 },
+  backup:      { nombre: "Backup y resiliencia",       peso: 17 },
+  identidad:   { nombre: "Identidad y accesos",        peso: 15 },
+  puestos:     { nombre: "Puestos y antivirus",        peso: 13 },
+  servidores:  { nombre: "Servidores",                 peso: 11 },
+  correo:      { nombre: "Correo y colaboración",      peso: 11 },
+  saneamiento: { nombre: "Saneamiento del onboarding", peso: 10 },
+  fisica:      { nombre: "Infraestructura física",     peso: 7 },
 };
 
 /** Tramos del semaforo. De peor a mejor, el primero que cumple manda. */
@@ -100,4 +114,37 @@ export const EVIDENCIA_MINIMA = 60;
 // av_tipo_solucion los saltos de EDR a MDR son cortos: quien vigila la
 // consola ya lo mide av_alertas_vigiladas-. El barrido de monotonia sobre las
 // 804 respuestas de los ejemplos baja de 0,6% a 0,5%.
-export const SCORE_MODEL_VERSION = "2.3.0";
+// 2.4.0: cambio estructural. Reportado por el dueno: "un XDR o MDR deberia
+// tener mas peso que un punto solo en ciberscore". Al medirlo, el problema no
+// estaba en el valor de la respuesta sino en la DILUCION: "endpoint" tenia 24
+// criterios y 53 unidades de peso en 16 puntos, asi que una unidad alli valia
+// 0,302 puntos frente a los 0,842 de identidad. Elegir MDR en vez de antivirus
+// de firmas movia 0,45 puntos sobre 100. Tres cambios:
+//
+//   - "endpoint" se parte en "puestos" (13) y "servidores" (11), que es lo que
+//     de verdad habia dentro. Beneficio extra: un cliente todo-cloud sin
+//     servidores perdia 21 de 53 unidades EN SILENCIO; ahora "servidores"
+//     simplemente no aplica y su peso se reparte, que es lo honesto.
+//   - La escala de peso pasa de 1-3 a 1-5. Con tres niveles no habia forma de
+//     decir que el tipo de solucion antivirus manda mas que el titular de una
+//     licencia. av_tipo_solucion, av_cobertura_parque, av_alertas_vigiladas,
+//     pcs_so_soporte, pcs_parcheo_sistema y srv_so_parcheo suben a 4; bajan a
+//     1 los que median trabajo de ALANA o riesgo legal en vez de seguridad
+//     (pcs_rmm_agente, pcs_software_licenciado, srv_licencia_titular).
+//   - Cinco criterios nuevos sobre riesgos que el formulario ya recogia y
+//     nadie puntuaba: san_licenciamiento_panel y san_licenciamiento_titular
+//     (el proveedor saliente conserva el panel de dominios y licencias, o las
+//     licencias estan a su nombre), lic_ssl_estado, identidad_ad_cuentas y
+//     srv_gpos.
+//
+// El resto de dominios cede 8 puntos para financiarlo: perimetro 18->16,
+// backup 18->17, identidad 16->15, correo 12->11, saneamiento 12->10,
+// fisica 8->7.
+//
+// Queda fuera a proposito servidores.herramientas_acceso, que puede valer
+// "RMM del proveedor anterior" y es el mismo riesgo: es un campo de tipo
+// `checks` y el motor no resuelve multiseleccion contra un mapa literal.
+//
+// Verificado: un cliente perfecto sigue dando EXACTAMENTE 100 (el reparto es
+// suma cero dentro de cada dominio y los pesos de dominio siguen sumando 100).
+export const SCORE_MODEL_VERSION = "2.4.0";
