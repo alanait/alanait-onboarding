@@ -58,12 +58,15 @@ export const EVIDENCIA_MINIMA = 60;
 // mismo tope disparandose por duplicado- asi que algunas notas bajan un punto.
 //
 // 2.2.0: cuatro correcciones, todas medidas antes de aplicarse.
-//   - Precondicion nueva para email, red y pcs (siempre hallazgo si "no") y
-//     para sai (hallazgo salvo que el cliente declare que no tiene
-//     servidores). Cierra la mayor parte del agujero medido en A1: negar las
-//     8 secciones sin precondicion hacia desaparecer el 73% del peso de la
-//     nota sin un solo hallazgo. Quedan fuera a proposito servidores, wifi,
-//     licenciamiento y vpn: para esas el "no" puede ser una respuesta real.
+//   - Precondicion nueva para email, red y pcs: siempre hallazgo si "no",
+//     ningun cliente real puede carecer de correo, red o equipos. Cierra
+//     buena parte del agujero medido en A1: negar las 8 secciones sin
+//     precondicion hacia desaparecer el 73% del peso de la nota sin un solo
+//     hallazgo. Quedan fuera a proposito servidores, wifi, licenciamiento,
+//     vpn y sai: para esas el "no" puede ser una respuesta real. sai se probo
+//     como precondicion el mismo dia y se revirtio: probado contra un cliente
+//     real, tener armario/rack es una recomendacion, no algo que deba capar
+//     un dominio (decision de negocio explicita, no bug).
 //   - Un valor fosil en so_windows_server/so_windows_cliente/so_linux ya no
 //     puede silenciar srv_so_soporte cuando so_familia ha cambiado desde que
 //     se contesto: redundanteSi ahora exige que su propio dep se cumpla.

@@ -159,6 +159,38 @@ console.log("\nCampo padre en blanco: el texto no puede contradecirse (100% no e
      html.includes("Tipo de servicio"), true);
 }
 
+// ── Y al reves: con evidencia BAJA, el mensaje de campos padre no manda ──
+// Reportado probando un cliente real muy incompleto (evidencia 13%, con
+// varios campos padre tambien en blanco): el texto decia "faltan 4 campos...
+// la nota seria 10", dando a entender que contestar esos 4 bastaba. Falso: el
+// problema de verdad era el 87% del modelo sin mirar. La evidencia manda
+// siempre que sea ella la que no llegue al minimo.
+console.log("\nCon evidencia baja, el mensaje de evidencia manda sobre el de campos padre");
+{
+  const c = {
+    clientData: { empresa: "Muy incompleto SL" },
+    // Las 15 secciones decididas (como en el cliente real que destapo esto):
+    // sin eso el motor cae antes en la rama de "secciones sin responder" y no
+    // aisla el caso que hay que probar.
+    sectionEnabled: {
+      red: "si", servidores: "si", pcs: "si", backup: "si", email: "si",
+      antivirus: "si", wifi: "no", vpn: "no", sai: "no", almacenamiento: "si",
+      telefonia: "no", impresion: "no", erp: "no", licenciamiento: "si", otros_dispositivos: "no",
+    },
+    // backup.repo_dedicado en blanco: séria un padre sin decidir, pero con
+    // evidencia tan baja no puede ser lo que explique la falta de nota.
+    formData: { backup: { 0: { frecuencia: "Continuo" } } },
+    instanceCounts: {}, sectionImages: {},
+  };
+  const { html, score } = informe(c);
+  es("evidencia muy por debajo del minimo", score.evidencia < score.evidenciaMinima, true);
+  es("hay campos padre sin decidir tambien", score.padresSinDecidir.length > 0, true);
+  es("el texto habla de evidencia, no de campos padre",
+     html.includes(`comprobado el ${score.evidencia}%`), true);
+  es("y no del mensaje de campos padre",
+     html.includes("que decide"), false);
+}
+
 // ── El inventario no imprime valores fosiles ─────────────────────────────
 // buildPrintHTML.js leia form_data en crudo para el inventario, sin pasar por
 // lectorEfectivo. Un campo oculto por su dep (firewall_soporte solo existe si
