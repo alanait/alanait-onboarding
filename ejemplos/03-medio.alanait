@@ -86,6 +86,7 @@
   },
   "pcs": {
    "0": {
+    "moviles": "No",
     "cantidad": "20",
     "portatiles_num": "8",
     "so": "Windows 10",

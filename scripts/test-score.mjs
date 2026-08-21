@@ -243,6 +243,82 @@ console.log("\nDeduccion del soporte del sistema operativo");
 }
 
 
+// ── Precondiciones nuevas (modelo 2.2.0) ─────────────────────────────────
+// Medido antes de este cambio: negar las 8 secciones sin precondicion hacia
+// desaparecer el 73% del peso de la nota sin un solo hallazgo (KNOWN_ISSUES
+// A1). email, red y pcs pasan a exigir hallazgo siempre; sai lo exige salvo
+// que el cliente declare que no tiene servidores. Las demas secciones
+// negables (servidores, wifi, licenciamiento, vpn) se dejan fuera a proposito:
+// su "no" puede ser una respuesta real y decidir lo contrario es una decision
+// de negocio pendiente, no un bug.
+console.log("\nPrecondiciones nuevas: email, red, pcs y sai (con salvoSi)");
+{
+  const rr = (se, fd, ic, fecha) => computeScore({ criterios: CRITERIOS, precondiciones: PRECONDICIONES, sectionEnabled: se, formData: fd || {}, instanceCounts: ic || {}, fecha: fecha || "" });
+
+  es("negar email genera hallazgo", rr({ email: "no" }).hallazgos.some(h => h.id === "sin_email"), true);
+  es("y capa el dominio correo a 0", rr({ email: "no" }).dominios.find(d => d.id === "correo").nota, 0);
+  es("negar red genera hallazgo", rr({ red: "no" }).hallazgos.some(h => h.id === "sin_red"), true);
+  es("negar pcs genera hallazgo", rr({ pcs: "no" }).hallazgos.some(h => h.id === "sin_pcs"), true);
+
+  es("negar sai CON servidores genera hallazgo",
+     rr({ sai: "no", servidores: "si" }).hallazgos.some(h => h.id === "sin_sai"), true);
+  es("negar sai SIN servidores no genera hallazgo (salvoSi)",
+     rr({ sai: "no", servidores: "no" }).hallazgos.some(h => h.id === "sin_sai"), false);
+
+  // Documenta la decision pendiente, no la esconde: servidores sigue siendo
+  // negable gratis hasta que el dueno decida su precondicion.
+  es("servidores sigue sin precondicion (decision de negocio pendiente)",
+     rr({ servidores: "no" }).hallazgos.length, 0);
+}
+
+// ── Un valor fosil no puede silenciar un capador ─────────────────────────
+// redundanteSi comparaba el campo de version SIN comprobar que su propio dep
+// se cumpliera todavia. Cambiar so_familia de "Windows Server" a "Linux" deja
+// un valor fosil en so_windows_server; leerlo sin mirar el dep colaba ese
+// fosil como si decidiera y silenciaba srv_so_soporte entero.
+console.log("\nUn valor fosil no puede silenciar el capador srv_so_soporte");
+{
+  const rr = (se, fd, ic, fecha) => computeScore({ criterios: CRITERIOS, precondiciones: PRECONDICIONES, sectionEnabled: se, formData: fd || {}, instanceCounts: ic || {}, fecha: fecha || "" });
+  const fosil = rr({ servidores: "si" },
+    { servidores: { 0: { so_familia: "Linux", so_windows_server: "Windows Server 2012", so_soporte: "" } } },
+    {}, "2026-08-20");
+  es("con so_familia en Linux, so_soporte sigue pendiente pese al fosil de Windows Server",
+     fosil.capadoresPendientes.some(p => p.id === "srv_so_soporte"), true);
+}
+
+// ── El disparo de un cap sigue su propia agregacion ──────────────────────
+// sai_existe agrega por "max" a proposito -"basta un armario bueno"- pero el
+// cap se disparaba con CUALQUIER instancia mala, contradiciendo su propio
+// porQue: un armario secundario sin SAI no puede capar el dominio si el
+// principal si lo tiene.
+console.log("\nUn cap con agregacion 'max' exige que TODAS las instancias esten mal");
+{
+  const rr = (se, fd, ic) => computeScore({ criterios: CRITERIOS, precondiciones: PRECONDICIONES, sectionEnabled: se, formData: fd, instanceCounts: ic });
+  const conBueno = rr({ sai: "si" }, { sai: { 0: { sai_existe: "Sí" }, 1: { sai_existe: "No" } } }, { sai: 2 });
+  es("un armario secundario sin SAI no capa si el principal si tiene",
+     conBueno.hallazgos.some(h => h.id === "sai_existe"), false);
+  const ningunoBueno = rr({ sai: "si" }, { sai: { 0: { sai_existe: "No" }, 1: { sai_existe: "No" } } }, { sai: 2 });
+  es("si NINGUN armario tiene SAI, si capa",
+     ningunoBueno.hallazgos.some(h => h.id === "sai_existe"), true);
+}
+
+// ── Campos padre sin decidir retrasan el sello de fiable ─────────────────
+// backup.repo_dedicado no puntua por si mismo, solo decide si puntuan otros
+// tres campos. Dejarlo en blanco no debe mover la nota -el orden de
+// incentivos del campo hijo ya es el correcto, ver KNOWN_ISSUES A2- pero
+// tampoco puede ser gratis del todo.
+console.log("\nUn campo padre en blanco retrasa 'fiable' sin tocar la nota");
+{
+  const rr = (se, fd) => computeScore({ criterios: CRITERIOS, precondiciones: PRECONDICIONES, sectionEnabled: se, formData: fd, instanceCounts: {} });
+  const blanco = rr({ backup: "si" }, { backup: { 0: { frecuencia: "Continuo" } } });
+  const contestado = rr({ backup: "si" }, { backup: { 0: { frecuencia: "Continuo", repo_dedicado: "No (solo cloud)" } } });
+  es("backup.repo_dedicado en blanco cuenta como padre sin decidir", blanco.padresSinDecidir > 0, true);
+  es("contestado ya no cuenta", contestado.padresSinDecidir, 0);
+  es("y no mueve la nota del dominio", blanco.dominios.find(d => d.id === "backup").nota,
+     contestado.dominios.find(d => d.id === "backup").nota);
+}
+
+
 // ── Que campos mueven la nota ───────────────────────────────────
 // El formulario los marca con una regla a la izquierda. Si esta lista se
 // quedara corta, el tecnico invertiria su tiempo en inventario -que fue

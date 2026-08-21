@@ -86,6 +86,25 @@ console.log("\nCliente sin hallazgos (nota 99)");
   es("sin comprobaciones criticas pendientes", score.capadoresPendientes.length, 0);
 }
 
+// ── Negar una seccion que si mueve la nota matiza el veredicto ──────────
+// Con las precondiciones nuevas, servidores/wifi/vpn/licenciamiento siguen
+// siendo negables sin hallazgo. La frase "se comprobo todo" no puede sonar
+// igual de rotunda cuando parte del modelo se descarto por declaracion.
+console.log("\nNegar una seccion con criterios matiza 'se comprobo todo'");
+{
+  const c = JSON.parse(readFileSync(join(dir, "01-bien-protegido.alanait"), "utf8"));
+  const conVpnNegada = { ...c, sectionEnabled: { ...c.sectionEnabled, vpn: "no" } };
+  const { html, score } = informe(conVpnNegada);
+  es("sigue sin hallazgos", score.hallazgos.length, 0);
+  es("ya NO afirma que se comprobo todo sin matiz",
+     html.includes("Se comprobaron todos los criterios que aplicaban"), false);
+  es("y nombra la seccion declarada inexistente",
+     html.includes("declarada inexistente") && html.includes("VPN"), true);
+  // La pluralizacion de "seccion" es irregular (seccion -> secciones): que no
+  // se cuele "secciónes".
+  es("sin la pluralizacion mal hecha", html.includes("secciónes"), false);
+}
+
 // ── Un cliente a medias no puede declararse limpio ─────────────────────
 // El caso Kishoa-Powen: backup 100/100 con un criterio contestado de diez, y el
 // informe imprimiendo "sin hallazgos criticos abiertos" encima.
@@ -93,8 +112,12 @@ console.log("\nCliente a medias (el caso que destapo el fallo)");
 {
   const medias = {
     clientData: { empresa: "A medias SL" },
+    // "red" se deja SIN DECIDIR a proposito y no en "no": desde el modelo 2.2.0
+    // marcarla "no" es en si misma un hallazgo (sin_red), y este caso quiere
+    // aislar el otro camino -comprobaciones criticas PENDIENTES, sin ningun
+    // hallazgo confirmado- que es el que de verdad destapo el bug original.
     sectionEnabled: { backup: "si", email: "si", pcs: "si", antivirus: "si", servidores: "si",
-                      red: "no", wifi: "no", vpn: "no", armario: "no", impresion: "no",
+                      wifi: "no", vpn: "no", armario: "no", impresion: "no",
                       otros: "no", almacenamiento: "no", telefonia: "no", apps: "no", licencias: "no" },
     formData: { backup: { 0: { frecuencia: "Continuo" } }, email: { 0: { archivado: "Sí" } } },
     instanceCounts: {}, sectionImages: {},

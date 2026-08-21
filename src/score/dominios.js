@@ -56,4 +56,24 @@ export const EVIDENCIA_MINIMA = 60;
 // preguntarse. En servidores eso quita un doble conteo -la version y "esta en
 // soporte" eran el mismo hecho puntuando dos veces en el mismo dominio, con el
 // mismo tope disparandose por duplicado- asi que algunas notas bajan un punto.
-export const SCORE_MODEL_VERSION = "2.1.0";
+//
+// 2.2.0: cuatro correcciones, todas medidas antes de aplicarse.
+//   - Precondicion nueva para email, red y pcs (siempre hallazgo si "no") y
+//     para sai (hallazgo salvo que el cliente declare que no tiene
+//     servidores). Cierra la mayor parte del agujero medido en A1: negar las
+//     8 secciones sin precondicion hacia desaparecer el 73% del peso de la
+//     nota sin un solo hallazgo. Quedan fuera a proposito servidores, wifi,
+//     licenciamiento y vpn: para esas el "no" puede ser una respuesta real.
+//   - Un valor fosil en so_windows_server/so_windows_cliente/so_linux ya no
+//     puede silenciar srv_so_soporte cuando so_familia ha cambiado desde que
+//     se contesto: redundanteSi ahora exige que su propio dep se cumpla.
+//   - El disparo de un cap con agregacion "max" (sai_existe, backup_pruebas,
+//     backup_prueba_resultado) exige ahora que TODAS las instancias esten en
+//     el estado critico, no que baste una: antes un armario secundario sin
+//     SAI capaba el dominio igual que si el principal tampoco lo tuviera,
+//     contradiciendo el porQue del propio criterio.
+//   - Dejar en blanco un campo padre sin criterio propio (backup.repo_dedicado,
+//     servidores.so_familia, licenciamiento.tipo_servicio, servidores.tipo,
+//     email.proveedor, pcs.moviles) ya no es gratis del todo: no toca la nota,
+//     pero impide el sello de fiable, igual que una seccion sin decidir.
+export const SCORE_MODEL_VERSION = "2.2.0";

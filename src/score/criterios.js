@@ -146,7 +146,13 @@ export const CRITERIOS = [
     porQue: "Una detección que nadie lee no es una detección; el ransomware avisa horas antes en la consola y nadie la mira (CIS 8.11 / 17.x)" },
   { id: "av_consola_control", dominio: "endpoint", seccion: "antivirus", campo: "consola_acceso", peso: 2, mapa: { "El cliente": 1, "El proveedor anterior": 0, Ambos: 0.5, "Nadie / credenciales perdidas": 0 }, agregacion: "min",
     porQue: "Si la consola la controla el proveedor anterior o nadie, el antivirus no se puede configurar, excluir ni desinstalar: la protección existe pero es ingobernable" },
-  { id: "srv_so_soporte", dominio: "endpoint", seccion: "servidores", campo: "so_soporte", peso: 3, redundanteSi: ["so_windows_server", "so_windows_cliente", "so_linux"], mapa: { "En soporte": 1, "Fuera de soporte (EOL)": 0 }, agregacion: "min", critico: { cuando: ["Fuera de soporte (EOL)"], capDominio: 45 },
+  { id: "srv_so_soporte", dominio: "endpoint", seccion: "servidores", campo: "so_soporte", peso: 3,
+    redundanteSi: [
+      { campo: "so_windows_server", dep: { field: "so_familia", value: "Windows Server" } },
+      { campo: "so_windows_cliente", dep: { field: "so_familia", value: "Windows (escritorio)" } },
+      { campo: "so_linux", dep: { field: "so_familia", value: "Linux" } },
+    ],
+    mapa: { "En soporte": 1, "Fuera de soporte (EOL)": 0 }, agregacion: "min", critico: { cuando: ["Fuera de soporte (EOL)"], capDominio: 45 },
     titular: "Servidor con sistema operativo fuera de soporte",
     porQue: "Un servidor fuera de soporte no recibirá nunca el parche de la próxima vulnerabilidad crítica y suele ser justo el que guarda los datos (CIS 2.2)" },
   { id: "srv_so_version_windows_server", dominio: "endpoint", seccion: "servidores", campo: "so_windows_server", peso: 2, mapa: { "Windows Server 2025": 1, "Windows Server 2022": 1, "Windows Server 2019": 1, "Windows Server 2016": 0.5, "Windows Server 2012 R2": 0, "Windows Server 2012": 0, "Windows Server 2008 R2": 0, "Windows Server 2008": 0, "Anterior a 2008": 0 }, dep: { field: "so_familia", value: "Windows Server" }, agregacion: "min", critico: { cuando: ["Windows Server 2012 R2", "Windows Server 2012", "Windows Server 2008 R2", "Windows Server 2008", "Anterior a 2008"], capDominio: 45 },
@@ -258,6 +264,14 @@ export const CRITERIOS = [
 // Precondiciones: casos en los que la respuesta a nivel de SECCION es en si
 // misma el hallazgo. Marcar "no" en backup no es un dato que falte —es que el
 // cliente no tiene copias— y ningun reparto de puntos puede compensar eso.
+//
+// Solo entran aqui secciones cuyo "no" tiene una unica lectura razonable, o
+// que se pueden eximir con `salvoSi` cuando ese "no" si es legitimo. Las
+// demas secciones negables (servidores, wifi, licenciamiento, vpn) se dejan
+// fuera a proposito: para esas el "no" puede ser verdad (todo-cloud, nave sin
+// wifi, nadie teletrabaja) y forzar un hallazgo las penalizaria sin motivo.
+// Medido antes de este cambio: negar las 8 secciones sin precondicion hacia
+// desaparecer el 73% del peso de la nota sin un solo hallazgo (KNOWN_ISSUES A1).
 export const PRECONDICIONES = [
   { id: "sin_backup", seccion: "backup", cuando: "no", dominio: "backup", capGlobal: 59, capDominio: 0, exigida: true,
     titular: "Sin copias de seguridad",
@@ -265,6 +279,24 @@ export const PRECONDICIONES = [
   { id: "sin_antivirus", seccion: "antivirus", cuando: "no", dominio: "endpoint", capDominio: 30, exigida: true,
     titular: "Sin antivirus ni EDR desplegado",
     texto: "No hay solucion antivirus ni EDR desplegada en el parque de equipos." },
+  { id: "sin_email", seccion: "email", cuando: "no", dominio: "correo", capDominio: 0, exigida: true,
+    titular: "Sin correo corporativo",
+    texto: "El cliente no tiene correo corporativo: lo mas probable es que se use correo personal para el trabajo, lo que es un riesgo de identidad y de fuga de datos que ningun otro control compensa." },
+  { id: "sin_red", seccion: "red", cuando: "no", dominio: "perimetro", capDominio: 0, exigida: true,
+    titular: "Sin infraestructura de red gestionada",
+    texto: "El cliente declara no tener conexion a internet ni infraestructura de red gestionada. Sin eso no hay perimetro que proteger, solo lo que ofrezca el operador por defecto." },
+  { id: "sin_pcs", seccion: "pcs", cuando: "no", dominio: "endpoint", capDominio: 0, exigida: true,
+    titular: "Sin ordenadores de trabajo",
+    texto: "El cliente declara no tener ordenadores de trabajo. Es una respuesta atipica que conviene confirmar en la visita: si es asi, el dominio de endpoint no tiene nada que proteger en este cliente." },
+  // Exenta si no hay servidores: sin nada que proteger electricamente, no
+  // tener SAI no es una carencia. Residual conocido: como "servidores" sigue
+  // siendo una seccion negable sin precondicion propia, declarar "no" en
+  // servidores tambien exime esta. No se cierra ahora porque exige la misma
+  // decision de negocio que "servidores" en general (ver CURRENT_STATE.md).
+  { id: "sin_sai", seccion: "sai", cuando: "no", dominio: "fisica", capDominio: 0, exigida: true,
+    salvoSi: { seccion: "servidores", cuando: "no" },
+    titular: "Sin armario de comunicaciones, rack ni SAI",
+    texto: "El cliente tiene servidores pero no tiene armario de comunicaciones, rack ni SAI: un corte de luz los apaga en seco sin ningun control fisico que lo evite." },
 ];
 
 // Campos del formulario que mueven la nota, como claves "seccion.campo".
@@ -282,3 +314,12 @@ export const CAMPOS_QUE_PUNTUAN = new Set([
   ...CRITERIOS.map(c => `${c.seccion}.${c.campo}`),
   ...CRITERIOS.filter(c => c.dep).map(c => `${c.seccion}.${c.dep.field}`),
 ]);
+
+// Campos padre que NO tienen criterio propio: solo deciden si puntuan otros
+// (backup.repo_dedicado, servidores.so_familia, licenciamiento.tipo_servicio,
+// servidores.tipo, email.proveedor, pcs.moviles). Derivado, no a mano, para
+// que un futuro campo padre sin peso propio entre solo por existir.
+const CAMPOS_CON_CRITERIO_PROPIO = new Set(CRITERIOS.map(c => `${c.seccion}.${c.campo}`));
+export const CAMPOS_PADRE_SIN_CRITERIO = [...new Set(
+  CRITERIOS.filter(c => c.dep).map(c => `${c.seccion}.${c.dep.field}`)
+)].filter(k => !CAMPOS_CON_CRITERIO_PROPIO.has(k));
