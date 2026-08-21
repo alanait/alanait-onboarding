@@ -23,7 +23,7 @@ const CRIT = [
     critico: { cuando: ["Sí"], capDominio: 30 }, porQue: "RDP publicado a internet" },
   { id: "utm", dominio: "perimetro", seccion: "red", campo: "utm", peso: 2,
     mapa: { "Sí": 1, "No": 0 }, agregacion: "max", porQue: "sin filtrado web" },
-  { id: "so", dominio: "endpoint", seccion: "servidores", campo: "so_soporte", peso: 3,
+  { id: "so", dominio: "servidores", seccion: "servidores", campo: "so_soporte", peso: 3,
     mapa: { "En soporte": 1, "Fuera de soporte (EOL)": 0 }, agregacion: "min", porQue: "SO sin parches" },
   { id: "fwsop", dominio: "perimetro", seccion: "red", campo: "firewall_soporte", peso: 2,
     dep: { field: "firewall", value: "Sí" },
@@ -63,7 +63,7 @@ es("y lo senala", sinbk.capadaGlobal, true);
 
 console.log("\nRegla 3 — multi-instancia");
 es("min: manda el peor servidor",
-   dom(r({ servidores: "si" }, { servidores: { 0: { so_soporte: "En soporte" }, 1: { so_soporte: "Fuera de soporte (EOL)" } } }, { servidores: 2 }), "endpoint").nota, 0);
+   dom(r({ servidores: "si" }, { servidores: { 0: { so_soporte: "En soporte" }, 1: { so_soporte: "Fuera de soporte (EOL)" } } }, { servidores: 2 }), "servidores").nota, 0);
 // rdp se contesta en las dos instancias para aislar lo que este test mide: si
 // se deja en blanco, su peso entra en el denominador valiendo 0 y tapa el
 // efecto de la agregacion.
@@ -188,10 +188,10 @@ console.log("\nRegla 1 — lo que no se ha comprobado no puntua");
   es("pero sin decidirla la nota no es fiable", sinTocar.fiable, false);
 
   // Multi-instancia: tres servidores son tres comprobaciones.
-  const unoDeTres = dom(r({ servidores: "si" }, { servidores: { 0: { so_soporte: "En soporte" } } }, { servidores: 3 }), "endpoint");
+  const unoDeTres = dom(r({ servidores: "si" }, { servidores: { 0: { so_soporte: "En soporte" } } }, { servidores: 3 }), "servidores");
   es("tres servidores con uno contestado no dan evidencia plena", unoDeTres.evidencia, 33);
   // ...salvo que el valor ya no pueda cambiar mirando las demas instancias.
-  const resuelto = dom(r({ servidores: "si" }, { servidores: { 0: { so_soporte: "Fuera de soporte (EOL)" } } }, { servidores: 3 }), "endpoint");
+  const resuelto = dom(r({ servidores: "si" }, { servidores: { 0: { so_soporte: "Fuera de soporte (EOL)" } } }, { servidores: 3 }), "servidores");
   es("...salvo que el valor ya este resuelto (min con un 0)", resuelto.evidencia, 100);
 
   // Un capador que aplicaba y nadie comprobo no toca la nota, pero se publica:
@@ -206,11 +206,13 @@ console.log("\nRegla 1 — lo que no se ha comprobado no puntua");
 // ── Lo que la aplicacion puede deducir, no lo pregunta ──────────────────
 // Reportado por el dueno: "esto se deberia determinar segun la version y si
 // tiene soporte oficial, no preguntarlo". Ademas de trabajo de mas, preguntarlo
-// hacia que el MISMO HECHO puntuara dos veces en el dominio endpoint.
+// hacia que el MISMO HECHO puntuara dos veces en el mismo dominio.
 console.log("\nDeduccion del soporte del sistema operativo");
 {
   const rr = (se, fd, fecha) => computeScore({ criterios: CRITERIOS, precondiciones: PRECONDICIONES, sectionEnabled: se, formData: fd, instanceCounts: {}, fecha });
-  const end = (r) => r.dominios.find(d => d.id === "endpoint");
+  // Desde 2.4.0 el antiguo dominio "endpoint" esta partido: el parque de PCs
+  // vive en "puestos" y las maquinas servidoras en "servidores".
+  const pcs = (r) => r.dominios.find(d => d.id === "puestos");
 
   // Servidores: la version ya tiene su propio criterio, asi que preguntar
   // ademas "esta en soporte?" contaba el mismo hecho dos veces.
@@ -224,21 +226,27 @@ console.log("\nDeduccion del soporte del sistema operativo");
 
   // Parque de PCs: no hay criterio de version, asi que el dato hace falta y se
   // deduce en vez de preguntarse.
-  const w10 = end(rr({ pcs: "si" }, { pcs: { 0: { so: "Windows 10" } } }, "2026-08-20"));
+  const w10 = pcs(rr({ pcs: "si" }, { pcs: { 0: { so: "Windows 10" } } }, "2026-08-20"));
   es("Windows 10 hoy se deduce fuera de soporte", w10.nota, 0);
   es("y cuenta como evidencia, no como hueco", w10.evidencia > 0, true);
 
   // La deduccion depende de la fecha de la VISITA, no del reloj de hoy: un
   // informe de hace un ano tiene que seguir diciendo lo que era cierto aquel dia.
-  const w10antes = end(rr({ pcs: "si" }, { pcs: { 0: { so: "Windows 10" } } }, "2025-01-01"));
-  es("el mismo parque en enero de 2025 estaba en soporte", w10antes.nota, 20);
+  //
+  // Se comparan notas entre si en vez de fijar un numero: el valor exacto
+  // depende del peso del criterio dentro de su dominio, y clavarlo aqui
+  // obligaria a reescribir la prueba cada vez que se repondera algo, que es
+  // justo lo que paso al partir "endpoint" en 2.4.0. Lo que la prueba tiene
+  // que fijar es el comportamiento, no la aritmetica.
+  const w10antes = pcs(rr({ pcs: "si" }, { pcs: { 0: { so: "Windows 10" } } }, "2025-01-01"));
+  es("el mismo parque en enero de 2025 estaba en soporte", w10antes.nota > w10.nota, true);
 
   // Una respuesta explicita manda sobre la deduccion (clientes con ESU de pago).
-  const esu = end(rr({ pcs: "si" }, { pcs: { 0: { so: "Windows 10", so_soporte: "En soporte" } } }, "2026-08-20"));
-  es("contestar a mano gana a la deduccion (caso ESU)", esu.nota, 20);
+  const esu = pcs(rr({ pcs: "si" }, { pcs: { 0: { so: "Windows 10", so_soporte: "En soporte" } } }, "2026-08-20"));
+  es("contestar a mano gana a la deduccion (caso ESU)", esu.nota, w10antes.nota);
 
   // Y lo que no se puede deducir sigue siendo un hueco.
-  const mixto = end(rr({ pcs: "si" }, { pcs: { 0: { so: "Mixto" } } }, "2026-08-20"));
+  const mixto = pcs(rr({ pcs: "si" }, { pcs: { 0: { so: "Mixto" } } }, "2026-08-20"));
   es("un parque \"Mixto\" no se deduce: sigue sin evidencia", mixto.evidencia, 0);
 }
 

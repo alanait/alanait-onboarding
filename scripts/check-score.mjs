@@ -57,7 +57,13 @@ for (const c of CRITERIOS) {
     }
   }
 
-  if (![1, 2, 3].includes(c.peso)) mal(`${c.id}: peso ${c.peso} fuera de 1-3`);
+  // Escala 1-5 desde el modelo 2.4.0. Con 1-3, "esto decide la seguridad del
+  // puesto" y "esto importa bastante" tenian que ser los dos un 3, y no hay
+  // forma de decir que el tipo de solucion antivirus manda mas que el numero
+  // de serie de la licencia. Cinco niveles dan ese margen sin inventar nada:
+  // el reparto sigue siendo suma cero dentro del dominio, asi que un cliente
+  // perfecto sigue dando exactamente 100.
+  if (![1, 2, 3, 4, 5].includes(c.peso)) mal(`${c.id}: peso ${c.peso} fuera de 1-5`);
   if (!['min', 'max'].includes(c.agregacion)) mal(`${c.id}: agregacion "${c.agregacion}" no valida`);
 }
 
