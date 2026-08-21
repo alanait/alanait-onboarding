@@ -6,6 +6,57 @@
 
 ## A. Agujeros abiertos del modelo de puntuación
 
+### A0. ⚠️ LO PRIMERO DEL PRÓXIMO DÍA — callar puntúa mejor que decir la verdad en 22 de los 24 capadores
+
+**Es el bug histórico de este proyecto, el que ya se ha corregido cuatro veces,
+vivo en su última esquina y a mayor escala de la que nadie había medido.**
+
+Un capador dispara su tope solo cuando el técnico **contesta** el literal
+crítico. Si el campo se deja **en blanco**, el criterio puntúa 0 igual —pero el
+cap no salta—. Como el cap suele quitar más de lo que quita el 0, **dejarlo en
+blanco sale a cuenta**.
+
+Medido el 2026-08-21 sobre un cliente perfecto salvo ese campo, modelo 2.5.0:
+
+| criterio | contestando la verdad | callándolo | ventaja de callar |
+|---|---|---|---|
+| `identidad_email_mfa` | 79 | 98 | **+19** |
+| `red_rdp` | 89 | 99 | +10 |
+| `wifi_cifrado` | 90 | 99 | +9 |
+| `backup_repo_expuesto` | 90 | 98 | +8 |
+| `backup_prueba_resultado` | 91 | 98 | +7 |
+| `identidad_email_mfa_admins` | 91 | 98 | +7 |
+| `red_firewall_soporte`, `backup_ultimo_job` | 92-93 | 98-99 | +6 |
+| …16 más | | | +1 a +5 |
+
+**22 de 24 capadores afectados.** Solo se salvan los dos cuyo cap queda por
+encima de lo que ya da la media.
+
+- **Reproducción:** cliente con todo en su mejor valor; cambiar un solo campo
+  capador a su literal crítico y comparar con dejar ese mismo campo vacío.
+- **NO lo introdujo el trabajo del 21/08.** Se descubrió ese día al verificar
+  que el cap nuevo de `av_tipo_solucion` no reintroducía el patrón; la
+  comprobación destapó que `red_firewall` ya se comportaba así desde antes
+  (97 contestando la verdad, 98 callando). El cap nuevo añade un caso a una
+  lista que ya tenía 21.
+- **Mitigación actual, parcial:** `capadoresPendientes` recoge los capadores
+  que aplicaban y nadie contestó, e impide que el informe afirme «sin hallazgos
+  críticos». O sea: el documento no miente, pero **la nota sí premia el
+  silencio**.
+- **Por qué NO se arregló sobre la marcha:** el arreglo obvio —disparar el cap
+  también cuando el campo está en blanco— es justo uno de los diseños que
+  `DECISIONS.md` D1 ya descartó, porque afirma un hallazgo que nadie ha visto
+  («este cliente tiene RDP publicado» cuando lo único cierto es que no se miró).
+  Necesita diseño, no un parche.
+- **Pistas para el diseño**, sin comprometerse a ninguna: (a) que el hueco de
+  un capador aplique un tope propio, más suave que el del hallazgo confirmado,
+  de modo que callar quede entre «bien» y «confirmado mal»; (b) que
+  `capadoresPendientes` bloquee `fiable` igual que hoy lo hacen las secciones
+  sin decidir y los campos padre; (c) tratar el hueco de un capador como
+  evidencia que falta y dejar que la nota baje por la vía del denominador, sin
+  cap. **Probar cualquiera comparando entradas distintas del mismo motor**, y
+  contra el barrido de monotonía completo, no contra un caso suelto.
+
 Todos están **medidos**, no son sospechas. Ninguno lo introdujo el trabajo de hoy;
 son preexistentes y salieron a la luz al auditar.
 
