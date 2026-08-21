@@ -8,7 +8,7 @@ import { computeScore } from "../src/score/computeScore.js";
 // El grueso de las pruebas usa modelos sinteticos para aislar el motor. El
 // bloque de deduccion del soporte necesita el modelo REAL: depende de ids
 // concretos y de la tabla de fin de soporte.
-import { CRITERIOS, PRECONDICIONES, CAMPOS_QUE_PUNTUAN } from "../src/score/criterios.js";
+import { CRITERIOS, PRECONDICIONES, CAMPOS_QUE_PUNTUAN, LITERALES_NO_APLICA, LITERALES_SIN_COMPROBAR } from "../src/score/criterios.js";
 
 let ok = 0, fallos = 0;
 const es = (etiqueta, real, esperado) => {
@@ -320,6 +320,60 @@ console.log("\nUn campo padre en blanco retrasa 'fiable' sin tocar la nota");
      contestado.dominios.find(d => d.id === "backup").nota);
 }
 
+
+// ── La calidad de la respuesta se gradua (modelo 2.3.0) ──────────────────
+// Reportado por el dueno: "no puede valer igual de nota un antivirus normal,
+// que edr, xdr, mdr gestionado". Estas pruebas fijan los escalones para que
+// nadie los vuelva a aplanar, y sobre todo fijan las dos reglas que hacen que
+// graduar sea seguro.
+console.log("\nLa calidad de la respuesta se gradua, no se aplana");
+{
+  const mapaDe = (id) => CRITERIOS.find(c => c.id === id).mapa;
+
+  // El caso que lo motivo, con su escalon completo.
+  const av = mapaDe("av_tipo_solucion");
+  es("MDR > XDR > EDR > antivirus basico",
+     av["MDR gestionado"] > av["XDR"] && av["XDR"] > av["EDR"] && av["EDR"] > av["Antivirus básico"], true);
+  // El antivirus de firmas no es "media proteccion": no ve el ransomware
+  // moderno, que es de lo que va este criterio.
+  es("y el antivirus de firmas no llega a la mitad", av["Antivirus básico"] < 0.5, true);
+
+  const bk = mapaDe("backup_frecuencia");
+  es("copia continua puntua mas que diaria", bk["Continuo"] > bk["Diario"], true);
+  const ret = mapaDe("backup_retencion");
+  es("tres meses de retencion puntuan mas que treinta dias", ret["3 a 12 meses"] > ret["15 a 30 días"], true);
+  const wifi = mapaDe("wifi_cifrado");
+  es("WPA3 puntua mas que WPA2-PSK", wifi["WPA3"] > wifi["WPA2-PSK"], true);
+  const ws = mapaDe("srv_so_version_windows_server");
+  es("Windows Server 2022 puntua mas que 2019", ws["Windows Server 2022"] > ws["Windows Server 2019"], true);
+
+  // REGLA 1: ninguna respuesta real puede quedar por debajo de callarse.
+  // Callar vale 0, asi que graduar a la baja nunca puede cruzar ese suelo: si
+  // lo cruzara, el tecnico aprenderia a no tocar el desplegable.
+  const sinComprobar = new Set([...LITERALES_NO_APLICA, ...LITERALES_SIN_COMPROBAR]);
+  const bajoCero = [];
+  const regalados = [];
+  for (const c of CRITERIOS) {
+    for (const [k, v] of Object.entries(c.mapa ?? {})) {
+      if (v < 0) bajoCero.push(`${c.id}.${k}`);
+      // Un literal de "no lo he mirado" no puede valer mas que cero: declarar
+      // la ignorancia y callarla son el mismo estado de conocimiento.
+      if (sinComprobar.has(k) && v > 0) regalados.push(`${c.id}.${k}`);
+    }
+  }
+  es("ninguna respuesta puntua por debajo de callarse", bajoCero, []);
+  es("y ningun literal de 'sin comprobar' puntua por encima de cero", regalados, []);
+
+  // REGLA 2: hay empates que son CORRECTOS y no se pueden "arreglar". Confundir
+  // "valen lo mismo porque el riesgo es el mismo" con "se nos olvido graduar"
+  // meteria ruido: no hay VPNs que auditar, no hay accesos que revocar.
+  es("'No hay VPNs' sigue valiendo lo mismo que 'Auditadas'",
+     mapaDe("red_vpns")["No hay VPNs"], mapaDe("red_vpns")["Auditadas"]);
+  es("'No existían' sigue valiendo lo mismo que 'Revocados'",
+     mapaDe("san_red_accesos")["No existían"], mapaDe("san_red_accesos")["Revocados"]);
+  es("los tres tipos de rack siguen valiendo igual (el tipo no cambia el riesgo)",
+     mapaDe("sai_rack_tipo")["Rack de pie 19\""], mapaDe("sai_rack_tipo")["Rack mural"]);
+}
 
 // ── Que campos mueven la nota ───────────────────────────────────
 // El formulario los marca con una regla a la izquierda. Si esta lista se

@@ -79,4 +79,25 @@ export const EVIDENCIA_MINIMA = 60;
 //     servidores.so_familia, licenciamiento.tipo_servicio, servidores.tipo,
 //     email.proveedor, pcs.moviles) ya no es gratis del todo: no toca la nota,
 //     pero impide el sello de fiable, igual que una seccion sin decidir.
-export const SCORE_MODEL_VERSION = "2.2.0";
+//
+// 2.3.0: se gradua la CALIDAD de la respuesta donde antes habia empates que
+// escondian diferencias reales. Reportado por el dueno: "no puede valer igual
+// de nota un antivirus normal, que edr, xdr, mdr gestionado". Se revisaron los
+// 93 criterios: 38 tenian empates, pero solo 12 escondian calidad distinta.
+// Los otros 26 son equivalencias deliberadas y CORRECTAS que NO se han tocado
+// -"No hay VPNs" vale lo mismo que "Auditadas" porque no hay nada que
+// auditar, y los tres tipos de rack valen igual porque el tipo no cambia el
+// riesgo-, y confundir las dos cosas habria metido ruido en vez de precision.
+//
+// Graduados: av_tipo_solucion, av_consola_control, backup_frecuencia,
+// backup_retencion, pcs_parcheo_sistema, pcs_parcheo_terceros, wifi_cifrado,
+// srv_so_version_windows_server, correo_dmarc, sai_sala, sai_ventilacion,
+// sai_pdu. El porQue de cada uno explica el escalon.
+//
+// Dos cuidados al hacerlo, los dos verificados: ninguna respuesta real puede
+// quedar por debajo de callarse (todas siguen siendo > 0, y callar sigue
+// valiendo 0), y el mismo hecho no puede puntuar dos veces -por eso en
+// av_tipo_solucion los saltos de EDR a MDR son cortos: quien vigila la
+// consola ya lo mide av_alertas_vigiladas-. El barrido de monotonia sobre las
+// 804 respuestas de los ejemplos baja de 0,6% a 0,5%.
+export const SCORE_MODEL_VERSION = "2.3.0";
