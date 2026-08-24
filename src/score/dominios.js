@@ -173,4 +173,75 @@ export const EVIDENCIA_MINIMA = 60;
 // contiene `capadoresPendientes`, que impide que el informe afirme que no hay
 // hallazgos criticos. Cerrarlo de verdad exige rediseñar los caps, no este
 // criterio.
-export const SCORE_MODEL_VERSION = "2.5.0";
+// 2.6.0: negar una seccion deja de ser gratis, pero por la via de la evidencia
+// y del sello, no por la de la nota. Y un criterio que solo existe si hay
+// servidores deja de cobrarse cuando el cliente declara que no los tiene.
+//
+// Viene de medir el atajo que D13 dejo abierto a proposito. Sobre las 5 fichas
+// de ejemplo, las 155 combinaciones de negar servidores, wifi, licenciamiento,
+// vpn y sai: 64 subian la nota Y SE PUBLICABAN, hasta +6, y 12 de ellas ademas
+// borraban un hallazgo critico del informe. Lo peor no era la nota: sobre una
+// visita a medias el atajo movia `fiable` de false a TRUE en las cinco fichas,
+// porque al negar una seccion sus criterios pasan a "no aplicaban" y entonces
+// si es cierto que se comprobo todo lo aplicable. El atajo hacia que el informe
+// pareciera MAS fiable, no menos.
+//
+// Tres cambios, y ninguno convierte el "no" en hallazgo ni en cap: eso ya lo
+// decidio el dueno cuando revirtio la precondicion del SAI, y sigue siendo suyo.
+//
+//   - El "no" pide MOTIVO, de una lista cerrada. CON motivo, el peso retirado
+//     cuenta en el numerador Y en el denominador de la evidencia: neutro,
+//     porque el tecnico declaro algo sobre el cliente y queda escrito con su
+//     nombre y la fecha. SIN motivo cuenta solo en el denominador y vale 0,
+//     igual que cualquier otra cosa que nadie ha comprobado, y ademas bloquea
+//     `fiable`. Es la regla 1 aplicada un piso mas arriba, a nivel de seccion.
+//   - CONTRADICCIONES: 11 reglas duras que cruzan una seccion declarada
+//     inexistente contra una respuesta CERRADA de otra seccion que no podria
+//     ser cierta si aquella no existiera ("no hay servidores" frente a "el DHCP
+//     lo da un servidor Windows"). No son hallazgos y no tocan la nota: no se
+//     afirma que el cliente tenga servidores, se afirma que el formulario se
+//     contradice, que es un hecho del propio formulario. Solo bloquean el
+//     sello. Las senales blandas quedan fuera a proposito: pcs.dominio = "Si"
+//     se contesta igual con Entra ID y sin un solo servidor, y una regla que
+//     salta sobre un cliente legitimo ensena a ignorar el aviso.
+//   - `depSeccion`: av_servidores solo aplica si la seccion servidores esta en
+//     "si". El todo-cloud honesto pagaba 11 puntos por contestar la verdad
+//     ("No, el antivirus no cubre servidores" daba 89; mentir "Si" devolvia los
+//     100). Ahora la verdad da 100 y la mentira no gana nada, porque salta la
+//     contradiccion con la seccion negada.
+//
+// Medido despues: de las 64 combinaciones que subian la nota y se publicaban
+// quedan 3, todas de +1 punto y ninguna borra un hallazgo; en visita a medias
+// `fiable` sigue en false en las cinco fichas; el barrido de monotonia no se
+// mueve (14 de 804, los mismos casos, todos de campo padre); y un cliente
+// perfecto sigue dando exactamente 100.
+//
+// La nota al negar una seccion NO cambia, y es deliberado: retirar el peso de
+// algo que de verdad no existe sigue siendo lo correcto, y moverlo habria
+// reintroducido el bug que este proyecto lleva cuatro veces corrigiendo.
+//
+// Dos arreglos mas del mismo dia, de otros agujeros:
+//
+//   - Un capador cuyo literal de "no comprobado" entra por `computa` (red_rdp =
+//     "No revisado" y los siete san_*) contaba como evaluado y NO entraba en
+//     capadoresPendientes. Las fichas 03 y 04 salian con CERO comprobaciones
+//     criticas pendientes teniendo el RDP y el panel de licencias sin mirar.
+//     Ese literal sigue puntuando lo que dice su mapa -esa excepcion no se
+//     toca- pero deja de cerrar el pendiente. No mueve ninguna nota.
+//   - "No revisado" en un campo PADRE contaba como decidido: cerraba el `dep`
+//     de sus hijos, los sacaba del denominador con sus capadores dentro, y
+//     devolvia el sello de fiable que el blanco si retiene. Declarar el NAS y
+//     reconocer no haberlo mirado daba 94; contestar "No revisado" en el padre
+//     daba 100 y fiable. Ahora los dos valen igual, que es lo que el propio
+//     modelo declara en LITERALES_SIN_COMPROBAR.
+//
+// LO QUE NO SE HA TOCADO: A0. Callar un capador sigue puntuando mejor que
+// contestar su literal critico en 22 de 24. Se disenaron y midieron cuatro
+// mecanismos y los cuatro cayeron por lo mismo, medido sobre las 28 rutas de
+// ocultacion que tiene un capador: el castigo del hueco y el premio por negar
+// que la cosa existe son EL MISMO NUMERO, punto por punto, en 28 de 28 casos,
+// porque el hueco solo nace si la seccion esta en "si" y el `dep` abierto. La
+// ventaja total de esconder pasaba de +43 a +168 en las tres vias que mueven la
+// nota. Cerrar A0 por la nota exige cerrar antes la fuga de los campos padre
+// (KNOWN_ISSUES A2), y eso todavia no tiene diseno.
+export const SCORE_MODEL_VERSION = "2.6.0";

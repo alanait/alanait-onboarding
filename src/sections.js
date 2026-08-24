@@ -1,3 +1,5 @@
+import { MOTIVOS_INEXISTENCIA, MOTIVO_OTRO } from "./score/criterios.js";
+
 // ─────────────────────────────────────────────────────────────────────────
 // Esquema del cuestionario de onboarding.
 //
@@ -63,6 +65,12 @@ export const SECTIONS = [
     question: "¿Dispone de servidores?",
     multi: true, multiLabel: "Servidor",
     fields: [
+      // Campos del "no": solo se pintan cuando la seccion se declara
+      // INEXISTENTE, no cuando se rellena (soloSiNo). Declarar que el
+      // cliente no tiene esto retira su peso del modelo, asi que el motivo
+      // tiene que quedar escrito igual que cualquier otra respuesta.
+      { id: "sin_servicio_motivo", label: "¿Por qué no tiene esto?", type: "select", options: MOTIVOS_INEXISTENCIA.servidores, soloSiNo: true, group: "Declaración" },
+      { id: "sin_servicio_detalle", label: "Detalle", type: "text", dep: { field: "sin_servicio_motivo", value: MOTIVO_OTRO }, soloSiNo: true, group: "Declaración" },
       // ── Identificación ───────────────────────────────────────────────────
       { id: "nombre", label: "Nombre / Hostname", type: "text", group: "Identificación" },
       { id: "ip", label: "Dirección IP", type: "ip", placeholder: "Ej: 192.168.1.10", group: "Identificación" },
@@ -274,6 +282,12 @@ export const SECTIONS = [
     question: "¿Dispone de red WiFi?",
     multi: true, multiLabel: "Red WiFi",
     fields: [
+      // Campos del "no": solo se pintan cuando la seccion se declara
+      // INEXISTENTE, no cuando se rellena (soloSiNo). Declarar que el
+      // cliente no tiene esto retira su peso del modelo, asi que el motivo
+      // tiene que quedar escrito igual que cualquier otra respuesta.
+      { id: "sin_servicio_motivo", label: "¿Por qué no tiene esto?", type: "select", options: MOTIVOS_INEXISTENCIA.wifi, soloSiNo: true, group: "Declaración" },
+      { id: "sin_servicio_detalle", label: "Detalle", type: "text", dep: { field: "sin_servicio_motivo", value: MOTIVO_OTRO }, soloSiNo: true, group: "Declaración" },
       // -- Redes y cifrado --
       { id: "ssids", label: "SSIDs / Redes WiFi", type: "text", placeholder: "Ej: CORP_WIFI, GUEST_WIFI", group: "Redes y cifrado" },
       { id: "cifrado", label: "Cifrado de la red principal", type: "select", options: ["WPA3", "WPA2-Enterprise (802.1X)", "WPA2-PSK", "WPA/WPA2 mixto", "WEP", "Abierta (sin contraseña)", "No revisado"], group: "Redes y cifrado" },
@@ -297,6 +311,12 @@ export const SECTIONS = [
     question: "¿Dispone de VPN corporativa?",
     multi: true, multiLabel: "VPN",
     fields: [
+      // Campos del "no": solo se pintan cuando la seccion se declara
+      // INEXISTENTE, no cuando se rellena (soloSiNo). Declarar que el
+      // cliente no tiene esto retira su peso del modelo, asi que el motivo
+      // tiene que quedar escrito igual que cualquier otra respuesta.
+      { id: "sin_servicio_motivo", label: "¿Por qué no tiene esto?", type: "select", options: MOTIVOS_INEXISTENCIA.vpn, soloSiNo: true, group: "Declaración" },
+      { id: "sin_servicio_detalle", label: "Detalle", type: "text", dep: { field: "sin_servicio_motivo", value: MOTIVO_OTRO }, soloSiNo: true, group: "Declaración" },
       { id: "tipo", label: "Tipo de VPN", type: "select", options: ["SSL/TLS", "IPsec Site-to-Site", "IPsec Client-to-Site", "OpenVPN", "WireGuard", "Otro"] },
       { id: "solucion", label: "Solución / Fabricante", type: "text", placeholder: "Ej: Fortinet, Cisco AnyConnect…" },
       { id: "usuarios", label: "Número de usuarios VPN", type: "number" },
@@ -315,6 +335,12 @@ export const SECTIONS = [
     question: "¿Dispone de armario de comunicaciones, rack o SAI?",
     multi: true, multiLabel: "Armario",
     fields: [
+      // Campos del "no": solo se pintan cuando la seccion se declara
+      // INEXISTENTE, no cuando se rellena (soloSiNo). Declarar que el
+      // cliente no tiene esto retira su peso del modelo, asi que el motivo
+      // tiene que quedar escrito igual que cualquier otra respuesta.
+      { id: "sin_servicio_motivo", label: "¿Por qué no tiene esto?", type: "select", options: MOTIVOS_INEXISTENCIA.sai, soloSiNo: true, group: "Declaración" },
+      { id: "sin_servicio_detalle", label: "Detalle", type: "text", dep: { field: "sin_servicio_motivo", value: MOTIVO_OTRO }, soloSiNo: true, group: "Declaración" },
       // ── Armario / Rack ───────────────────────────────────────────────────
       { id: "rack_tipo", label: "Tipo de armario", type: "select", options: ["Rack de pie 19\"", "Rack mural", "Semi-rack", "Sin armario (equipos sueltos)", "No revisado"], group: "Armario / Rack" },
       { id: "rack_us", label: "Tamaño del rack (U)", type: "text", placeholder: "Ej: 42U", group: "Armario / Rack" },
@@ -438,6 +464,12 @@ export const SECTIONS = [
     question: "¿Dispone de licencias o contratos de mantenimiento?",
     multi: true, multiLabel: "Licencia / Contrato",
     fields: [
+      // Campos del "no": solo se pintan cuando la seccion se declara
+      // INEXISTENTE, no cuando se rellena (soloSiNo). Declarar que el
+      // cliente no tiene esto retira su peso del modelo, asi que el motivo
+      // tiene que quedar escrito igual que cualquier otra respuesta.
+      { id: "sin_servicio_motivo", label: "¿Por qué no tiene esto?", type: "select", options: MOTIVOS_INEXISTENCIA.licenciamiento, soloSiNo: true, group: "Declaración" },
+      { id: "sin_servicio_detalle", label: "Detalle", type: "text", dep: { field: "sin_servicio_motivo", value: MOTIVO_OTRO }, soloSiNo: true, group: "Declaración" },
       // -- Servicio contratado --
       // "Conectividad / linea" se omite a proposito: la conexion del ISP ya se
       // documenta en la seccion "Internet y Red" y duplicarla aqui invita a que

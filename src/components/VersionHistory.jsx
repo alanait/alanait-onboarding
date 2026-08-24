@@ -6,6 +6,40 @@ const C = {
   gray: "#868686", border: "#E4E6EA", textLight: "#9AA0A6",
 };
 
+/**
+ * Quien escribio ESTA version, dicho con la seguridad que de verdad se tiene.
+ *
+ *   directa        la escribio el trigger de la base: el autor es el de verdad.
+ *   derivada       reconstruida del historial anterior por desplazamiento.
+ *   indeterminada  historica y no reconstruible: no se inventa un nombre.
+ *   legacy         anterior al SQL de auditoria; `changed_by` es quien
+ *                  sobreescribio, no quien escribio, asi que se dice asi.
+ */
+function autoria(v) {
+  const estilo = { fontSize: 12, color: C.textLight, marginTop: 4 };
+  if (v.author_origin === "directa" && v.author_email) {
+    return <div style={estilo}>Escrito por: {v.author_email}</div>;
+  }
+  if (v.author_origin === "derivada" && v.author_email) {
+    return (
+      <div style={estilo} title="Autoría reconstruida del historial anterior, no registrada en su momento">
+        Escrito por: {v.author_email} <span style={{ opacity: 0.7 }}>(reconstruido)</span>
+      </div>
+    );
+  }
+  if (v.author_origin === "indeterminada") {
+    return (
+      <div style={estilo}>
+        Autoría no registrada{v.changed_by ? ` · sobrescrita por ${v.changed_by}` : ""}
+      </div>
+    );
+  }
+  // Sin columnas de autoria todavia (el SQL no se ha ejecutado): se dice lo
+  // unico que ese dato significa de verdad.
+  if (v.changed_by) return <div style={estilo}>Sobrescrita por: {v.changed_by}</div>;
+  return null;
+}
+
 export default function VersionHistory({ clientId, onRestore, onClose }) {
   const [versions, setVersions] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -22,7 +56,7 @@ export default function VersionHistory({ clientId, onRestore, onClose }) {
     setRestoring(versionId);
     try {
       const snapshot = await loadVersion(versionId);
-      onRestore(snapshot);
+      onRestore(snapshot, version);
     } catch (err) {
       alert("Error al restaurar: " + err.message);
     }
@@ -80,11 +114,11 @@ export default function VersionHistory({ clientId, onRestore, onClose }) {
                         })}
                       </span>
                     </div>
-                    {v.changed_by && (
-                      <div style={{ fontSize: 12, color: C.textLight, marginTop: 4 }}>
-                        Guardado por: {v.changed_by}
-                      </div>
-                    )}
+                    {/* "Guardado por: {changed_by}" era FALSO: esa columna
+                        guarda a quien SOBREESCRIBIO la version, no a quien la
+                        escribio. Ahora la etiqueta depende de lo segura que sea
+                        la atribucion, en vez de afirmar siempre lo mismo. */}
+                    {autoria(v)}
                   </div>
                   <button
                     onClick={() => handleRestore(v.id, v.version)}

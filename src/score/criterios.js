@@ -143,7 +143,13 @@ export const CRITERIOS = [
     porQue: "El antivirus de firmas no ve el ransomware moderno, que llega sin fichero y se ejecuta en memoria. Puntua 0 y no a medio camino porque no es media proteccion: es proteccion contra la amenaza de hace diez anos, y la carencia esta confirmada, no pendiente de mirar. Ademas CAPA el dominio, y esa es la unica forma de que la eleccion de solucion se note en la nota global: el peso de un criterio esta acotado por el de su dominio -puestos entero solo vale 13 puntos- asi que por mucho que se suba, elegir MDR en vez de firmas no llegaria a mover ni dos puntos. Del EDR hacia arriba los saltos son cortos a proposito: el gran diferencial del MDR -que alguien vigile la consola 24x7- ya lo mide av_alertas_vigiladas, y contarlo tambien aqui seria puntuar el mismo hecho dos veces. Lo que se gradua aqui es el alcance de la tecnologia: EDR mira el puesto, XDR correlaciona ademas red e identidad (CIS 10.7)" },
   { id: "av_cobertura_parque", dominio: "puestos", seccion: "antivirus", campo: "cobertura", peso: 4, mapa: { "Todos los equipos": 1, "La mayoría, con excepciones": 0.5, "Solo algunos equipos": 0 }, agregacion: "max",
     porQue: "Basta un equipo sin protección para que entre el cifrado y se propague por los recursos compartidos (CIS 10.1)" },
-  { id: "av_servidores", dominio: "servidores", seccion: "antivirus", campo: "servidores_av", peso: 3, mapa: { "Sí": 1, No: 0 }, agregacion: "max",
+  // `depSeccion`: este criterio vive en el dominio `servidores` pero pregunta
+  // en la seccion `antivirus`, asi que sobrevivia a negar la seccion de
+  // servidores y se quedaba decidiendo el dominio entero el solo. El cliente
+  // todo-cloud que contestaba la verdad -"No, el antivirus no cubre
+  // servidores", porque no hay servidores que cubrir- se llevaba el dominio a
+  // 0 y perdia 11 puntos de nota global; mentir "Si" se los devolvia enteros.
+  { id: "av_servidores", dominio: "servidores", seccion: "antivirus", campo: "servidores_av", peso: 3, mapa: { "Sí": 1, No: 0 }, agregacion: "max", depSeccion: { seccion: "servidores" },
     porQue: "El servidor de ficheros es el objetivo del ransomware, no el PC del usuario; dejarlo fuera del antivirus es dejar fuera lo único que importa" },
   { id: "av_licencia_estado", dominio: "puestos", seccion: "antivirus", campo: "licencias_estado", peso: 2, mapa: { Vigente: 1, Caducada: 0, "En periodo de prueba": 0.5 }, agregacion: "min",
     porQue: "Una licencia caducada deja el agente instalado pero sin actualizaciones ni consola: aparenta protección y no la da" },
@@ -332,3 +338,86 @@ const CAMPOS_CON_CRITERIO_PROPIO = new Set(CRITERIOS.map(c => `${c.seccion}.${c.
 export const CAMPOS_PADRE_SIN_CRITERIO = [...new Set(
   CRITERIOS.filter(c => c.dep).map(c => `${c.seccion}.${c.dep.field}`)
 )].filter(k => !CAMPOS_CON_CRITERIO_PROPIO.has(k));
+
+// ─────────────────────────────────────────────────────────────────────────
+// 2.6.0 — Declaracion de inexistencia
+// ─────────────────────────────────────────────────────────────────────────
+
+// Por que el cliente no tiene esto. Lista cerrada: se elige, no se redacta,
+// para que el caso legitimo cueste un clic y no una frase. "Otro" exige
+// detalle escrito, que es el unico caso en el que hay que teclear.
+//
+// La lista NO es una excusa: es una afirmacion sobre el cliente que se imprime
+// en el informe con quien la hizo y cuando, igual que cualquier otra respuesta.
+export const MOTIVO_OTRO = "Otro (indicar)";
+export const MOTIVOS_INEXISTENCIA = {
+  servidores: [
+    "Todo en cloud: no hay servidores propios",
+    "Los servidores son del grupo / de la matriz, fuera del alcance",
+    "Servidores retirados, pendientes de baja",
+    MOTIVO_OTRO,
+  ],
+  wifi: [
+    "No hay WiFi: todo el parque va por cable",
+    "El WiFi es de un tercero (centro de negocios, arrendador)",
+    "WiFi solo de invitados, gestionado por el operador",
+    MOTIVO_OTRO,
+  ],
+  vpn: [
+    "Nadie teletrabaja ni accede en remoto",
+    "El acceso remoto es por escritorio publicado / SaaS, sin VPN",
+    "La VPN la aporta un tercero (cliente final, matriz)",
+    MOTIVO_OTRO,
+  ],
+  licenciamiento: [
+    "Todas las licencias y dominios los gestiona el propio cliente fuera de ALANA",
+    "No hay licencias ni contratos propios: todo va incluido en otro servicio",
+    MOTIVO_OTRO,
+  ],
+  sai: [
+    "No hay armario ni rack: los equipos de red van sueltos y no hay nada que proteger",
+    "El armario es del arrendador / del centro de negocios",
+    MOTIVO_OTRO,
+  ],
+};
+
+// Contradicciones: una seccion declarada inexistente contra una respuesta de
+// OTRA seccion que afirma lo contrario. No son hallazgos sobre el cliente -no
+// se afirma que tenga servidores, que seria justo lo que D6 prohibe- sino que
+// el formulario se contradice a si mismo, que es un hecho del formulario.
+//
+// Solo entran senales DURAS: una respuesta cerrada de otra seccion que no
+// puede ser cierta si la seccion negada no existe. Se descartaron a proposito:
+//   - pcs.dominio = "Si" ("Unidos a dominio?"): un parque unido a Entra ID se
+//     contesta "Si" sin que exista ningun servidor. Una regla que salta sobre
+//     un cliente legitimo es peor que no tenerla: ensena a ignorar el aviso.
+//   - pcs.moviles = "Si" como senal de WiFi: un movil corporativo tira de 4G.
+//   - red.vlans_detalle mencionando "invitados": es texto libre.
+export const CONTRADICCIONES = [
+  { id: "contra_srv_av", seccion: "servidores", senal: { seccion: "antivirus", campo: "servidores_av", valores: ["Sí"] },
+    texto: "Se declara que no hay servidores, pero en Antivirus consta que la solución cubre servidores." },
+  { id: "contra_srv_dhcp", seccion: "servidores", senal: { seccion: "red", campo: "dhcp_servidor", valores: ["Servidor Windows (AD/DHCP)"] },
+    texto: "Se declara que no hay servidores, pero el DHCP lo da un servidor Windows." },
+  { id: "contra_srv_dns", seccion: "servidores", senal: { seccion: "red", campo: "dns_tipo", valores: ["Interno (AD/Windows)"] },
+    texto: "Se declara que no hay servidores, pero el DNS de la red es interno de AD/Windows." },
+  { id: "contra_srv_ficheros", seccion: "servidores", senal: { seccion: "almacenamiento", campo: "tipo", valores: ["Servidor de ficheros"] },
+    texto: "Se declara que no hay servidores, pero el almacenamiento es un servidor de ficheros." },
+  { id: "contra_srv_erp", seccion: "servidores", senal: { seccion: "erp", campo: "alojamiento", valores: ["On-Premise", "Servidor propio"] },
+    texto: "Se declara que no hay servidores, pero hay una aplicación crítica alojada en un servidor propio." },
+  { id: "contra_vpn_firewall", seccion: "vpn", senal: { seccion: "red", campo: "vpns_auditadas", valores: ["Auditadas", "Pendiente de auditar"] },
+    texto: "Se declara que no hay VPN corporativa, pero en Red constan VPNs configuradas en el perímetro." },
+  { id: "contra_vpn_repo", seccion: "vpn", senal: { seccion: "backup", campo: "repo_expuesto", dep: { field: "repo_dedicado", value: "Sí" }, valores: ["Sí, únicamente por VPN"] },
+    texto: "Se declara que no hay VPN corporativa, pero el repositorio de copias se alcanza únicamente por VPN." },
+  { id: "contra_wifi_impresion", seccion: "wifi", senal: { seccion: "impresion", campo: "conectividad", valores: ["WiFi"] },
+    texto: "Se declara que no hay WiFi, pero hay impresoras conectadas por WiFi." },
+  { id: "contra_lic_antivirus", seccion: "licenciamiento", senal: { seccion: "antivirus", campo: "licencias_estado", valores: ["Vigente", "Caducada", "En periodo de prueba"] },
+    texto: "Se declara que no hay licencias ni contratos, pero la licencia del antivirus consta con estado propio." },
+  { id: "contra_lic_email", seccion: "licenciamiento", senal: { seccion: "email", campo: "proveedor", valores: ["Microsoft 365", "Google Workspace"] },
+    texto: "Se declara que no hay licencias ni contratos, pero el correo es Microsoft 365 / Google Workspace, que se licencia por usuario." },
+  // La mitad simetrica: si no estuviera, la salida barata de una contradiccion
+  // seria mentir en la senal, que es el patron que este proyecto lleva cuatro
+  // veces corrigiendo. "No hay VPNs" ya valia lo mismo que "Auditadas" (D14),
+  // asi que sin esta regla silenciar el aviso saldria gratis.
+  { id: "contra_vpn_inversa", seccion: "vpn", cuando: "si", senal: { seccion: "red", campo: "vpns_auditadas", valores: ["No hay VPNs"] },
+    texto: "Se documenta una VPN corporativa, pero en Red consta que no hay ninguna VPN configurada." },
+];

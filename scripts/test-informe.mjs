@@ -90,19 +90,44 @@ console.log("\nCliente sin hallazgos (nota 99)");
 // Con las precondiciones nuevas, servidores/wifi/vpn/licenciamiento siguen
 // siendo negables sin hallazgo. La frase "se comprobo todo" no puede sonar
 // igual de rotunda cuando parte del modelo se descarto por declaracion.
+// Desde 2.6.0 el "no" de una de estas secciones pide MOTIVO. Los dos casos son
+// distintos a proposito y hay que fijar los dos: sin motivo el informe no se
+// publica; con motivo se publica y la declaracion queda escrita.
 console.log("\nNegar una seccion con criterios matiza 'se comprobo todo'");
 {
-  const c = JSON.parse(readFileSync(join(dir, "01-bien-protegido.alanait"), "utf8"));
-  const conVpnNegada = { ...c, sectionEnabled: { ...c.sectionEnabled, vpn: "no" } };
-  const { html, score } = informe(conVpnNegada);
-  es("sigue sin hallazgos", score.hallazgos.length, 0);
+  const base = JSON.parse(readFileSync(join(dir, "01-bien-protegido.alanait"), "utf8"));
+  // La ficha 01 tiene una VPN auditada de verdad, asi que negar la seccion a
+  // secas es una CONTRADICCION y el motor la retiene por ese otro motivo. Para
+  // probar el motivo hay que partir de un cliente coherente sin VPN: se niega
+  // la seccion y la senal del perimetro dice lo mismo.
+  const c = { ...base, formData: { ...base.formData, red: { 0: { ...base.formData.red[0], vpns_auditadas: "No hay VPNs" } } } };
+
+  // (a) sin motivo: no se publica.
+  const sinMotivo = { ...c, sectionEnabled: { ...c.sectionEnabled, vpn: "no" } };
+  const r1 = informe(sinMotivo);
+  es("negar sin motivo no se publica", r1.score.fiable, false);
+  es("y el motor dice por que", r1.score.motivoNoFiable, "sin_motivo");
+  es("el informe lo explica", r1.html.includes("sin decir por qué"), true);
+  es("y nombra la seccion", r1.html.includes("VPN"), true);
+
+  // (b) con motivo: se publica, y la declaracion se imprime con su motivo.
+  const MOTIVO = "Nadie teletrabaja ni accede en remoto";
+  const conMotivo = {
+    ...c,
+    sectionEnabled: { ...c.sectionEnabled, vpn: "no" },
+    formData: { ...c.formData, vpn: { 0: { sin_servicio_motivo: MOTIVO } } },
+  };
+  const r2 = informe(conMotivo);
+  es("negar CON motivo si se publica", r2.score.fiable, true);
+  es("sigue sin hallazgos", r2.score.hallazgos.length, 0);
   es("ya NO afirma que se comprobo todo sin matiz",
-     html.includes("Se comprobaron todos los criterios que aplicaban"), false);
+     r2.html.includes("Se comprobaron todos los criterios que aplicaban"), false);
   es("y nombra la seccion declarada inexistente",
-     html.includes("declarada inexistente") && html.includes("VPN"), true);
+     r2.html.includes("declarada inexistente") && r2.html.includes("VPN"), true);
+  es("imprimiendo el motivo que dio el tecnico", r2.html.includes(MOTIVO), true);
   // La pluralizacion de "seccion" es irregular (seccion -> secciones): que no
   // se cuele "secciónes".
-  es("sin la pluralizacion mal hecha", html.includes("secciónes"), false);
+  es("sin la pluralizacion mal hecha", r2.html.includes("secciónes"), false);
 }
 
 // ── Un cliente a medias no puede declararse limpio ─────────────────────
@@ -127,7 +152,10 @@ console.log("\nCliente a medias (el caso que destapo el fallo)");
   es("y hay comprobaciones criticas sin hacer", score.capadoresPendientes.length > 0, true);
   es("el informe NO dice que se comprobo todo", html.includes("Se comprobaron todos los criterios que aplicaban"), false);
   es("y NO dice 'Sin hallazgos críticos'", html.includes("Sin hallazgos críticos"), false);
-  es("las publica como pendientes", html.includes("Preguntas críticas sin contestar"), true);
+  // El bloque se llamaba "Preguntas críticas sin contestar". Un campo con
+  // "No revisado" ESTA contestado y no esta comprobado, asi que el titulo
+  // afirmaba algo falso justo sobre los casos que 2.6.0 hace visibles.
+  es("las publica como pendientes", html.includes("Comprobaciones críticas sin hacer"), true);
   // Reportado por el dueno: el aviso decia "Servidor con sistema operativo fuera
   // de soporte" al lado de un "Windows Server 2025" recien escrito. Una pregunta
   // sin contestar se nombra con SU PREGUNTA, no con el titular del hallazgo, que

@@ -5,13 +5,15 @@ import LoginPage from "./components/LoginPage.jsx";
 import { isSupabaseConfigured } from "./lib/supabase.js";
 import { getSession, onAuthChange, signOut, getUserName } from "./lib/auth.js";
 import { saveClient as saveToCloud, loadClient, resolveImagesToBase64, searchClients } from "./lib/clientService.js";
+import { guardarBorrador, leerBorrador, borrarBorrador, borradorTieneContenido, haceCuanto } from "./lib/borrador.js";
+import { registrarEvento } from "./lib/auditoria.js";
 import { SECTIONS, lectorEfectivo, reindexarHints } from "./sections.js";
 import { C, inp, FUENTE } from "./theme.js";
 import { SiNoToggle, ImageZone, SectionFields } from "./components/fields.jsx";
 import { buildPrintFragment } from "./print/buildPrintHTML.js";
 import { exportarInformePdf } from "./print/exportarPdf.js";
 import { computeScore } from "./score/computeScore.js";
-import { CRITERIOS, PRECONDICIONES, CAMPOS_QUE_PUNTUAN } from "./score/criterios.js";
+import { CRITERIOS, PRECONDICIONES, CAMPOS_QUE_PUNTUAN, MOTIVO_OTRO } from "./score/criterios.js";
 import { hintsVisibles, claveHint, TIPOS_HINT } from "./hints.js";
 import ReportPanel from "./components/ReportPanel.jsx";
 import SectionRail from "./components/SectionRail.jsx";
@@ -175,6 +177,9 @@ export default function App() {
     if (!sec || sectionEnabled[sectionId] !== "si") return { total, rellenos };
     for (let i = 0; i < getCount(sectionId); i++) {
       for (const f of sec.fields) {
+        // Los campos del "no" no existen en una seccion que el cliente SI
+        // tiene: contarlos dejaria la barra fija por debajo del 100%.
+        if (f.soloSiNo) continue;
         if (f.dep && getVal(sectionId, f.dep.field, i) !== f.dep.value) continue;
         const v = getVal(sectionId, f.id, i);
         const relleno = Array.isArray(v) ? v.length > 0 : v !== "" && v !== undefined;
@@ -214,6 +219,13 @@ export default function App() {
       const fecha = new Date().toISOString().split("T")[0];
       await exportarInformePdf(container, `${nombre}_${fecha}.pdf`);
 
+      // El informe es INTERNO y lleva el inventario, las capturas y las
+      // oportunidades comerciales. Que se genero uno queda registrado.
+      registrarEvento("pdf_generado", {
+        clientId: currentClientId, empresa: clientData.empresa,
+        detalle: { nota: score.nota, fiable: score.fiable, modelo: score.version },
+      });
+
       document.body.removeChild(container);
     } catch (err) {
       console.error('PDF export error:', err);
@@ -241,6 +253,11 @@ export default function App() {
         addToRecent(clientData.empresa || "proyecto", id);
         loadRecent();
         setIsDirty(false);
+        // Ya esta en la nube: el borrador local deja de tener trabajo que
+        // salvar y conservarlo solo serviria para ofrecer recuperar algo
+        // viejo la proxima vez.
+        borrarBorrador();
+        setAvisoBorrador(null);
       } catch (err) {
         // Ficha guardada, imagen(es) no: se conserva el id para que reintentar
         // actualice este cliente en vez de crear uno duplicado. isDirty se
@@ -282,6 +299,13 @@ export default function App() {
     a.click();
     document.body.removeChild(a);
     setTimeout(() => URL.revokeObjectURL(url), 3000);
+    // Un .alanait lleva la ficha entera, capturas incluidas, y sale del control
+    // de la aplicacion en cuanto se descarga. Que salio queda registrado;
+    // adonde fue, no lo puede saber nadie.
+    registrarEvento("fichero_exportado", {
+      clientId: currentClientId, empresa: clientData.empresa,
+      detalle: { capturas: Object.values(exportImages || {}).reduce((n, l) => n + l.length, 0) },
+    });
     addToRecent(nombre, currentClientId);
     setCurrentFilePath(nombre);
     // Sin Supabase configurado, exportar a fichero ES el guardado (lo usa
@@ -289,7 +313,7 @@ export default function App() {
     // Supabase configurado, exportar es una copia aparte y la nube sigue
     // teniendo la version antigua: el aviso de "cambios sin guardar" tiene que
     // seguir en pie.
-    if (!isSupabaseConfigured()) setIsDirty(false);
+    if (!isSupabaseConfigured()) { setIsDirty(false); borrarBorrador(); setAvisoBorrador(null); }
     loadRecent();
   };
 
@@ -314,6 +338,8 @@ export default function App() {
         setCurrentClientId(null);
         setCurrentFilePath(file.name.replace(/\.alanait$/, ""));
         setIsDirty(false);
+        borrarBorrador();
+        setAvisoBorrador(null);
         addToRecent(data.clientData?.empresa || file.name);
         loadRecent();
       } catch {
@@ -358,10 +384,9 @@ export default function App() {
     return () => window.removeEventListener('focus', onFocus);
   }, []);
 
-  // Cerrar la pestana o el navegador con cambios sin guardar perdia la visita
-  // entera sin un solo aviso: no hay borrador local ni autoguardado, todo vive
-  // en memoria de React. Esto no lo evita -sigue sin haber autoguardado- pero
-  // hace que hacerlo sea una decision del tecnico, no un accidente.
+  // Cerrar la pestana o el navegador con cambios sin guardar avisa. El aviso
+  // cubre el cierre deliberado; el autoguardado de mas abajo cubre lo que el
+  // aviso no puede: el cuelgue, la bateria agotada y el "restaurar pestanas".
   useEffect(() => {
     const onBeforeUnload = (e) => {
       if (!isDirty) return;
@@ -371,6 +396,78 @@ export default function App() {
     window.addEventListener("beforeunload", onBeforeUnload);
     return () => window.removeEventListener("beforeunload", onBeforeUnload);
   }, [isDirty]);
+
+  // ── Autoguardado del borrador ──────────────────────────────────────────────
+  //
+  // La visita entera vivia en memoria de React: un cuelgue del navegador a mitad
+  // de una visita de dos horas se la llevaba completa. Ahora se copia a
+  // localStorage al parar de escribir y al salir de la pagina.
+  //
+  // El borrador es una RED DE SEGURIDAD, no un guardado: no sustituye a Guardar
+  // ni apaga el punto de "cambios sin guardar". Si lo apagara, el tecnico se
+  // iria de la visita creyendo que el cliente esta en la nube cuando solo esta
+  // en el portatil con el que ha ido.
+  const [borradorPendiente, setBorradorPendiente] = useState(null);
+  const [avisoBorrador, setAvisoBorrador] = useState(null);
+
+  const estadoVisita = () => ({ clientData, sectionEnabled, formData, instanceCounts, sectionImages, currentClientId, currentFilePath });
+
+  const escribirBorrador = () => {
+    const r = guardarBorrador(estadoVisita(), new Date().toISOString());
+    setAvisoBorrador(r.guardado
+      ? { hora: new Date().toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit" }), capturasOmitidas: r.capturasOmitidas }
+      : { error: r.error || "no se pudo guardar" });
+    return r;
+  };
+
+  // Al arrancar: si quedo un borrador de una sesion que no acabo bien, se
+  // ofrece. No se restaura solo: pisar en silencio lo que el tecnico tenga
+  // delante seria la misma perdida de datos con el signo del reves.
+  useEffect(() => {
+    const b = leerBorrador();
+    if (borradorTieneContenido(b)) setBorradorPendiente(b);
+  }, []);
+
+  // Rebote de 1,5 s: escribir en cada pulsacion serializaria el formulario
+  // entero decenas de veces por frase. Solo con cambios pendientes: si esta
+  // todo guardado no hay nada que salvar.
+  useEffect(() => {
+    if (!isDirty) return;
+    const t = setTimeout(escribirBorrador, 1500);
+    return () => clearTimeout(t);
+  }, [isDirty, clientData, sectionEnabled, formData, instanceCounts, sectionImages, currentClientId, currentFilePath]);
+
+  // Ultimo momento util antes de que la pagina desaparezca. `pagehide` y
+  // `visibilitychange` en vez de `beforeunload` porque en movil y en tablet
+  // -el tecnico trabaja de pie- `beforeunload` puede no dispararse nunca.
+  useEffect(() => {
+    const alSalir = () => { if (isDirty) guardarBorrador(estadoVisita(), new Date().toISOString()); };
+    const alOcultarse = () => { if (document.visibilityState === "hidden") alSalir(); };
+    window.addEventListener("pagehide", alSalir);
+    document.addEventListener("visibilitychange", alOcultarse);
+    return () => {
+      window.removeEventListener("pagehide", alSalir);
+      document.removeEventListener("visibilitychange", alOcultarse);
+    };
+  }, [isDirty, clientData, sectionEnabled, formData, instanceCounts, sectionImages, currentClientId, currentFilePath]);
+
+  const recuperarBorrador = () => {
+    const b = borradorPendiente;
+    if (!b) return;
+    setClientData(b.clientData || {});
+    setSectionEnabled(b.sectionEnabled || {});
+    setFormData(b.formData || {});
+    setInstanceCounts(b.instanceCounts || {});
+    setSectionImages(b.sectionImages || {});
+    setCurrentClientId(b.clienteId || null);
+    setCurrentFilePath(b.ficheroActual || null);
+    // Recuperado no es guardado: lo que se recupera sigue sin estar en la nube.
+    setIsDirty(true);
+    setBorradorPendiente(null);
+    setView("editor");
+  };
+
+  const descartarBorrador = () => { borrarBorrador(); setBorradorPendiente(null); };
 
   const doNewProject = () => {
     setClientData({ empresa: "", sector: "", trabajadores: "", sedes: "", contacto: "", telefono: "", email: "", web: "", direccion: "", fecha: new Date().toISOString().split("T")[0], responsable: "" });
@@ -382,6 +479,12 @@ export default function App() {
     setCurrentClientId(null);
     setIsDirty(false);
     setShowRecent(false);
+    // Empezar de cero descarta el borrador a proposito. Es seguro porque
+    // llegar aqui con cambios sin guardar pasa antes por el dialogo de
+    // "Cambios sin guardar", y un borrador pendiente de recuperar bloquea la
+    // pantalla hasta que el tecnico decide.
+    borrarBorrador();
+    setAvisoBorrador(null);
     setView('editor');
   };
 
@@ -398,13 +501,16 @@ export default function App() {
       addToRecent(data.clientData.empresa || "proyecto", data.id);
       loadRecent();
       setIsDirty(false);
+      borrarBorrador();
+      setAvisoBorrador(null);
       setView('editor');
     } catch (err) {
       alert("Error al cargar cliente: " + err.message);
     }
   };
 
-  const handleRestoreVersion = (snapshot) => {
+  const handleRestoreVersion = (snapshot, version) => {
+    registrarEvento("version_restaurada", { clientId: currentClientId, empresa: clientData.empresa, detalle: { version } });
     if (snapshot.clientData) setClientData(snapshot.clientData);
     if (snapshot.sectionEnabled) setSectionEnabled(snapshot.sectionEnabled);
     if (snapshot.formData) setFormData(snapshot.formData);
@@ -452,15 +558,50 @@ export default function App() {
     return <LoginPage onLogin={s => { setSession(s); setView('dashboard'); }} />;
   }
 
+  // Aviso de borrador recuperable. Se monta por encima del panel Y del editor:
+  // con Supabase configurado la app arranca en el panel, y ahi es justo donde
+  // el tecnico vuelve despues de que se le cierre el navegador.
+  const modalBorrador = borradorPendiente && (
+    <div style={{ position: "fixed", inset: 0, zIndex: 99999, background: "rgba(0,0,0,0.6)", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: FUENTE }}>
+      <div style={{ background: "#fff", borderRadius: 12, padding: "28px 32px", width: 420, boxShadow: "0 20px 60px rgba(0,0,0,0.3)" }}>
+        <div style={{ fontSize: 20, marginBottom: 8 }}>♻️</div>
+        <div style={{ fontWeight: 500, fontSize: 16, color: C.navy, marginBottom: 8 }}>Hay una visita sin terminar</div>
+        <div style={{ fontSize: 14, color: "#64748b", marginBottom: borradorPendiente.capturasOmitidas ? 12 : 24 }}>
+          Se guardó un borrador de <b style={{ color: C.navy }}>{borradorPendiente.empresa || "una visita sin nombre"}</b>{" "}
+          {haceCuanto(borradorPendiente.guardadoEn, new Date().toISOString())} y no llegó a guardarse.
+        </div>
+        {borradorPendiente.capturasOmitidas > 0 && (
+          <div style={{ fontSize: 13, color: "#B4530F", background: "#FDF4EC", border: "1px solid #F0D9C2", borderRadius: 8, padding: "9px 11px", marginBottom: 24 }}>
+            {borradorPendiente.capturasOmitidas === 1
+              ? "1 captura no cabía en el borrador y no se recupera."
+              : `${borradorPendiente.capturasOmitidas} capturas no cabían en el borrador y no se recuperan.`}{" "}
+            El resto de la visita sí.
+          </div>
+        )}
+        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+          <button onClick={recuperarBorrador} style={{ padding: "10px", background: C.green, border: "none", borderRadius: 8, color: "#fff", fontSize: 14, fontWeight: 500, cursor: "pointer", fontFamily: "inherit" }}>
+            ♻️ Recuperar la visita
+          </button>
+          <button onClick={descartarBorrador} style={{ padding: "10px", background: "#f1f5f9", border: "1px solid #e2e8f0", borderRadius: 8, color: "#374151", fontSize: 14, fontWeight: 500, cursor: "pointer", fontFamily: "inherit" }}>
+            Descartar el borrador
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+
   // Dashboard view
   if (view === 'dashboard') {
     return (
-      <Dashboard
-        onOpenClient={openClientFromCloud}
-        onNewClient={doNewProject}
-        session={session}
-        onSignOut={async () => { await signOut(); setSession(null); }}
-      />
+      <>
+        {modalBorrador}
+        <Dashboard
+          onOpenClient={openClientFromCloud}
+          onNewClient={doNewProject}
+          session={session}
+          onSignOut={async () => { await signOut(); setSession(null); }}
+        />
+      </>
     );
   }
 
@@ -498,6 +639,8 @@ export default function App() {
           onClose={() => setShowVersionHistory(false)}
         />
       )}
+      {/* BORRADOR RECUPERABLE */}
+      {modalBorrador}
       {/* UNSAVED CHANGES MODAL */}
       {showUnsaved && (
         <div style={{ position: "fixed", inset: 0, zIndex: 99999, background: "rgba(0,0,0,0.6)", display: "flex", alignItems: "center", justifyContent: "center" }}>
@@ -559,6 +702,19 @@ export default function App() {
                 {currentFilePath ? currentFilePath.split("\\").pop().split("/").pop() : "Onboarding técnico"}
               </span>
               {isDirty && <span title="Cambios sin guardar" style={{ color: "#2FB6BA", marginLeft: 5, fontSize: 15 }}>•</span>}
+              {/* Una linea, no un bloque: el dueno ya aviso de que el panel se
+                  satura. Solo aparece si hay algo que decir, y el fallo se ve
+                  en ambar porque significa que la red de seguridad NO esta. */}
+              {avisoBorrador?.error && (
+                <span title={`No se pudo guardar el borrador local: ${avisoBorrador.error}`} style={{ fontSize: 11, color: "#F0B27A", marginLeft: 8, whiteSpace: "nowrap" }}>
+                  ⚠ sin borrador
+                </span>
+              )}
+              {avisoBorrador?.hora && !avisoBorrador.error && (
+                <span title="Copia local de seguridad. No sustituye a Guardar." style={{ fontSize: 11, color: "#A9C6EA", marginLeft: 8, whiteSpace: "nowrap" }}>
+                  borrador {avisoBorrador.hora}
+                </span>
+              )}
             </div>
 
             <div style={{ flex: 1 }} />
@@ -875,13 +1031,56 @@ export default function App() {
                   // de verdad hace falta verlo.
                   const pre = PRECONDICIONES.find(p => p.seccion === section.id && p.cuando === "no"
                     && !(p.salvoSi && sectionEnabled[p.salvoSi.seccion] === p.salvoSi.cuando));
-                  return pre ? (
+                  if (pre) return (
                     <div style={{ padding: "10px 20px", fontSize: 13, color: C.red, background: C.redLight, borderTop: `1px solid ${C.redBorder}` }}>
                       <b>Hallazgo crítico:</b> {pre.texto}
                     </div>
-                  ) : (
-                    <div style={{ padding: "10px 20px", fontSize: 13, color: C.red, fontStyle: "italic" }}>
-                      Sin servicio — no se documentará esta sección.
+                  );
+
+                  // Secciones cuyo "no" retira peso del modelo: se pide el
+                  // MOTIVO. No es un castigo ni un hallazgo -el "no" puede ser
+                  // perfectamente cierto- pero declarar que el cliente no tiene
+                  // algo saca esa parte del modelo de la nota, asi que tiene
+                  // que quedar escrito por que, igual que queda escrita
+                  // cualquier otra respuesta. Sin motivo el informe no publica.
+                  const campoMotivo = section.fields.find(f => f.id === "sin_servicio_motivo");
+                  if (!campoMotivo) {
+                    return (
+                      <div style={{ padding: "10px 20px", fontSize: 13, color: C.red, fontStyle: "italic" }}>
+                        Sin servicio — no se documentará esta sección.
+                      </div>
+                    );
+                  }
+                  const motivo = getVal(section.id, "sin_servicio_motivo", 0);
+                  const detalle = getVal(section.id, "sin_servicio_detalle", 0);
+                  const faltaDetalle = motivo === MOTIVO_OTRO && !String(detalle || "").trim();
+                  return (
+                    <div style={{ padding: "12px 20px", borderTop: `1px solid ${C.redBorder}`, background: C.redLight }}>
+                      <label style={{ fontWeight: 500, fontSize: 13, color: C.text, display: "block", marginBottom: 6 }}>
+                        ¿Por qué no tiene esto? <span style={{ color: C.red }}>*</span>
+                      </label>
+                      <select
+                        value={motivo}
+                        onChange={e => setVal(section.id, "sin_servicio_motivo", e.target.value, 0)}
+                        style={{ ...inp, width: "100%", maxWidth: 520 }}
+                      >
+                        <option value="">— Seleccionar —</option>
+                        {campoMotivo.options.map(o => <option key={o} value={o}>{o}</option>)}
+                      </select>
+                      {motivo === MOTIVO_OTRO && (
+                        <input
+                          type="text"
+                          value={detalle}
+                          onChange={e => setVal(section.id, "sin_servicio_detalle", e.target.value, 0)}
+                          placeholder="Indica el motivo"
+                          style={{ ...inp, width: "100%", maxWidth: 520, marginTop: 8 }}
+                        />
+                      )}
+                      <div style={{ fontSize: 12, color: !motivo || faltaDetalle ? C.red : C.textLight, marginTop: 7, lineHeight: 1.45 }}>
+                        {!motivo || faltaDetalle
+                          ? "Sin motivo no se publica la nota: declarar que el cliente no tiene esto retira esa parte del modelo."
+                          : "Queda escrito en el informe, junto al alcance de la visita."}
+                      </div>
                     </div>
                   );
                 })()}

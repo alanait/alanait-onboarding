@@ -29,6 +29,10 @@ la visita**. React + Vite + Supabase, desplegada en Vercel. Calcula un **CiberSc
   callarlo o mentir, el diseño está mal. Este proyecto ha corregido ese patrón
   cuatro veces. Probar siempre comparando **entradas distintas del mismo motor**,
   no versiones del motor con la misma entrada.
+  > **Y probarlo contra las 28 rutas de ocultación, no solo contra el campo en
+  > blanco.** Un capador se esquiva de tres formas: dejarlo vacío, cerrar su `dep`
+  > contestando el padre con otro valor, o negar la sección entera. Cuatro diseños
+  > cayeron en agosto por medir solo la primera (`KNOWN_ISSUES.md` § A0-bis).
 - **Nunca leer respuestas directamente de `form_data`.** Usar `lectorEfectivo()`:
   un campo oculto por su `dep` conserva su valor y dispararía avisos fósiles.
 - **Nunca publicar un contador de "faltan N comprobaciones"** mientras exista la
@@ -60,16 +64,17 @@ No hace falta migración: la nota no se guarda en BD, se recalcula.
 ## Comandos
 
 ```bash
-npm run build     # 5 guardarraíles encadenados + vite build
-node scripts/test-score.mjs          # 81 pruebas del motor
-node scripts/test-informe.mjs        # 52 pruebas del informe
+npm run build     # 6 guardarraíles encadenados + vite build
+node scripts/test-score.mjs          # 115 pruebas del motor
+node scripts/test-informe.mjs        # 58 pruebas del informe
+node scripts/test-borrador.mjs       # 33 pruebas del borrador local
 node scripts/puntuar-ejemplos.mjs    # notas de las 5 fichas de ejemplo
 node scripts/etiquetar-ejemplos.mjs  # reetiquetar tras cambiar el modelo
 ```
 
-Los cinco guardarraíles (`check-ids`, `check-imports`, `check-score`,
-`test-score`, `test-informe`) están encadenados en `npm run build`, así que
-**fallan el deploy**, no solo avisan.
+Los seis guardarraíles (`check-ids`, `check-imports`, `check-score`,
+`test-score`, `test-informe`, `test-borrador`) están encadenados en
+`npm run build`, así que **fallan el deploy**, no solo avisan.
 
 ## Verificación
 

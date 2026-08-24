@@ -213,6 +213,19 @@
     "type": "textarea",
     "options": null
   },
+  "servidores.sin_servicio_motivo": {
+    "type": "select",
+    "options": [
+      "Todo en cloud: no hay servidores propios",
+      "Los servidores son del grupo / de la matriz, fuera del alcance",
+      "Servidores retirados, pendientes de baja",
+      "Otro (indicar)"
+    ]
+  },
+  "servidores.sin_servicio_detalle": {
+    "type": "text",
+    "options": null
+  },
   "servidores.nombre": {
     "type": "text",
     "options": null
@@ -1181,6 +1194,19 @@
     "type": "textarea",
     "options": null
   },
+  "wifi.sin_servicio_motivo": {
+    "type": "select",
+    "options": [
+      "No hay WiFi: todo el parque va por cable",
+      "El WiFi es de un tercero (centro de negocios, arrendador)",
+      "WiFi solo de invitados, gestionado por el operador",
+      "Otro (indicar)"
+    ]
+  },
+  "wifi.sin_servicio_detalle": {
+    "type": "text",
+    "options": null
+  },
   "wifi.ssids": {
     "type": "text",
     "options": null
@@ -1268,6 +1294,19 @@
     "type": "textarea",
     "options": null
   },
+  "vpn.sin_servicio_motivo": {
+    "type": "select",
+    "options": [
+      "Nadie teletrabaja ni accede en remoto",
+      "El acceso remoto es por escritorio publicado / SaaS, sin VPN",
+      "La VPN la aporta un tercero (cliente final, matriz)",
+      "Otro (indicar)"
+    ]
+  },
+  "vpn.sin_servicio_detalle": {
+    "type": "text",
+    "options": null
+  },
   "vpn.tipo": {
     "type": "select",
     "options": [
@@ -1305,6 +1344,18 @@
   },
   "vpn.notas": {
     "type": "textarea",
+    "options": null
+  },
+  "sai.sin_servicio_motivo": {
+    "type": "select",
+    "options": [
+      "No hay armario ni rack: los equipos de red van sueltos y no hay nada que proteger",
+      "El armario es del arrendador / del centro de negocios",
+      "Otro (indicar)"
+    ]
+  },
+  "sai.sin_servicio_detalle": {
+    "type": "text",
     "options": null
   },
   "sai.rack_tipo": {
@@ -1816,6 +1867,18 @@
   },
   "erp.notas": {
     "type": "textarea",
+    "options": null
+  },
+  "licenciamiento.sin_servicio_motivo": {
+    "type": "select",
+    "options": [
+      "Todas las licencias y dominios los gestiona el propio cliente fuera de ALANA",
+      "No hay licencias ni contratos propios: todo va incluido en otro servicio",
+      "Otro (indicar)"
+    ]
+  },
+  "licenciamiento.sin_servicio_detalle": {
+    "type": "text",
     "options": null
   },
   "licenciamiento.tipo_servicio": {

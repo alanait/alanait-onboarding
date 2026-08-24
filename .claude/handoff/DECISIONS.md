@@ -405,3 +405,136 @@ llevar credenciales o datos bancarios— desaparecía para siempre.
 **El detalle del `clientId` importa:** la ficha ya está guardada cuando falla la
 imagen. Sin propagar el id, el reintento crearía un cliente duplicado. Y `isDirty`
 se deja en `true` a propósito: no se guardó todo.
+
+---
+
+# Sesión del 2026-08-24
+
+## D20. El borrador local usa `localStorage`, y cuando no cabe lo dice
+
+**Decisión.** `src/lib/borrador.js` copia la visita a `localStorage` 1,5 s después
+de dejar de escribir, y también en `pagehide` y `visibilitychange`. Al arrancar se
+**ofrece** recuperarlo; nunca se restaura solo.
+
+**Por qué `localStorage` y no IndexedDB**, que es la respuesta «correcta» de manual
+y aquí es la equivocada: `localStorage` es **síncrono**, así que se puede escribir
+dentro de `pagehide` —el último instante en que el navegador deja correr código—.
+IndexedDB es asíncrono y en ese momento no garantiza terminar la escritura, que es
+justo el caso que hay que cubrir. El precio es el cupo (~5 MB por origen) cuando
+una sola captura en base64 puede ocupar 2 MB.
+
+**Por eso el aligerado por escalones, y por eso se cuentan las omitidas.** Si no
+cabe: primero fuera las capturas aún no subidas (las que ya están en la nube son
+una URL corta y sobreviven), luego todas. El número de capturas que se quedaron
+fuera **se guarda y se enseña al recuperar**. Un borrador que dice haber salvado
+unas capturas que soltó es peor que no tener borrador: el técnico se entera al
+imprimir el informe, días después y delante del cliente.
+
+**Por qué el cupo se comprueba intentando escribir.** No hay forma fiable de
+consultar el espacio libre de `localStorage`: la única señal real es que
+`setItem` lance. Por eso son tres intentos y no un cálculo de tamaño. Solo se
+reintenta aligerando si el fallo es de cupo — con el almacén bloqueado (modo
+privado, permisos) quitar fotos no arregla nada y solo retrasaría el aviso.
+
+**Por qué NO apaga el punto de «cambios sin guardar».** El borrador es una red de
+seguridad, no un guardado. Si apagara el aviso, el técnico se iría de la visita
+creyendo que el cliente está en la nube cuando solo está en el portátil con el que
+fue. Mismo razonamiento que D18.
+
+**Por qué no se restaura solo.** Pisar en silencio lo que el técnico tenga delante
+es la misma pérdida de datos con el signo del revés.
+
+**Por qué una ficha recién abierta no se ofrece.** Nace con la fecha de hoy puesta.
+Ofrecer recuperar *eso* enseña a decir que no al aviso, y el día que importe también
+se dirá que no (`borradorTieneContenido` ignora el campo `fecha`).
+
+**Guardarraíl:** `scripts/test-borrador.mjs`, encadenado en `npm run build` como
+sexto. Usa un `localStorage` de mentira **con cupo**, porque el comportamiento que
+hay que fijar es el de cuando NO cabe.
+
+---
+
+## D21. El «no» de una sección pide motivo, pero sigue sin costar nota
+
+**Decisión (modelo 2.6.0).** `servidores`, `wifi`, `vpn`, `licenciamiento` y `sai`
+siguen siendo negables y **siguen retirando su peso de la nota**. Lo que cambia:
+
+1. El «no» pide un **motivo** de lista cerrada. Con motivo, el peso retirado cuenta
+   en el numerador *y* en el denominador de la evidencia (neutro). Sin motivo,
+   solo en el denominador, valiendo 0, y **bloquea `fiable`**.
+2. **11 `CONTRADICCIONES`**: una sección declarada inexistente contra una respuesta
+   *cerrada* de otra que no podría ser cierta. Bloquean el sello; no tocan la nota.
+3. **`depSeccion`**: `av_servidores` solo aplica si hay sección de servidores.
+
+**Por qué NO se convierte en precondición.** Es la decisión del dueño de C5, y sigue
+siendo suya. El «no» puede ser verdad.
+
+**Por qué la nota NO se mueve.** Retirar el peso de algo que de verdad no existe es
+lo correcto (regla 1). Moverlo habría reintroducido el bug histórico. Lo que se
+cierra es el otro efecto, que era peor: **negar una sección subía la evidencia**, y
+la evidencia es lo que abre el sello. Medido: sobre una visita a medias el atajo
+movía `fiable` de false a **true en las cinco fichas**.
+
+**Por qué las señales blandas quedan fuera.** `pcs.dominio = "Sí"` se contesta igual
+con Entra ID y sin un solo servidor. **Una regla que salta sobre un cliente
+legítimo enseña a ignorar el aviso**, y entonces no sirve ninguna.
+
+**Por qué existe `contra_vpn_inversa`.** Sin la mitad simétrica, la salida barata de
+una contradicción sería mentir en la señal. «No hay VPNs» ya valía lo mismo que
+«Auditadas» (D14), así que silenciar el aviso saldría gratis.
+
+**Efecto secundario que el dueño debe validar:** `licenciamiento` queda **negable
+solo en la práctica si nada más lo desmiente**. Un cliente con `licencias_estado =
+"Vigente"` y `email.proveedor = "Microsoft 365"` —dos respuestas normales— dispara
+dos contradicciones al negarla. Es defendible (todo cliente tiene licencias) pero
+es un cambio de negocio: quitar `contra_lic_antivirus` lo revierte.
+
+**Un mentiroso coherente sigue ganando.** Negar las 4 con motivo *y* retocar una
+decena de respuestas en 5 secciones da 98 fiable. Ningún motor detecta una
+falsificación internamente consistente. Lo que se compra es el precio: de 4 clics a
+4 clics + 4 motivos + una decena de respuestas, y con **cualquiera** sin retocar el
+informe no se publica.
+
+---
+
+## D22. La auditoría la escribe la base, no el navegador
+
+**Decisión.** `supabase-auditoria.sql`: las mutaciones (crear/modificar/borrar ficha,
+subir/borrar captura) las registran **triggers `SECURITY DEFINER`**. Lo que no muta
+nada —abrir, PDF, exportar, restaurar— lo declara la app, marcado `origin = 'app'`
+frente a `origin = 'base'`.
+
+**Motivo.** Con `FOR ALL TO authenticated USING (true)` (AS1, sigue abierto), un log
+escrito por el cliente bajo esas mismas políticas es **borrable y falsificable por
+quien lo genera**. Un log que el propio actor puede borrar no es una prueba.
+
+**El `GRANT INSERT` es por columnas.** El navegador no tiene privilegio para nombrar
+`actor_id`, `origin` ni `occurred_at`. Falsificar autoría no queda «comprobado y
+rechazado»: no hay forma de intentarlo.
+
+**El bug que hacía inútil el historial que ya había.** `createVersionSnapshot`
+archiva el estado *anterior* y lo etiqueta con el usuario de la edición *en curso*:
+desfase de uno. La versión N llevaba el nombre del autor de la edición N+1, y la
+pantalla lo imprimía como «Guardado por X». Los datos viejos **no se
+reinterpretan**: se derivan por desplazamiento donde se puede (`derivada`) y se
+marcan `indeterminada` donde el valor era texto libre. Hueco declarado antes que
+atribución inventada — D6 aplicado a la autoría.
+
+**Corrección al diseño, hecha antes de entregarlo.** El asiento del borrado contaba
+capturas y versiones en un trigger `AFTER DELETE`, pero el `ON DELETE CASCADE` es
+también un trigger AFTER y **cuál corre primero depende del orden alfabético de los
+nombres y de la intercalación de la base**. Si gana la cascada, los contadores salen
+0 y el asiento del borrado —el evento que más importa— diría que no había ninguna
+captura. Se cuenta y se anota en el `BEFORE`.
+
+**Orden de despliegue: el código aguanta los dos.** `createVersionSnapshot` **no se
+retira todavía** —si el SQL no está puesto, es lo único que crea historial— y
+`getVersions` pide las columnas de autoría con reintento sin ellas, porque pedir una
+columna inexistente no devuelve null: **hace fallar la consulta entera** y dejaría el
+historial en blanco.
+
+**Lo que NO cubre, y venderlo de más sería el patrón de siempre:** no cierra AS1
+(sigue siendo detectivo, no preventivo); `ficha_abierta` es *declarado*, no
+certificado (una cuenta con su token puede leer `clients` por la API sin dejar
+rastro); no cubre a quien tenga la `service_role` key; y el log es dato personal de
+los empleados, así que **hay que informarles** (RGPD art. 13, LOPDGDD 87-90).

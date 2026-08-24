@@ -6,7 +6,7 @@
 // siempre y nadie se entera: la nota simplemente sale distinta. Esto lo caza.
 
 import { SECTIONS } from '../src/sections.js';
-import { CRITERIOS, PRECONDICIONES, LITERALES_NO_APLICA, LITERALES_SIN_COMPROBAR } from '../src/score/criterios.js';
+import { CRITERIOS, PRECONDICIONES, LITERALES_NO_APLICA, LITERALES_SIN_COMPROBAR, CONTRADICCIONES, MOTIVOS_INEXISTENCIA, MOTIVO_OTRO } from '../src/score/criterios.js';
 import { DOMINIOS } from '../src/score/dominios.js';
 
 const campoDe = (sid, fid) => SECTIONS.find(s => s.id === sid)?.fields.find(f => f.id === fid);
@@ -84,6 +84,52 @@ for (const p of PRECONDICIONES) {
 for (const [id, d] of Object.entries(DOMINIOS)) {
   const n = CRITERIOS.filter(c => c.dominio === id).length;
   if (n === 0) mal(`el dominio "${id}" pesa ${d.peso}% y no tiene ningun criterio`);
+}
+
+// `depSeccion` tiene que apuntar a una seccion real: si no, el criterio no
+// aplicaria NUNCA y desapareceria del modelo sin que nadie se entere.
+for (const c of CRITERIOS.filter(x => x.depSeccion)) {
+  if (!SECTIONS.some(s => s.id === c.depSeccion.seccion)) {
+    mal(`${c.id}: depSeccion apunta a "${c.depSeccion.seccion}", que no existe`);
+  }
+}
+
+// Las contradicciones son el unico sitio del modelo donde un literal se compara
+// contra OTRA seccion. Un literal que no case no da error: simplemente deja de
+// comprobar, en silencio, que es el motivo entero por el que existe este
+// fichero. Se comprueba tambien que la seccion declarable tenga sus campos del
+// "no": sin ellos el motivo no se podria contestar y el sello nunca llegaria.
+for (const k of CONTRADICCIONES) {
+  const sec = SECTIONS.find(s => s.id === k.seccion);
+  if (!sec) { mal(`contradiccion ${k.id}: la seccion ${k.seccion} no existe`); continue; }
+  if ((k.cuando ?? "no") === "no" && !sec.fields.some(f => f.id === "sin_servicio_motivo")) {
+    mal(`contradiccion ${k.id}: la seccion ${k.seccion} no tiene campo de motivo`);
+  }
+  const senal = SECTIONS.find(s => s.id === k.senal.seccion);
+  if (!senal) { mal(`contradiccion ${k.id}: la seccion de senal ${k.senal.seccion} no existe`); continue; }
+  const campo = senal.fields.find(f => f.id === k.senal.campo);
+  if (!campo) { mal(`contradiccion ${k.id}: ${k.senal.seccion}.${k.senal.campo} no existe`); continue; }
+  for (const v of k.senal.valores) {
+    if (!(campo.options ?? []).includes(v)) {
+      mal(`contradiccion ${k.id}: "${v}" no es una opcion de ${k.senal.seccion}.${k.senal.campo}`);
+    }
+  }
+  if (k.senal.dep && !senal.fields.some(f => f.id === k.senal.dep.field)) {
+    mal(`contradiccion ${k.id}: el dep apunta a ${k.senal.dep.field}, que no existe en ${k.senal.seccion}`);
+  }
+}
+
+// Cada seccion declarable tiene que ofrecer motivos, y el literal "Otro" tiene
+// que estar entre ellos o el campo de detalle no se pintaria nunca.
+for (const [sec, motivos] of Object.entries(MOTIVOS_INEXISTENCIA)) {
+  const s = SECTIONS.find(x => x.id === sec);
+  if (!s) { mal(`MOTIVOS_INEXISTENCIA: la seccion ${sec} no existe`); continue; }
+  const campo = s.fields.find(f => f.id === "sin_servicio_motivo");
+  if (!campo) { mal(`MOTIVOS_INEXISTENCIA: ${sec} no tiene campo sin_servicio_motivo`); continue; }
+  if (!motivos.includes(MOTIVO_OTRO)) mal(`MOTIVOS_INEXISTENCIA: ${sec} no ofrece "${MOTIVO_OTRO}"`);
+  if (JSON.stringify(campo.options) !== JSON.stringify(motivos)) {
+    mal(`MOTIVOS_INEXISTENCIA: las opciones de ${sec}.sin_servicio_motivo no coinciden con la lista`);
+  }
 }
 
 if (fallos) {

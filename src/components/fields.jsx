@@ -384,10 +384,17 @@ function Grupo({ section, titulo, campos, instanceIdx, getVal, setVal, hints, ge
 }
 
 function SectionFields({ section, instanceIdx, getVal, setVal, getHint, setHint, fechaVisita = "" }) {
+  // Los campos `soloSiNo` son los del "no" (por que el cliente no tiene esto).
+  // Se pintan en el bloque de seccion declarada inexistente de App.jsx, nunca
+  // aqui: apareceria un "¿Por qué no tiene esto?" en medio del formulario de
+  // una seccion que el cliente SI tiene, y ademas contarian en el "13/13" del
+  // grupo como campos sin rellenar que no se pueden rellenar.
+  const campos = section.fields.filter(f => !f.soloSiNo);
+
   // Agrupar preservando el orden de aparicion del esquema
   const orden = [];
   const porGrupo = new Map();
-  for (const f of section.fields) {
+  for (const f of campos) {
     const g = f.group || "";
     if (!porGrupo.has(g)) { porGrupo.set(g, []); orden.push(g); }
     porGrupo.get(g).push(f);
@@ -412,7 +419,7 @@ function SectionFields({ section, instanceIdx, getVal, setVal, getHint, setHint,
 
   if (orden.length === 1 && orden[0] === "") {
     return <>
-      <Rejilla {...comun} campos={section.fields} />
+      <Rejilla {...comun} campos={campos} />
       {avisosSueltos}
     </>;
   }

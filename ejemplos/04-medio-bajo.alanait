@@ -2,7 +2,7 @@
  "clientData": {
   "sedes": "1",
   "web": "",
-  "empresa": "Mecanitzats Serra SL - Ex. Ciberscore 30/100",
+  "empresa": "Mecanitzats Serra SL - Ex. Ciberscore 33/100",
   "sector": "Mecanizados y calderería",
   "trabajadores": "24",
   "contacto": "Ramon Serra",
@@ -20,7 +20,7 @@
   "email": "si",
   "antivirus": "si",
   "wifi": "si",
-  "vpn": "no",
+  "vpn": "si",
   "sai": "si",
   "almacenamiento": "si",
   "telefonia": "si",

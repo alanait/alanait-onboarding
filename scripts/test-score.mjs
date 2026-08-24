@@ -8,7 +8,8 @@ import { computeScore } from "../src/score/computeScore.js";
 // El grueso de las pruebas usa modelos sinteticos para aislar el motor. El
 // bloque de deduccion del soporte necesita el modelo REAL: depende de ids
 // concretos y de la tabla de fin de soporte.
-import { CRITERIOS, PRECONDICIONES, CAMPOS_QUE_PUNTUAN, LITERALES_NO_APLICA, LITERALES_SIN_COMPROBAR } from "../src/score/criterios.js";
+import { CRITERIOS, PRECONDICIONES, CAMPOS_QUE_PUNTUAN, LITERALES_NO_APLICA, LITERALES_SIN_COMPROBAR, CONTRADICCIONES, MOTIVOS_INEXISTENCIA, MOTIVO_OTRO } from "../src/score/criterios.js";
+import { SECTIONS } from "../src/sections.js";
 
 let ok = 0, fallos = 0;
 const es = (etiqueta, real, esperado) => {
@@ -326,6 +327,16 @@ console.log("\nUn campo padre en blanco retrasa 'fiable' sin tocar la nota");
   es("contestado ya no cuenta", contestado.padresSinDecidir.length, 0);
   es("y no mueve la nota del dominio", blanco.dominios.find(d => d.id === "backup").nota,
      contestado.dominios.find(d => d.id === "backup").nota);
+
+  // "No revisado" en un PADRE es el mismo estado de conocimiento que el blanco,
+  // y valia mejor: cerraba el `dep` de los hijos -sacando del denominador dos
+  // capadores- y encima devolvia el sello de fiable que el blanco retiene.
+  // Medido sobre un cliente perfecto: declarar el NAS y reconocer no haberlo
+  // mirado daba 94; contestar "No revisado" en el padre daba 100 y fiable.
+  const noRevisado = rr({ backup: "si" }, { backup: { 0: { frecuencia: "Continuo", repo_dedicado: "No revisado" } } });
+  es("'No revisado' en un padre cuenta igual que el blanco", noRevisado.padresSinDecidir.length, blanco.padresSinDecidir.length);
+  es("y por tanto tampoco da el sello de fiable", noRevisado.fiable, blanco.fiable);
+  es("y sigue sin mover la nota", noRevisado.nota, blanco.nota);
 }
 
 
@@ -410,6 +421,222 @@ console.log("\nCampos que mueven la nota");
   // Y no marca de mas: una seccion sin criterios no tiene ni un campo marcado.
   es("una seccion sin criterios no marca nada",
      [...CAMPOS_QUE_PUNTUAN].some(k => k.startsWith("telefonia.")), false);
+}
+
+
+// ═══════════════════════════════════════════════════════════════════════════
+// 2.6.0 — Declarar que el cliente no tiene algo
+// ═══════════════════════════════════════════════════════════════════════════
+
+// Modelo sintetico minimo: una seccion declarable (`wifi`) y otra que no lo es.
+// Sintetico y no el real para que estas pruebas fijen el MECANISMO y no las
+// cifras del catalogo, que cambian cada vez que se anade un criterio (C8).
+//
+// `red` lleva varios criterios a proposito: con uno solo, retirar el peso de
+// `wifi` hunde la evidencia por debajo del 60% y el motor devuelve el motivo
+// "evidencia" en vez de "sin_motivo" —correctamente, porque la evidencia manda
+// siempre que sea ella la que no llega (C6)—. Para probar el motivo hace falta
+// que el resto del modelo siga por encima del umbral.
+const MOD_DECL = {
+  criterios: [
+    { id: "t_wifi", dominio: "perimetro", seccion: "wifi", campo: "cifrado", peso: 3,
+      mapa: { "WPA3": 1, "WPA2-Enterprise": 1, "WPA2-PSK": 0.5, "Abierta": 0 }, agregacion: "min",
+      porQue: "prueba" },
+    { id: "t_red", dominio: "perimetro", seccion: "red", campo: "firewall", peso: 3,
+      mapa: { "Sí": 1, No: 0 }, agregacion: "min", porQue: "prueba" },
+    { id: "t_red2", dominio: "perimetro", seccion: "red", campo: "utm", peso: 3,
+      mapa: { "Sí": 1, No: 0 }, agregacion: "min", porQue: "prueba" },
+    { id: "t_red3", dominio: "perimetro", seccion: "red", campo: "vlans", peso: 3,
+      mapa: { "Sí": 1, No: 0 }, agregacion: "min", porQue: "prueba" },
+    { id: "t_red4", dominio: "perimetro", seccion: "red", campo: "monitorizacion", peso: 3,
+      mapa: { "Sí": 1, No: 0 }, agregacion: "min", porQue: "prueba" },
+  ],
+  precondiciones: [],
+  contradiccionesDef: [],
+};
+const RED_OK = { firewall: "Sí", utm: "Sí", vlans: "Sí", monitorizacion: "Sí" };
+const decl = (sectionEnabled, formData, extra = {}) =>
+  computeScore({ ...MOD_DECL, sectionEnabled, formData, instanceCounts: {}, ...extra });
+
+const MOTIVO_WIFI = MOTIVOS_INEXISTENCIA.wifi[0];
+
+console.log("\nNegar una seccion: el peso sale de la nota, pero no de la evidencia");
+{
+  const abierta = decl({ wifi: "si", red: "si" }, { wifi: { 0: { cifrado: "WPA3" } }, red: { 0: RED_OK } });
+  const conMotivo = decl({ wifi: "no", red: "si" }, { wifi: { 0: { sin_servicio_motivo: MOTIVO_WIFI } }, red: { 0: RED_OK } });
+  const sinMotivo = decl({ wifi: "no", red: "si" }, { red: { 0: RED_OK } });
+  const vacia = decl({ wifi: "si", red: "si" }, { red: { 0: RED_OK } });
+
+  // Con motivo el tecnico ha declarado algo sobre el cliente y queda escrito:
+  // es evidencia aportada, igual que comprobar la seccion entera.
+  es("negar con motivo no baja la evidencia", conMotivo.evidencia, abierta.evidencia);
+  es("y se publica", conMotivo.fiable, true);
+
+  // Sin motivo no queda nada escrito, asi que no puede valer como comprobacion.
+  es("negar sin motivo baja la evidencia", sinMotivo.evidencia < conMotivo.evidencia, true);
+  es("y no se publica", sinMotivo.fiable, false);
+  es("diciendo por que", sinMotivo.motivoNoFiable, "sin_motivo");
+
+  // El incentivo, que es lo que de verdad hay que fijar: el clic del "no" a
+  // secas no puede comprar nada frente a dejar la seccion abierta sin mirar.
+  es("negar sin motivo no puntua mejor que dejarla abierta y vacia",
+     sinMotivo.evidencia <= vacia.evidencia, true);
+
+  // "Otro" sin escribir el detalle no es una declaracion: es un desplegable
+  // tocado. Si valiera, seria el atajo mas barato de todos.
+  const otroPelado = decl({ wifi: "no", red: "si" }, { wifi: { 0: { sin_servicio_motivo: MOTIVO_OTRO } }, red: { 0: RED_OK } });
+  es("'Otro' sin detalle cuenta como sin motivo", otroPelado.motivoNoFiable, "sin_motivo");
+  const otroEscrito = decl({ wifi: "no", red: "si" }, { wifi: { 0: { sin_servicio_motivo: MOTIVO_OTRO, sin_servicio_detalle: "El wifi lo pone el arrendador" } }, red: { 0: RED_OK } });
+  es("'Otro' con detalle si cuenta", otroEscrito.fiable, true);
+
+  // Y negar algo que no tiene peso en el modelo no puede cambiar nada.
+  const sinCriterios = decl({ wifi: "si", red: "si", telefonia: "no" }, { wifi: { 0: { cifrado: "WPA3" } }, red: { 0: RED_OK } });
+  es("negar una seccion sin criterios no cambia la nota", sinCriterios.nota, abierta.nota);
+  es("ni pide motivo", sinCriterios.negadasSinMotivo.length, 0);
+}
+
+console.log("\nContradicciones: el formulario que se desmiente a si mismo");
+{
+  const REGLA = [{
+    id: "t_contra", seccion: "wifi",
+    senal: { seccion: "impresion", campo: "conectividad", valores: ["WiFi"] },
+    texto: "prueba",
+  }];
+  const base = { wifi: { 0: { sin_servicio_motivo: MOTIVO_WIFI } }, red: { 0: RED_OK } };
+  const limpio = decl({ wifi: "no", red: "si", impresion: "si" },
+    { ...base, impresion: { 0: { conectividad: "Ethernet" } } }, { contradiccionesDef: REGLA });
+  const roto = decl({ wifi: "no", red: "si", impresion: "si" },
+    { ...base, impresion: { 0: { conectividad: "WiFi" } } }, { contradiccionesDef: REGLA });
+
+  es("una senal de otra seccion bloquea el sello", roto.fiable, false);
+  es("y el motor dice por que", roto.motivoNoFiable, "contradicciones");
+  es("nombrando la regla", roto.contradicciones.length, 1);
+  // No es un hallazgo sobre el cliente: no se afirma que tenga wifi, se afirma
+  // que el formulario dice dos cosas incompatibles (D6).
+  es("no genera hallazgo", roto.hallazgos.length, limpio.hallazgos.length);
+  es("ni mueve la nota", roto.nota, limpio.nota);
+  es("sin la senal no salta nada", limpio.contradicciones.length, 0);
+
+  // La senal solo cuenta si su seccion esta activa: leerla de una seccion
+  // negada seria leer un valor fosil (la trampa de lectorEfectivo).
+  const senalApagada = decl({ wifi: "no", red: "si", impresion: "no" },
+    { ...base, impresion: { 0: { conectividad: "WiFi" } } }, { contradiccionesDef: REGLA });
+  es("una senal de una seccion negada no cuenta", senalApagada.contradicciones.length, 0);
+
+  // Y con `dep`: un campo tapado por su condicional no puede disparar nada.
+  const CON_DEP = [{
+    id: "t_dep", seccion: "wifi",
+    senal: { seccion: "backup", campo: "repo_expuesto", dep: { field: "repo_dedicado", value: "Sí" }, valores: ["Sí, únicamente por VPN"] },
+    texto: "prueba",
+  }];
+  const tapada = decl({ wifi: "no", red: "si", backup: "si" },
+    { ...base, backup: { 0: { repo_dedicado: "No (solo cloud)", repo_expuesto: "Sí, únicamente por VPN" } } },
+    { contradiccionesDef: CON_DEP });
+  es("una senal tapada por su dep no dispara", tapada.contradicciones.length, 0);
+}
+
+console.log("\nLa regla simetrica de VPN existe (si no, mentir en la senal sale gratis)");
+{
+  // Sin la mitad simetrica, la salida barata de una contradiccion seria mentir
+  // en la senal en vez de arreglar la respuesta. "No hay VPNs" ya valia lo
+  // mismo que "Auditadas" (D14), asi que silenciarlo no costaba nada.
+  es("hay al menos una regla que se dispara con la seccion en 'si'",
+     CONTRADICCIONES.some(k => k.cuando === "si"), true);
+  const inversa = computeScore({
+    criterios: CRITERIOS, precondiciones: PRECONDICIONES,
+    sectionEnabled: { vpn: "si", red: "si" },
+    formData: { red: { 0: { vpns_auditadas: "No hay VPNs" } } },
+    instanceCounts: {},
+  });
+  es("documentar una VPN que el perimetro niega es contradiccion",
+     inversa.contradicciones.some(k => k.id === "contra_vpn_inversa"), true);
+}
+
+console.log("\nUn criterio que cuelga de otra seccion (depSeccion)");
+{
+  const MOD_DEP = {
+    criterios: [
+      { id: "t_av_srv", dominio: "servidores", seccion: "antivirus", campo: "servidores_av", peso: 3,
+        mapa: { "Sí": 1, No: 0 }, agregacion: "max", depSeccion: { seccion: "servidores" }, porQue: "prueba" },
+      { id: "t_red", dominio: "perimetro", seccion: "red", campo: "firewall", peso: 3,
+        mapa: { "Sí": 1, No: 0 }, agregacion: "min", porQue: "prueba" },
+    ],
+    precondiciones: [], contradiccionesDef: [],
+  };
+  const conSrv = (av) => computeScore({ ...MOD_DEP, sectionEnabled: { servidores: "si", antivirus: "si", red: "si" },
+    formData: { antivirus: { 0: { servidores_av: av } }, red: { 0: RED_OK } }, instanceCounts: {} });
+  const sinSrv = (av) => computeScore({ ...MOD_DEP, sectionEnabled: { servidores: "no", antivirus: "si", red: "si" },
+    formData: { servidores: { 0: { sin_servicio_motivo: MOTIVOS_INEXISTENCIA.servidores[0] } }, antivirus: { 0: { servidores_av: av } }, red: { 0: RED_OK } },
+    instanceCounts: {} });
+
+  const dom = (r) => r.dominios.find(d => d.id === "servidores");
+  es("con servidores, el criterio aplica", dom(conSrv("No")).evaluable, true);
+  es("sin servidores, sale del denominador", dom(sinSrv("No")).evaluable, false);
+
+  // El agujero que cerraba: el todo-cloud que contestaba la verdad ("el
+  // antivirus no cubre servidores, porque no hay servidores") se llevaba el
+  // dominio entero a 0 y perdia su peso en la nota global. Mentir lo devolvia.
+  es("y contestar la verdad ya no cuesta nota", sinSrv("No").nota, sinSrv("Sí").nota);
+  es("ni la cuesta dejarlo en blanco", sinSrv(undefined).nota, sinSrv("No").nota);
+}
+
+console.log("\nUn literal declarado sin comprobar no cierra el capador");
+{
+  // `computa` existe para que "No revisado" en red_rdp puntue 0 en vez de salir
+  // del denominador: ahi desconocerlo ES el riesgo. Pero contestarlo no es
+  // haberlo comprobado, asi que no puede vaciar la lista de comprobaciones
+  // criticas pendientes. Las fichas 03 y 04 salian con CERO pendientes
+  // teniendo el RDP y el panel de licencias sin mirar.
+  const conCriterios = CRITERIOS.filter(c => c.critico && c.computa?.some(v => LITERALES_SIN_COMPROBAR.includes(v)));
+  es("hay capadores con un literal de 'no comprobado' que computa", conCriterios.length > 0, true);
+
+  const r = (valor) => computeScore({
+    criterios: CRITERIOS, precondiciones: PRECONDICIONES,
+    sectionEnabled: { red: "si" },
+    formData: { red: { 0: { firewall: "Sí", ...(valor === undefined ? {} : { rdp_expuesto: valor }) } } },
+    instanceCounts: {},
+  });
+  const blanco = r(undefined), declarado = r("No revisado");
+  const pend = (x) => x.capadoresPendientes.filter(p => p.campo === "rdp_expuesto").length;
+
+  es("declararlo deja el capador pendiente igual que el blanco", pend(declarado), pend(blanco));
+  // Y la excepcion acordada con el dueno sigue en pie: el literal PUNTUA.
+  es("pero el literal sigue puntuando (no sale del denominador)",
+     declarado.dominios.find(d => d.id === "perimetro").criteriosEvaluados >
+     blanco.dominios.find(d => d.id === "perimetro").criteriosEvaluados, true);
+}
+
+console.log("\nInvariantes duros del modelo REAL");
+{
+  // El dueno lo puso como restriccion explicita: "si fuera perfecto deberia dar
+  // 100". Se construye a partir de los propios CRITERIOS -el mejor literal de
+  // cada mapa- y no de una ficha con numeros a mano, para que la prueba siga
+  // valiendo cuando se anadan criterios.
+  const mejorLiteral = (c) => {
+    if (!c.mapa) return null;
+    let mejor = null, valor = -1;
+    for (const [lit, v] of Object.entries(c.mapa)) if (v > valor) { valor = v; mejor = lit; }
+    return mejor;
+  };
+  const perfecto = () => {
+    const sectionEnabled = {}, formData = {};
+    for (const s of SECTIONS) sectionEnabled[s.id] = "si";
+    for (const c of CRITERIOS) {
+      const lit = mejorLiteral(c);
+      if (lit === null) continue;
+      (formData[c.seccion] ??= { 0: {} });
+      formData[c.seccion][0][c.campo] = lit;
+      // Los campos padre tienen que abrir el `dep` de sus hijos.
+      if (c.dep) formData[c.seccion][0][c.dep.field] = c.dep.value;
+    }
+    return { sectionEnabled, formData };
+  };
+  const cliente = perfecto();
+  const r = computeScore({ ...cliente, criterios: CRITERIOS, precondiciones: PRECONDICIONES, instanceCounts: {}, fecha: "2026-08-24" });
+  es("un cliente perfecto da EXACTAMENTE 100", r.nota, 100);
+  es("con evidencia 100", r.evidencia, 100);
+  es("y sin un solo hallazgo", r.hallazgos.length, 0);
+  es("los 8 dominios a 100", r.dominios.filter(d => d.nota === 100).length, 8);
 }
 
 console.log(`\n${ok} correctas, ${fallos} fallos\n`);

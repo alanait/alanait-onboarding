@@ -26,10 +26,31 @@
 //      basta con una buena (`max`, para backup fuera de sede).
 
 import { DOMINIOS, tramoDe, SCORE_MODEL_VERSION, EVIDENCIA_MINIMA } from "./dominios.js";
-import { LITERALES_NO_APLICA, LITERALES_SIN_COMPROBAR, CAMPOS_PADRE_SIN_CRITERIO } from "./criterios.js";
+import { LITERALES_NO_APLICA, LITERALES_SIN_COMPROBAR, CAMPOS_PADRE_SIN_CRITERIO, MOTIVO_OTRO, CONTRADICCIONES } from "./criterios.js";
 import { FIN_SOPORTE, soporteDe } from "./soporteSO.js";
 
 const vacio = (v) => v === undefined || v === null || v === "" || (Array.isArray(v) && v.length === 0);
+
+/**
+ * Un campo PADRE que nadie ha decidido todavia. No es lo mismo que `vacio`:
+ * contestar "No revisado" es exactamente el mismo estado de conocimiento que
+ * dejarlo en blanco -no lo he mirado- y el modelo ya declara en
+ * LITERALES_SIN_COMPROBAR que los dos tienen que valer igual, "porque si
+ * valieran distinto el tecnico aprenderia a no tocar el desplegable".
+ *
+ * En un padre no valian igual, y la diferencia iba en el sentido peor. Medido
+ * sobre un cliente perfecto que declara su NAS y reconoce no haberlo mirado:
+ *
+ *   "Si" + los 4 hijos sin mirar (honesto)   nota  94, fiable, 2 capadores pendientes
+ *   padre en blanco                          nota 100, NO fiable
+ *   padre "No revisado" (el mismo saber)     nota 100, FIABLE, 0 pendientes
+ *
+ * O sea: tocar el desplegable para decir que no lo has mirado cerraba el `dep`
+ * de los hijos, los sacaba del denominador con sus dos capadores dentro, y
+ * ademas devolvia el sello de fiable que el blanco si retiene. Salia mas a
+ * cuenta que decir la verdad.
+ */
+const sinDecidir = (v) => vacio(v) || (!Array.isArray(v) && LITERALES_SIN_COMPROBAR.includes(v));
 
 /**
  * Estado de un criterio en UNA instancia. Tres valores y no dos, porque el
@@ -91,7 +112,13 @@ function estadoEnInstancia(criterio, leer, fecha) {
   // `computa` es la excepcion documentada: para estos criterios reconocer que
   // nadie lo ha mirado ES el hallazgo, asi que puntua lo que diga el mapa en
   // vez de contar como hueco.
-  if (criterio.computa?.includes(v) && criterio.mapa && v in criterio.mapa) return { tipo: "valor", valor: criterio.mapa[v] };
+  // `declaradoSinComprobar` distingue las dos formas de entrar por `computa`.
+  // "No revisado" en red_rdp puntua 0 -esa es la excepcion acordada y no se
+  // toca- pero NO es una comprobacion hecha, asi que no puede cerrar el
+  // capador pendiente. Sin esta marca, las fichas 03 y 04 salian con CERO
+  // comprobaciones criticas pendientes teniendo el RDP y el panel de licencias
+  // sin mirar, y el informe podia imprimirlo por encima.
+  if (criterio.computa?.includes(v) && criterio.mapa && v in criterio.mapa) return { tipo: "valor", valor: criterio.mapa[v], declaradoSinComprobar: LITERALES_SIN_COMPROBAR.includes(v) };
   if (LITERALES_SIN_COMPROBAR.includes(v)) return { tipo: "sincomprobar" };
 
   // Literal que el modelo no conoce: no se inventa valor, pero tampoco se
@@ -127,14 +154,14 @@ function agregar(valores, modo) {
  * @param {Array}  p.criterios       reglas del modelo
  * @param {Array}  p.precondiciones  reglas de seccion entera (p.ej. no hay backup)
  */
-export function computeScore({ formData = {}, sectionEnabled = {}, instanceCounts = {}, criterios = [], precondiciones = [], fecha = "" }) {
+export function computeScore({ formData = {}, sectionEnabled = {}, instanceCounts = {}, criterios = [], precondiciones = [], contradiccionesDef = CONTRADICCIONES, fecha = "" }) {
   const porDominio = {};
   // `pesoAplicable` (el denominador de la nota) es el peso de los criterios que
   // le tocaban a este cliente, contestados o no. `pesoEvaluado` es el de los
   // que ademas se comprobaron. La distancia entre ambos es la evidencia que
   // falta, y es justo lo que antes desaparecia del cociente.
   for (const d of Object.keys(DOMINIOS)) {
-    porDominio[d] = { suma: 0, pesoEvaluado: 0, pesoAplicable: 0, cap: 100, evaluados: 0, aplicables: 0 };
+    porDominio[d] = { suma: 0, pesoEvaluado: 0, pesoAplicable: 0, cap: 100, evaluados: 0, aplicables: 0, pesoRetirado: 0, pesoRetiradoDeclarado: 0 };
   }
 
   const hallazgos = [];
@@ -149,6 +176,92 @@ export function computeScore({ formData = {}, sectionEnabled = {}, instanceCount
     ...criterios.map(c => c.seccion),
     ...precondiciones.filter(p => p.exigida).map(p => p.seccion),
   ])].filter(s => sectionEnabled[s] === undefined).sort();
+
+  // ── Declaracion de inexistencia ──────────────────────────────────────────
+  // Marcar "no" una seccion retira su peso del modelo. Eso es CORRECTO cuando
+  // el "no" es verdad -un cliente todo-cloud no tiene servidores- y por eso
+  // estas secciones no llevan precondicion (D13). Lo que no puede pasar es que
+  // el clic valga por si solo como comprobacion: hasta 2.5.0 negar una seccion
+  // SUBIA la evidencia, que es lo que abre el sello de fiable, asi que el atajo
+  // hacia que el informe pareciera MAS fiable, no menos. Medido sobre una
+  // visita a medias, negar las cuatro movia `fiable` de false a true en las
+  // cinco fichas de ejemplo.
+  //
+  // La regla nueva es la regla 1 aplicada un piso mas arriba: la evidencia mide
+  // lo que queda ESCRITO, no lo que sale del denominador. Un "no" con motivo es
+  // una declaracion que se imprime en el informe y cuenta como evidencia
+  // aportada; un "no" a secas no deja nada escrito, asi que cuenta en el
+  // denominador de la evidencia valiendo 0, igual que un campo en blanco.
+  const motivoDe = (s) => ({
+    motivo: String(formData[s]?.[0]?.sin_servicio_motivo ?? "").trim(),
+    detalle: String(formData[s]?.[0]?.sin_servicio_detalle ?? "").trim(),
+  });
+  const estaDeclarada = (s) => {
+    const { motivo, detalle } = motivoDe(s);
+    return !!motivo && (motivo !== MOTIVO_OTRO || detalle.length > 0);
+  };
+
+  // Secciones cuyo "no" retira peso del modelo y no produce por si solo ningun
+  // texto en el informe. Las que tienen precondicion quedan fuera: su "no" ya
+  // es un hallazgo escrito, que es exactamente la evidencia que se les pide.
+  //
+  // Se deriva de los `criterios` y `precondiciones` QUE LA FUNCION RECIBE, no
+  // del modelo real: los modelos sinteticos de las pruebas darian incoherencias
+  // si se mirara el catalogo global.
+  const conPrecondicion = new Set(precondiciones.filter(p => p.cuando === "no").map(p => p.seccion));
+  const declarables = [...new Set(criterios.flatMap(c => [c.seccion, c.depSeccion?.seccion]).filter(Boolean))]
+    .filter(s => !conPrecondicion.has(s)).sort();
+
+  // Peso NOMINAL de cada seccion declarable, por dominio: lo que se retira del
+  // modelo al marcarla "no". Se cuenta sin mirar los dep de instancia, porque
+  // al negar la seccion no hay respuestas que leer. Es una constante del
+  // modelo: no depende de lo contestado, asi que no se puede mover contestando.
+  const pesoNominal = {};
+  for (const c of criterios) {
+    for (const s of new Set([c.seccion, c.depSeccion?.seccion].filter(Boolean))) {
+      ((pesoNominal[s] ??= {})[c.dominio] ??= 0);
+      pesoNominal[s][c.dominio] += c.peso;
+    }
+  }
+
+  const declaradas = [], negadasSinMotivo = [];
+  for (const s of declarables) {
+    if (sectionEnabled[s] !== "no") continue;
+    (estaDeclarada(s) ? declaradas : negadasSinMotivo).push(s);
+  }
+  for (const s of [...declaradas, ...negadasSinMotivo]) {
+    const cuenta = declaradas.includes(s);
+    for (const [dom, peso] of Object.entries(pesoNominal[s] ?? {})) {
+      porDominio[dom].pesoRetirado += peso;
+      if (cuenta) porDominio[dom].pesoRetiradoDeclarado += peso;
+    }
+  }
+
+  // ── Contradicciones ──────────────────────────────────────────────────────
+  // Una seccion declarada inexistente contra una respuesta de OTRA seccion que
+  // dice lo contrario. No se afirma nada sobre el cliente -no se dice "este
+  // cliente tiene servidores"-: se dice que el formulario se contradice a si
+  // mismo, que es un hecho del formulario y no una acusacion (D6). Por eso no
+  // generan hallazgo ni tocan la nota: solo retienen el sello hasta que alguien
+  // decida cual de las dos respuestas es la buena.
+  const contradicciones = [];
+  for (const k of contradiccionesDef) {
+    // Las reglas son simetricas a proposito: tambien se comprueba el caso
+    // contrario ("hay VPN" contra "no hay VPNs" en el firewall). Sin esa mitad,
+    // la salida barata de una contradiccion seria mentir en la senal, que es
+    // justo el patron que este proyecto lleva cuatro veces corrigiendo.
+    if (sectionEnabled[k.seccion] !== (k.cuando ?? "no")) continue;
+    if (sectionEnabled[k.senal.seccion] !== "si") continue;
+    const nSenal = Math.max(1, instanceCounts[k.senal.seccion] || 1);
+    for (let i = 0; i < nSenal; i++) {
+      const leer = (campo) => formData[k.senal.seccion]?.[i]?.[campo] ?? "";
+      if (k.senal.dep && leer(k.senal.dep.field) !== k.senal.dep.value) continue;
+      if (k.senal.valores.includes(leer(k.senal.campo))) {
+        contradicciones.push({ id: k.id, seccion: k.seccion, senal: k.senal.seccion, campo: k.senal.campo, texto: k.texto });
+        break;
+      }
+    }
+  }
 
   // ── Precondiciones de seccion ────────────────────────────────────────────
   // "No tiene backup" no es un dato que falte: es el hallazgo.
@@ -172,18 +285,24 @@ export function computeScore({ formData = {}, sectionEnabled = {}, instanceCount
     // Seccion sin responder, o marcada como que no aplica: fuera del
     // denominador. Las secciones cuyo "no" es un hallazgo van en precondiciones.
     if (sectionEnabled[c.seccion] !== "si") continue;
+    // Un criterio puede colgar de OTRA seccion: av_servidores mide el antivirus
+    // pero solo tiene sentido si hay servidores que cubrir. Sin esto, negar
+    // "servidores" dejaba un dominio de 11 puntos decidido por un unico campo
+    // que ya no tenia forma honesta de contestarse: "No" (la verdad) daba 0 y
+    // "Si" (mentira) daba 100. El todo-cloud honesto pagaba 11 puntos.
+    if (c.depSeccion && sectionEnabled[c.depSeccion.seccion] !== "si") continue;
 
     const n = Math.max(1, instanceCounts[c.seccion] || 1);
     const d = porDominio[c.dominio];
     const valores = [];
-    let aplicables = 0, evaluadas = 0;
+    let aplicables = 0, evaluadas = 0, declaradasSinMirar = 0;
 
     for (let i = 0; i < n; i++) {
       const leer = (campo) => formData[c.seccion]?.[i]?.[campo] ?? "";
       const e = estadoEnInstancia(c, leer, fecha);
       if (e.tipo === "noaplica") { valores.push(null); continue; }
       aplicables++;
-      if (e.tipo === "valor") { evaluadas++; valores.push(e.valor); }
+      if (e.tipo === "valor") { evaluadas++; if (e.declaradoSinComprobar) declaradasSinMirar++; valores.push(e.valor); }
       else valores.push(null);
     }
 
@@ -226,7 +345,7 @@ export function computeScore({ formData = {}, sectionEnabled = {}, instanceCount
         hallazgos.push({ id: c.id, dominio: c.dominio, gravedad: "critico", texto: c.porQue });
         if (c.critico.capDominio !== undefined) d.cap = Math.min(d.cap, c.critico.capDominio);
         if (c.critico.capGlobal !== undefined) capGlobal = Math.min(capGlobal, c.critico.capGlobal);
-      } else if (evaluadas < aplicables) {
+      } else if (evaluadas - declaradasSinMirar < aplicables) {
         // Comprobacion critica que aplicaba y nadie hizo. No toca la nota
         // —afirmar el peor caso sin haberlo visto seria fabricar un hallazgo—
         // pero el informe no puede seguir imprimiendo "sin hallazgos criticos
@@ -255,19 +374,27 @@ export function computeScore({ formData = {}, sectionEnabled = {}, instanceCount
     const nota = evaluable ? Math.round(Math.min(bruto, d.cap)) : null;
 
     // Cuanto de lo que habia que mirar en este dominio se ha mirado de verdad.
-    const evidencia = d.pesoAplicable > 0 ? Math.round((d.pesoEvaluado / d.pesoAplicable) * 100) : null;
+    // El denominador de la evidencia incluye el peso retirado del modelo por
+    // declarar una seccion inexistente, y el numerador solo lo suma si esa
+    // declaracion lleva motivo. Con motivo la evidencia sale igual que antes
+    // -el todo-cloud honesto no paga nada-; sin motivo sale igual que si la
+    // seccion estuviera abierta y en blanco, que es lo que de verdad es.
+    const denomEvid = d.pesoAplicable + d.pesoRetirado;
+    const numEvid = d.pesoEvaluado + d.pesoRetiradoDeclarado;
+    const evidencia = denomEvid > 0 ? Math.round((numEvid / denomEvid) * 100) : null;
 
     dominios.push({
       id, nombre: DOMINIOS[id].nombre, peso: DOMINIOS[id].peso,
       nota, evaluable, capado: evaluable && bruto > d.cap,
       criteriosEvaluados: d.evaluados, criteriosAplicables: d.aplicables,
       evidencia, pesoEvaluado: d.pesoEvaluado, pesoAplicable: d.pesoAplicable,
+      pesoRetirado: d.pesoRetirado, pesoRetiradoDeclarado: d.pesoRetiradoDeclarado,
       tramo: evaluable ? tramoDe(nota) : null,
     });
 
     if (evaluable) { numerador += nota * DOMINIOS[id].peso; pesoTotal += DOMINIOS[id].peso; }
-    if (d.pesoAplicable > 0) {
-      evidPond += DOMINIOS[id].peso * (d.pesoEvaluado / d.pesoAplicable);
+    if (denomEvid > 0) {
+      evidPond += DOMINIOS[id].peso * (numEvid / denomEvid);
       pesoEvid += DOMINIOS[id].peso;
     }
   }
@@ -290,7 +417,7 @@ export function computeScore({ formData = {}, sectionEnabled = {}, instanceCount
     if (sectionEnabled[seccion] !== "si") continue;
     const n = Math.max(1, instanceCounts[seccion] || 1);
     for (let i = 0; i < n; i++) {
-      if (vacio(formData[seccion]?.[i]?.[campo] ?? "")) padresSinDecidir.push({ seccion, campo, instancia: n > 1 ? i + 1 : null });
+      if (sinDecidir(formData[seccion]?.[i]?.[campo] ?? "")) padresSinDecidir.push({ seccion, campo, instancia: n > 1 ? i + 1 : null });
     }
   }
 
@@ -310,14 +437,51 @@ export function computeScore({ formData = {}, sectionEnabled = {}, instanceCount
   // segun se completa— pero solo es fiable con evidencia suficiente y sin
   // secciones sin decidir. La interfaz decide como presentarla; el motor solo
   // lo declara.
-  const fiable = global !== null && evidencia >= EVIDENCIA_MINIMA && sinResponder.length === 0 && padresSinDecidir.length === 0;
+  // Dos bloqueos nuevos, del mismo tipo que los que ya habia: no son hallazgos
+  // sobre el cliente, son estados del FORMULARIO que impiden publicar la nota.
+  // Negar una seccion sin decir por que deja de ser gratis; y un formulario que
+  // se contradice no se sella hasta que alguien decida cual respuesta es buena.
+  const fiable = global !== null && evidencia >= EVIDENCIA_MINIMA
+    && sinResponder.length === 0 && padresSinDecidir.length === 0
+    && negadasSinMotivo.length === 0 && contradicciones.length === 0;
+
+  // POR QUE no es fiable, decidido UNA sola vez y aqui.
+  //
+  // El orden es parte del diseno, no un detalle de implementacion. Ya costo un
+  // error real: al anadir `padresSinDecidir` se le dio prioridad sobre la
+  // evidencia y el PDF de un cliente con el 13% comprobado decia "faltan 4
+  // campos", dando a entender que contestarlos bastaba, cuando el problema era
+  // el 87% sin mirar. La evidencia manda siempre que sea ella la que no llega.
+  //
+  // Se calcula en el motor y no en cada consumidor porque `informe.js` y
+  // `ReportPanel.jsx` ya rederivaban esta cascada por separado y ya diferian.
+  // Con los motivos nuevos serian cinco copias de la misma regla.
+  const motivoNoFiable = fiable ? null
+    : global === null ? "sin_nota"
+    : sinResponder.length ? "secciones"
+    : evidencia < EVIDENCIA_MINIMA ? "evidencia"
+    : contradicciones.length ? "contradicciones"
+    : negadasSinMotivo.length ? "sin_motivo"
+    : padresSinDecidir.length ? "padres"
+    : null;
 
   return {
     version: SCORE_MODEL_VERSION,
     nota: global,
     fiable,
+    motivoNoFiable,
     sinResponder,
     padresSinDecidir,
+    // Secciones que el tecnico declara inexistentes, con su motivo escrito y el
+    // peso de modelo que retiran. El informe las imprime SIEMPRE y de forma
+    // visible: aunque no cuesten nota, el lector tiene que poder ver que parte
+    // del modelo se ha retirado por declaracion y no por comprobacion.
+    seccionesDeclaradas: declaradas.map(s => ({
+      seccion: s, ...motivoDe(s),
+      peso: Object.values(pesoNominal[s] ?? {}).reduce((a, v) => a + v, 0),
+    })),
+    negadasSinMotivo,
+    contradicciones,
     evidenciaMinima: EVIDENCIA_MINIMA,
     tramo: global === null ? null : tramoDe(global),
     capadaGlobal: global !== null && capGlobal < 100,

@@ -6,7 +6,7 @@
 
 import { SECTIONS, lectorEfectivo } from "../sections.js";
 import { LOGO_ALANA } from "../assets/logo.js";
-import { selloNota, paginaDiagnostico, bloqueHallazgos, bloquePlan, bloqueOportunidades } from "./informe.js";
+import { selloNota, paginaDiagnostico, bloqueHallazgos, bloqueDeclaraciones, bloquePlan, bloqueOportunidades } from "./informe.js";
 
 // Escapa valores introducidos por el tecnico para que no rompan el HTML del informe
 export const esc = (s) => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
@@ -76,6 +76,7 @@ export function buildPrintFragment(clientData, sectionEnabled, formData, instanc
   if (score) {
     body += paginaDiagnostico(score, sectionEnabled, clientData.fecha);
     body += bloqueHallazgos(score);
+    body += bloqueDeclaraciones(score);
   }
   body += bloquePlan(score, sectionEnabled, formData, instanceCounts);
   body += bloqueOportunidades(sectionEnabled, formData, instanceCounts);
