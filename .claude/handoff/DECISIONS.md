@@ -405,3 +405,49 @@ llevar credenciales o datos bancarios— desaparecía para siempre.
 **El detalle del `clientId` importa:** la ficha ya está guardada cuando falla la
 imagen. Sin propagar el id, el reintento crearía un cliente duplicado. Y `isDirty`
 se deja en `true` a propósito: no se guardó todo.
+
+---
+
+# Sesión del 2026-08-24
+
+## D20. El borrador local usa `localStorage`, y cuando no cabe lo dice
+
+**Decisión.** `src/lib/borrador.js` copia la visita a `localStorage` 1,5 s después
+de dejar de escribir, y también en `pagehide` y `visibilitychange`. Al arrancar se
+**ofrece** recuperarlo; nunca se restaura solo.
+
+**Por qué `localStorage` y no IndexedDB**, que es la respuesta «correcta» de manual
+y aquí es la equivocada: `localStorage` es **síncrono**, así que se puede escribir
+dentro de `pagehide` —el último instante en que el navegador deja correr código—.
+IndexedDB es asíncrono y en ese momento no garantiza terminar la escritura, que es
+justo el caso que hay que cubrir. El precio es el cupo (~5 MB por origen) cuando
+una sola captura en base64 puede ocupar 2 MB.
+
+**Por eso el aligerado por escalones, y por eso se cuentan las omitidas.** Si no
+cabe: primero fuera las capturas aún no subidas (las que ya están en la nube son
+una URL corta y sobreviven), luego todas. El número de capturas que se quedaron
+fuera **se guarda y se enseña al recuperar**. Un borrador que dice haber salvado
+unas capturas que soltó es peor que no tener borrador: el técnico se entera al
+imprimir el informe, días después y delante del cliente.
+
+**Por qué el cupo se comprueba intentando escribir.** No hay forma fiable de
+consultar el espacio libre de `localStorage`: la única señal real es que
+`setItem` lance. Por eso son tres intentos y no un cálculo de tamaño. Solo se
+reintenta aligerando si el fallo es de cupo — con el almacén bloqueado (modo
+privado, permisos) quitar fotos no arregla nada y solo retrasaría el aviso.
+
+**Por qué NO apaga el punto de «cambios sin guardar».** El borrador es una red de
+seguridad, no un guardado. Si apagara el aviso, el técnico se iría de la visita
+creyendo que el cliente está en la nube cuando solo está en el portátil con el que
+fue. Mismo razonamiento que D18.
+
+**Por qué no se restaura solo.** Pisar en silencio lo que el técnico tenga delante
+es la misma pérdida de datos con el signo del revés.
+
+**Por qué una ficha recién abierta no se ofrece.** Nace con la fecha de hoy puesta.
+Ofrecer recuperar *eso* enseña a decir que no al aviso, y el día que importe también
+se dirá que no (`borradorTieneContenido` ignora el campo `fecha`).
+
+**Guardarraíl:** `scripts/test-borrador.mjs`, encadenado en `npm run build` como
+sexto. Usa un `localStorage` de mentira **con cupo**, porque el comportamiento que
+hay que fijar es el de cuando NO cabe.
