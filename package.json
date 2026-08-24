@@ -6,10 +6,11 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "node scripts/check-ids.mjs && node scripts/check-imports.mjs && node scripts/check-score.mjs && node scripts/test-score.mjs && node scripts/test-informe.mjs && vite build",
+    "build": "node scripts/check-ids.mjs && node scripts/check-imports.mjs && node scripts/check-score.mjs && node scripts/test-score.mjs && node scripts/test-informe.mjs && node scripts/test-borrador.mjs && vite build",
     "check-ids": "node scripts/check-ids.mjs",
     "test-score": "node scripts/test-score.mjs",
     "test-informe": "node scripts/test-informe.mjs",
+    "test-borrador": "node scripts/test-borrador.mjs",
     "check-imports": "node scripts/check-imports.mjs",
     "check-score": "node scripts/check-score.mjs",
     "escenarios": "node scripts/escenarios-score.mjs",
