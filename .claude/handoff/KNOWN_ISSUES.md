@@ -6,7 +6,57 @@
 
 ## A. Agujeros abiertos del modelo de puntuación
 
-### A0. ⚠️ LO PRIMERO DEL PRÓXIMO DÍA — callar puntúa mejor que decir la verdad en 22 de los 24 capadores
+### A0-bis. ⚠️ LA LEY QUE TUMBA CUALQUIER ARREGLO DE A0 (medido el 2026-08-24)
+
+**Antes de diseñar nada para A0, lee esto. Ahorra una sesión entera.**
+
+El 24/08 se diseñaron y midieron **cuatro** mecanismos para cerrar A0 (tope suave
+para el hueco, bloqueo de `fiable`, peso efectivo multiplicado, y un techo de no
+verificación de diseño libre). **Los cuatro cayeron**, cada uno ante un refutador
+adversarial independiente y con contraejemplo medido. No es mala suerte:
+
+> **Por cada punto que una vía baja la rama honesta, la ventaja de esconder sube
+> exactamente ese punto. 28 de 28 casos, coincidencia exacta, en tres vías
+> distintas.**
+
+La razón es estructural: **el hueco de un capador solo existe si la sección está en
+«sí» y el `dep` abierto.** Así que castigar el hueco *es* premiar negar que la cosa
+exista. Se construyeron las **28 rutas de ocultación** de un capador (19 = cerrar el
+`dep` contestando el padre con otro valor; 9 = negar la sección):
+
+| motor | rutas que ganan a la verdad | ventaja total | máxima |
+|---|---|---|---|
+| vivo 2.5.0 | 24 / 28 | +43 | +2 |
+| tope suave | 28 / 28 | **+168** | +10 |
+| peso efectivo | 28 / 28 | **+171** | +11 |
+| techo no verificación | 28 / 28 | **+168** | +10 |
+| bloquea `fiable` | 24 / 28 | +43 | +2 |
+
+Casos que lo enseñan sin números: con las tres vías que mueven la nota, declarar que
+**hay** firewall y no mirar su soporte pasa a puntuar **peor** que declarar que no
+hay firewall (93 contra 97), y decir que el cliente **no prueba sus copias** gana +7
+sobre decir que sí las prueba. Es, palabra por palabra, el motivo ① por el que D1
+tumbó el «techo por capadores» en su día.
+
+**Consecuencia práctica, y es un cambio de orden del proyecto:**
+
+> **A2 (la fuga de los campos padre) es PRERREQUISITO de A0, y no tiene diseño.**
+> Son 19 de las 28 rutas. Mientras cerrar un `dep` sea gratis, subir el precio del
+> hueco es subir el precio de decir la verdad. **Lo que hay que diseñar el próximo
+> día es A2, no A0.**
+
+La única vía que no empeora nada es bloquear `fiable` con `capadoresPendientes`
+—porque no toca la nota en ningún caso— pero por eso tampoco arregla A0, y además
+deja sin informe al cliente pequeño honesto: medido, de cuatro conductas (dejar en
+blanco / «No revisado» / mentir / inventárselo), **la única que se quedaba sin nota
+era la honesta**.
+
+Queda escrita, sin implementar, la regla correcta de `resuelto` que cualquier vía
+futura necesitará: **hay hueco salvo cuando `agregacion === "max" && valor === 1`**.
+Solo el lado `max` resuelve de verdad; las vías A y D tenían cada una media regla
+mal, con inversiones medidas de hasta +42 de dominio por contestar *peor*.
+
+### A0. ⚠️ Callar puntúa mejor que decir la verdad en 22 de los 24 capadores
 
 **Es el bug histórico de este proyecto, el que ya se ha corregido cuatro veces,
 vivo en su última esquina y a mayor escala de la que nadie había medido.**
@@ -96,7 +146,19 @@ informe pareciera MÁS fiable, no menos.**
   documento: `red`, `wifi`, `email`, `vpn`, `licenciamiento`, `pcs`, `servidores`
   y `sai`. Cambia notas → sube versión de modelo.
 
-### A2. Fuga por campos padre (`dep`)
+### A2. ⚠️ Fuga por campos padre (`dep`) — LO PRIMERO DEL PRÓXIMO DÍA
+
+> **Cambió de prioridad el 2026-08-24.** Ya no es «un agujero pequeño de 0,7 %»:
+> es el **prerrequisito de A0** (ver A0-bis) y son 19 de las 28 rutas de ocultación.
+> **No tiene diseño.** Es lo que hay que diseñar, y probablemente ocupe una sesión.
+
+**Cerrado en parte el 24/08:** «No revisado» en un campo padre ya cuenta igual que
+dejarlo en blanco. Antes no: cerraba el `dep` de los hijos, los sacaba del
+denominador **con sus capadores dentro**, y devolvía el sello de fiable que el
+blanco sí retiene. Medido sobre un cliente perfecto que declara su NAS y reconoce no
+haberlo mirado: la verdad daba **94**, contestar «No revisado» en el padre daba
+**100 y fiable**. Sigue abierto el caso de **mentir** en el padre («No (solo
+cloud)»), que da 100 con sello.
 
 **Mitigado en parte desde 2.2.0:** dejarlos en blanco ya no toca la nota pero
 **bloquea el sello de `fiable`**. La lista `CAMPOS_PADRE_SIN_CRITERIO` se **deriva**
