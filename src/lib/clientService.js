@@ -1,4 +1,5 @@
 import { supabase, isSupabaseConfigured } from './supabase.js';
+import { registrarEvento } from './auditoria.js';
 
 // Get current user email
 async function getUserEmail() {
@@ -84,6 +85,18 @@ export async function saveClient(id, { clientData, sectionEnabled, formData, ins
     // Create version snapshot BEFORE updating.
     // La autoria es el usuario autenticado, no el campo de texto "Responsable"
     // del formulario (que es el tecnico asignado al cliente, no quien edita).
+    //
+    // ESTA LLAMADA ESTA CONDENADA, PERO NO SE QUITA TODAVIA. Cuando se ejecute
+    // supabase-auditoria.sql, la version la creara un trigger AFTER UPDATE -con
+    // el autor correcto, que aqui esta mal: se etiqueta la version con quien la
+    // SOBREESCRIBE, no con quien la escribio- y el `revoke insert` de ese mismo
+    // SQL hara que esta linea falle en silencio, que es inofensivo porque no se
+    // comprueba su error.
+    //
+    // Se deja para que la app funcione igual EN LOS DOS ORDENES: si el SQL aun
+    // no se ha ejecutado, esto sigue siendo lo unico que crea el historial, y
+    // quitarlo antes de tiempo dejaria una ventana sin historial de versiones.
+    // Retirarla en cuanto el SQL este confirmado en produccion.
     await createVersionSnapshot(clientId, await getUserEmail() || clientData.responsable || '');
 
     const { error } = await supabase.from('clients').update(row).eq('id', clientId);
@@ -152,6 +165,15 @@ export async function loadClient(id) {
       _storagePath: img.storage_path,
     });
   }
+
+  // Abrir una ficha es el acceso que ningun trigger puede ver: no muta nada.
+  // Se declara aqui y no en App.jsx porque es el unico punto por el que pasa la
+  // lectura completa del cliente. Sin await: el tecnico no espera a la traza.
+  registrarEvento('ficha_abierta', {
+    clientId: id,
+    empresa: client.empresa,
+    detalle: { capturas: (images || []).length },
+  });
 
   return {
     id: client.id,
@@ -223,6 +245,23 @@ async function createVersionSnapshot(clientId, changedBy) {
 
 export async function getVersions(clientId) {
   if (!isSupabaseConfigured()) return [];
+
+  // `changed_by` guarda a quien SOBREESCRIBIO la version, no a quien la
+  // escribio: es un desfase de uno, y la pantalla lo imprimia como "Guardado
+  // por X", que es falso. `author_email` + `author_origin` traen la autoria
+  // buena; las llegadas antes de supabase-auditoria.sql quedan marcadas como
+  // reconstruidas o indeterminadas en vez de reinterpretarse a la brava.
+  //
+  // Se piden en dos pasos porque las columnas nuevas solo existen despues de
+  // ejecutar ese SQL, y pedir una columna inexistente no devuelve null: hace
+  // fallar la consulta entera y dejaria la pantalla de historial en blanco.
+  const conAutoria = await supabase
+    .from('client_versions')
+    .select('id, version, changed_by, created_at, author_email, author_origin')
+    .eq('client_id', clientId)
+    .order('version', { ascending: false });
+  if (!conAutoria.error) return conAutoria.data || [];
+
   const { data, error } = await supabase
     .from('client_versions')
     .select('id, version, changed_by, created_at')

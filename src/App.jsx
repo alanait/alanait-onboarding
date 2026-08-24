@@ -6,6 +6,7 @@ import { isSupabaseConfigured } from "./lib/supabase.js";
 import { getSession, onAuthChange, signOut, getUserName } from "./lib/auth.js";
 import { saveClient as saveToCloud, loadClient, resolveImagesToBase64, searchClients } from "./lib/clientService.js";
 import { guardarBorrador, leerBorrador, borrarBorrador, borradorTieneContenido, haceCuanto } from "./lib/borrador.js";
+import { registrarEvento } from "./lib/auditoria.js";
 import { SECTIONS, lectorEfectivo, reindexarHints } from "./sections.js";
 import { C, inp, FUENTE } from "./theme.js";
 import { SiNoToggle, ImageZone, SectionFields } from "./components/fields.jsx";
@@ -218,6 +219,13 @@ export default function App() {
       const fecha = new Date().toISOString().split("T")[0];
       await exportarInformePdf(container, `${nombre}_${fecha}.pdf`);
 
+      // El informe es INTERNO y lleva el inventario, las capturas y las
+      // oportunidades comerciales. Que se genero uno queda registrado.
+      registrarEvento("pdf_generado", {
+        clientId: currentClientId, empresa: clientData.empresa,
+        detalle: { nota: score.nota, fiable: score.fiable, modelo: score.version },
+      });
+
       document.body.removeChild(container);
     } catch (err) {
       console.error('PDF export error:', err);
@@ -291,6 +299,13 @@ export default function App() {
     a.click();
     document.body.removeChild(a);
     setTimeout(() => URL.revokeObjectURL(url), 3000);
+    // Un .alanait lleva la ficha entera, capturas incluidas, y sale del control
+    // de la aplicacion en cuanto se descarga. Que salio queda registrado;
+    // adonde fue, no lo puede saber nadie.
+    registrarEvento("fichero_exportado", {
+      clientId: currentClientId, empresa: clientData.empresa,
+      detalle: { capturas: Object.values(exportImages || {}).reduce((n, l) => n + l.length, 0) },
+    });
     addToRecent(nombre, currentClientId);
     setCurrentFilePath(nombre);
     // Sin Supabase configurado, exportar a fichero ES el guardado (lo usa
@@ -494,7 +509,8 @@ export default function App() {
     }
   };
 
-  const handleRestoreVersion = (snapshot) => {
+  const handleRestoreVersion = (snapshot, version) => {
+    registrarEvento("version_restaurada", { clientId: currentClientId, empresa: clientData.empresa, detalle: { version } });
     if (snapshot.clientData) setClientData(snapshot.clientData);
     if (snapshot.sectionEnabled) setSectionEnabled(snapshot.sectionEnabled);
     if (snapshot.formData) setFormData(snapshot.formData);
