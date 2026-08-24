@@ -11,7 +11,7 @@
 
 import { SECTIONS, lectorEfectivo, preguntaDe } from "../sections.js";
 import { hintsVisibles, TIPOS_HINT, claveHint } from "../hints.js";
-import { CRITERIOS, PRECONDICIONES } from "../score/criterios.js";
+import { CRITERIOS, PRECONDICIONES, MOTIVO_OTRO } from "../score/criterios.js";
 import { DOMINIOS } from "../score/dominios.js";
 import { esc } from "./buildPrintHTML.js";
 
@@ -61,25 +61,28 @@ export function selloNota(score) {
   const hayNota = score.nota !== null && score.fiable;
   const color = hayNota ? COLOR_TRAMO[score.tramo.nivel] : C.gris;
   const valor = hayNota ? String(score.nota) : "—";
+  // El MOTIVO de "no fiable" lo decide el motor (`score.motivoNoFiable`), no
+  // este fichero. Antes la cascada se rederivaba aqui y en ReportPanel.jsx por
+  // separado y ya diferian; con los motivos nuevos de 2.6.0 serian cinco copias
+  // de la misma regla. El orden -evidencia por delante de los campos sueltos-
+  // esta razonado en computeScore: con un cliente al 13% el problema de verdad
+  // es el 87% sin mirar, no dos campos padre.
+  const motivo = score.motivoNoFiable;
   const etiqueta = hayNota
     ? esc(score.tramo.etiqueta)
-    : (score.sinResponder?.length || score.padresSinDecidir?.length ? "Sin datos suficientes" : "Sin nota");
-  // Tres motivos posibles de "no fiable", no dos: evidencia insuficiente,
-  // secciones sin decidir, o campos padre sin decidir. La evidencia manda
-  // siempre que sea ella la que no llega -con un cliente al 13% el problema
-  // de verdad es el 87% sin mirar, no dos o tres campos padre sueltos-. El
-  // texto de campos padre solo tiene sentido cuando la evidencia YA esta al
-  // dia y lo unico que falta son esos campos ("sólo se ha comprobado el
-  // 100%... por debajo del 60%" seria una contradiccion literal).
+    : (motivo === "secciones" || motivo === "padres" || motivo === "sin_motivo" || motivo === "contradicciones"
+        ? "Sin datos suficientes" : "Sin nota");
   const pie = hayNota
     ? `evidencia ${score.evidencia}% · modelo ${esc(score.version)}`
-    : score.sinResponder?.length
+    : motivo === "secciones"
       ? `faltan ${score.sinResponder.length} secciones por responder`
-      : score.evidencia < score.evidenciaMinima
-        ? `sólo se ha comprobado el ${score.evidencia}% del modelo`
-        : score.padresSinDecidir?.length
-          ? `faltan ${score.padresSinDecidir.length} campo${score.padresSinDecidir.length > 1 ? "s que deciden" : " que decide"} otras respuestas`
-          : `sólo se ha comprobado el ${score.evidencia}% del modelo`;
+      : motivo === "contradicciones"
+        ? `el formulario se contradice en ${score.contradicciones.length} punto${score.contradicciones.length > 1 ? "s" : ""}`
+        : motivo === "sin_motivo"
+          ? `falta decir por qué el cliente no tiene ${score.negadasSinMotivo.length} servicio${score.negadasSinMotivo.length > 1 ? "s" : ""}`
+          : motivo === "padres"
+            ? `faltan ${score.padresSinDecidir.length} campo${score.padresSinDecidir.length > 1 ? "s que deciden" : " que decide"} otras respuestas`
+            : `sólo se ha comprobado el ${score.evidencia}% del modelo`;
 
   return `<div style="display:inline-block;border:2px solid ${color};border-radius:8px;padding:14px 20px;min-width:150px;text-align:center;">
     <div style="font-size:40px;font-weight:500;color:${color};line-height:1;">${valor}${hayNota ? '<span style="font-size:15px;color:#868686;font-weight:400;"> / 100</span>' : ""}</div>
@@ -123,9 +126,19 @@ export function paginaDiagnostico(score, sectionEnabled, fecha) {
     : "";
   let lectura;
   if (!score.fiable) {
-    if (score.sinResponder?.length) {
+    if (score.motivoNoFiable === "secciones") {
       lectura = `Sin nota: quedan ${score.sinResponder.length} secciones sin responder (${esc(score.sinResponder.join(", "))}). Mientras no se decida si el cliente tiene esos servicios, cualquier puntuación sería engañosa.`;
-    } else if (score.evidencia >= score.evidenciaMinima && score.padresSinDecidir?.length) {
+    } else if (score.motivoNoFiable === "contradicciones") {
+      // No se acusa al cliente de nada: se dice que el formulario se contradice,
+      // que es un hecho del propio formulario (D6). Publicar una nota sobre un
+      // formulario que se desmiente a si mismo es publicar un numero que no se
+      // sabe de que cliente habla.
+      const textos = score.contradicciones.map(k => k.texto);
+      lectura = `Sin nota: el formulario se contradice en ${textos.length} punto${textos.length > 1 ? "s" : ""}. ${esc(textos.join(" "))} Hasta que se decida cuál de las dos respuestas es la buena, la nota hablaría de un cliente que no es este. La nota provisional sería ${score.nota} sobre 100.`;
+    } else if (score.motivoNoFiable === "sin_motivo") {
+      const nombres = score.negadasSinMotivo.map(s => SECTIONS.find(x => x.id === s)?.label ?? s);
+      lectura = `Sin nota: ${nombres.length > 1 ? "se han declarado" : "se ha declarado"} ${nombres.length} ${nombres.length > 1 ? "secciones inexistentes" : "sección inexistente"} sin decir por qué (${esc(nombres.join(", "))}). Declarar que el cliente no tiene algo retira esa parte del modelo, así que tiene que quedar escrito el motivo, igual que queda escrita cualquier otra respuesta. La nota provisional sería ${score.nota} sobre 100.`;
+    } else if (score.motivoNoFiable === "padres") {
       // Solo entra aqui cuando la evidencia YA llega al minimo: si un cliente
       // esta al 13%, el problema de verdad es el 87% sin mirar, no dos o tres
       // campos padre sueltos, y decir "contesta estos y ya tienes nota" seria
@@ -219,10 +232,17 @@ export function bloqueHallazgos(score) {
 
   const pendientes = score.capadoresPendientes ?? [];
 
-  // Sin hallazgos pero con comprobaciones criticas sin hacer, callarse seria lo
+  // Comprobaciones criticas que aplicaban y nadie hizo. Callarselas seria lo
   // peor: el lector entiende "no hay problemas" cuando lo cierto es "no se ha
-  // mirado". Se imprime el bloque con la lista de lo que falta.
-  if (!score.hallazgos.length) {
+  // mirado".
+  //
+  // Se imprime SIEMPRE que las haya, tambien cuando hay hallazgos. Antes solo
+  // salia con cero hallazgos, y ese es justo el caso que no se da en un cliente
+  // real: las fichas 03, 04 y 05 tienen hallazgos, asi que su lista de huecos
+  // no llegaba nunca al PDF. El hueco no deja de existir porque haya ademas
+  // problemas confirmados; si acaso importa mas, porque el lector ya ha
+  // asumido que el documento le esta contando lo malo.
+  const bloquePendientes = (hayHallazgos) => {
     if (!pendientes.length) return "";
     // Se imprime LA PREGUNTA del campo, no el `titular` del criterio. El titular
     // afirma el problema ("Servidor con sistema operativo fuera de soporte") y
@@ -232,20 +252,24 @@ export function bloqueHallazgos(score) {
       const q = preguntaDe(p.seccion, p.campo);
       return `<div class="pdf-avoid" style="padding:7px 0;border-bottom:1px solid ${C.borde};page-break-inside:avoid;">
         <div style="font-size:12px;font-weight:500;color:${C.tinta};line-height:1.4;">${esc(q.pregunta)}</div>
-        <div style="font-size:9.5px;color:${C.gris};margin-top:2px;">${esc(q.seccion)} · sin contestar</div>
+        <div style="font-size:9.5px;color:${C.gris};margin-top:2px;">${esc(q.seccion)} · sin comprobar</div>
       </div>`;
     }).join("");
+    const intro = hayHallazgos
+      ? `Además de los hallazgos de arriba, ${pendientes.length} comprobación${pendientes.length > 1 ? "es" : ""} que también puede${pendientes.length > 1 ? "n" : ""} dar un hallazgo crítico quedó${pendientes.length > 1 ? "aron" : ""} sin hacer.
+         No son hallazgos: son huecos. La lista de arriba no está cerrada hasta que se cierren.`
+      : `Ningún criterio de los comprobados ha disparado un hallazgo crítico, pero
+         ${pendientes.length} pregunta${pendientes.length > 1 ? "s" : ""} que sí pueden darlo quedó${pendientes.length > 1 ? "aron" : ""} sin comprobar en la visita.
+         No son hallazgos: son huecos. Hasta cerrarlos, este informe no afirma que el cliente esté limpio.`;
     return `<div class="pdf-break-before" style="height:24px;"></div>
     <div style="page-break-before:always;">
-      <h2 style="font-size:16px;font-weight:500;color:${C.azul};margin:0 0 4px;">Preguntas críticas sin contestar</h2>
-      <p style="font-size:11px;color:${C.gris};margin:0 0 12px;">
-        Ningún criterio de los comprobados ha disparado un hallazgo crítico, pero
-        ${pendientes.length} pregunta${pendientes.length > 1 ? "s" : ""} que sí pueden darlo quedó${pendientes.length > 1 ? "aron" : ""} sin contestar en la visita.
-        No son hallazgos: son huecos. Hasta cerrarlos, este informe no afirma que el cliente esté limpio.
-      </p>
+      <h2 style="font-size:16px;font-weight:500;color:${C.azul};margin:0 0 4px;">Comprobaciones críticas sin hacer</h2>
+      <p style="font-size:11px;color:${C.gris};margin:0 0 12px;">${intro}</p>
       <div style="border-top:2px solid ${C.ambar};">${filasP}</div>
     </div>`;
-  }
+  };
+
+  if (!score.hallazgos.length) return bloquePendientes(false);
 
   const titularDe = (h) => {
     const c = CRITERIOS.find(x => x.id === h.id) || PRECONDICIONES.find(x => x.id === h.id);
@@ -284,6 +308,48 @@ export function bloqueHallazgos(score) {
       Ninguna mejora en otros apartados los compensa.
     </p>
     <div style="border-top:2px solid ${C.magenta};">${filas}</div>
+  </div>${bloquePendientes(true)}`;
+}
+
+// ── Lo que este cliente no tiene ────────────────────────────────────────────
+// Declarar que el cliente no tiene servidores, wifi, VPN o licencias propias
+// retira esa parte del modelo de la nota. Es legitimo -no todo cliente tiene
+// de todo- pero tiene que VERSE: si no, el lector no puede distinguir un 95
+// sobre el modelo entero de un 95 sobre la mitad del modelo.
+//
+// No es un bloque de hallazgos y no lleva color de alarma: es la parte del
+// alcance que se retiro por declaracion en vez de por comprobacion, con el
+// motivo que dio el tecnico. Se imprime tambien cuando el informe SI es fiable,
+// que es justo cuando mas falta hace.
+export function bloqueDeclaraciones(score) {
+  if (!score) return "";
+  const declaradas = score.seccionesDeclaradas ?? [];
+  const sinMotivo = score.negadasSinMotivo ?? [];
+  if (!declaradas.length && !sinMotivo.length) return "";
+
+  const etiqueta = (id) => SECTIONS.find(s => s.id === id)?.label ?? id;
+
+  const filas = declaradas.map(d => `
+    <div class="pdf-avoid" style="padding:7px 0;border-bottom:1px solid ${C.borde};page-break-inside:avoid;">
+      <div style="font-size:12px;font-weight:500;color:${C.tinta};line-height:1.4;">${esc(etiqueta(d.seccion))}</div>
+      <div style="font-size:10.5px;color:${C.tinta};margin-top:2px;line-height:1.4;">${esc(d.motivo === MOTIVO_OTRO && d.detalle ? d.detalle : d.motivo)}</div>
+    </div>`).join("");
+
+  const filasSin = sinMotivo.map(s => `
+    <div class="pdf-avoid" style="padding:7px 0;border-bottom:1px solid ${C.borde};page-break-inside:avoid;">
+      <div style="font-size:12px;font-weight:500;color:${C.tinta};line-height:1.4;">${esc(etiqueta(s))}</div>
+      <div style="font-size:10.5px;color:${C.ambar};margin-top:2px;line-height:1.4;">Declarada inexistente sin indicar el motivo.</div>
+    </div>`).join("");
+
+  return `<div class="pdf-break-before" style="height:24px;"></div>
+  <div style="page-break-before:always;">
+    <h2 style="font-size:16px;font-weight:500;color:${C.azul};margin:0 0 4px;">Lo que este cliente no tiene</h2>
+    <p style="font-size:11px;color:${C.gris};margin:0 0 12px;">
+      Estas partes del modelo quedan fuera de la nota porque se ha declarado que el cliente no las tiene.
+      No son carencias: son alcance retirado por declaración, no por comprobación. Se listan para que la
+      nota se lea sabiendo sobre qué se calculó.
+    </p>
+    <div style="border-top:2px solid ${C.azul};">${filas}${filasSin}</div>
   </div>`;
 }
 

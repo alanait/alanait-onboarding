@@ -12,7 +12,7 @@ import { SiNoToggle, ImageZone, SectionFields } from "./components/fields.jsx";
 import { buildPrintFragment } from "./print/buildPrintHTML.js";
 import { exportarInformePdf } from "./print/exportarPdf.js";
 import { computeScore } from "./score/computeScore.js";
-import { CRITERIOS, PRECONDICIONES, CAMPOS_QUE_PUNTUAN } from "./score/criterios.js";
+import { CRITERIOS, PRECONDICIONES, CAMPOS_QUE_PUNTUAN, MOTIVO_OTRO } from "./score/criterios.js";
 import { hintsVisibles, claveHint, TIPOS_HINT } from "./hints.js";
 import ReportPanel from "./components/ReportPanel.jsx";
 import SectionRail from "./components/SectionRail.jsx";
@@ -176,6 +176,9 @@ export default function App() {
     if (!sec || sectionEnabled[sectionId] !== "si") return { total, rellenos };
     for (let i = 0; i < getCount(sectionId); i++) {
       for (const f of sec.fields) {
+        // Los campos del "no" no existen en una seccion que el cliente SI
+        // tiene: contarlos dejaria la barra fija por debajo del 100%.
+        if (f.soloSiNo) continue;
         if (f.dep && getVal(sectionId, f.dep.field, i) !== f.dep.value) continue;
         const v = getVal(sectionId, f.id, i);
         const relleno = Array.isArray(v) ? v.length > 0 : v !== "" && v !== undefined;
@@ -1012,13 +1015,56 @@ export default function App() {
                   // de verdad hace falta verlo.
                   const pre = PRECONDICIONES.find(p => p.seccion === section.id && p.cuando === "no"
                     && !(p.salvoSi && sectionEnabled[p.salvoSi.seccion] === p.salvoSi.cuando));
-                  return pre ? (
+                  if (pre) return (
                     <div style={{ padding: "10px 20px", fontSize: 13, color: C.red, background: C.redLight, borderTop: `1px solid ${C.redBorder}` }}>
                       <b>Hallazgo crítico:</b> {pre.texto}
                     </div>
-                  ) : (
-                    <div style={{ padding: "10px 20px", fontSize: 13, color: C.red, fontStyle: "italic" }}>
-                      Sin servicio — no se documentará esta sección.
+                  );
+
+                  // Secciones cuyo "no" retira peso del modelo: se pide el
+                  // MOTIVO. No es un castigo ni un hallazgo -el "no" puede ser
+                  // perfectamente cierto- pero declarar que el cliente no tiene
+                  // algo saca esa parte del modelo de la nota, asi que tiene
+                  // que quedar escrito por que, igual que queda escrita
+                  // cualquier otra respuesta. Sin motivo el informe no publica.
+                  const campoMotivo = section.fields.find(f => f.id === "sin_servicio_motivo");
+                  if (!campoMotivo) {
+                    return (
+                      <div style={{ padding: "10px 20px", fontSize: 13, color: C.red, fontStyle: "italic" }}>
+                        Sin servicio — no se documentará esta sección.
+                      </div>
+                    );
+                  }
+                  const motivo = getVal(section.id, "sin_servicio_motivo", 0);
+                  const detalle = getVal(section.id, "sin_servicio_detalle", 0);
+                  const faltaDetalle = motivo === MOTIVO_OTRO && !String(detalle || "").trim();
+                  return (
+                    <div style={{ padding: "12px 20px", borderTop: `1px solid ${C.redBorder}`, background: C.redLight }}>
+                      <label style={{ fontWeight: 500, fontSize: 13, color: C.text, display: "block", marginBottom: 6 }}>
+                        ¿Por qué no tiene esto? <span style={{ color: C.red }}>*</span>
+                      </label>
+                      <select
+                        value={motivo}
+                        onChange={e => setVal(section.id, "sin_servicio_motivo", e.target.value, 0)}
+                        style={{ ...inp, width: "100%", maxWidth: 520 }}
+                      >
+                        <option value="">— Seleccionar —</option>
+                        {campoMotivo.options.map(o => <option key={o} value={o}>{o}</option>)}
+                      </select>
+                      {motivo === MOTIVO_OTRO && (
+                        <input
+                          type="text"
+                          value={detalle}
+                          onChange={e => setVal(section.id, "sin_servicio_detalle", e.target.value, 0)}
+                          placeholder="Indica el motivo"
+                          style={{ ...inp, width: "100%", maxWidth: 520, marginTop: 8 }}
+                        />
+                      )}
+                      <div style={{ fontSize: 12, color: !motivo || faltaDetalle ? C.red : C.textLight, marginTop: 7, lineHeight: 1.45 }}>
+                        {!motivo || faltaDetalle
+                          ? "Sin motivo no se publica la nota: declarar que el cliente no tiene esto retira esa parte del modelo."
+                          : "Queda escrito en el informe, junto al alcance de la visita."}
+                      </div>
                     </div>
                   );
                 })()}
