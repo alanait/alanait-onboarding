@@ -95,6 +95,25 @@ hay registro y la atribución del historial sigue equivocada.
    (`client_versions` sin poda), AS5 (previews contra la BD de producción), AS6 (el
    PDF no se declara interno en portada), AS7 (cero media queries).
 
+## Rumbo declarado por el dueño (25/08/2026)
+
+- **Siguiente fase: volcar la información a Hudu.** Que lo que se recoge en la visita
+  acabe en la documentación de Hudu en vez de quedarse solo en la app. La
+  configuración la hará él. Ya hay conectores MCP de Hudu en el entorno, y el asset
+  de la propia aplicación está documentado en
+  https://alanait.huducloud.com/a/d303da0ec8e2 (layout «Aplicaciones / Licencias»).
+- **Segundo uso, además del onboarding:** pasar con la misma herramienta a los
+  clientes de mantenimiento antiguos, para tener CiberScore comparable en toda la
+  cartera. Afecta al modelo: esos clientes no son «onboarding», así que el dominio
+  `saneamiento` (10 %, accesos heredados del proveedor anterior) puede no aplicarles.
+  **Conviene medirlo antes de prometerlo.**
+- **Estudiado y aplazado:** salir de Vercel y Supabase a Linux propio. La app apenas
+  está acoplada (4 ficheros, 515 líneas, todos en `src/lib/`); lo acoplado es el SQL
+  (1.001 líneas con `auth.uid()`, `storage.objects`, `supabase_auth_admin`). Vía de
+  menor riesgo: autoalojar Supabase, que no obliga a tocar código. Freno real: la app
+  se usa en casa del cliente, así que la infra propia tendría que estar expuesta a
+  internet y disponible justo durante las visitas.
+
 ## Decisiones que tiene que tomar el dueño
 
 1. **`licenciamiento` queda negable solo si nada más lo desmiente.** Dos respuestas
