@@ -3,6 +3,7 @@ import { listClients, searchClients, deleteClient, importFromFile } from "../lib
 import { isSupabaseConfigured } from "../lib/supabase.js";
 import { getUserName } from "../lib/auth.js";
 import { FUENTE } from "../theme.js";
+import Manual from "./Manual.jsx";
 
 const C = {
   navy: "#1E3A6E", blue: "#2F56A3", blueLight: "#EEF3FB",
@@ -16,6 +17,7 @@ export default function Dashboard({ onOpenClient, onNewClient, onImportFile, ses
   const [loading, setLoading] = useState(true);
   const [confirmDeleteId, setConfirmDeleteId] = useState(null);
   const [importing, setImporting] = useState(false);
+  const [showManual, setShowManual] = useState(false);
   const fileRef = useRef(null);
 
   const load = async () => {
@@ -99,6 +101,7 @@ export default function Dashboard({ onOpenClient, onNewClient, onImportFile, ses
 
   return (
     <div style={{ minHeight: "100vh", background: "#F9F9F9", fontFamily: FUENTE }}>
+      {showManual && <Manual onClose={() => setShowManual(false)} />}
       {/* Header */}
       <div style={{ background: C.navy, color: "#fff", padding: "0 24px", boxShadow: "0 2px 8px rgba(0,0,0,0.3)" }}>
         <div style={{ maxWidth: 1000, margin: "0 auto", display: "flex", justifyContent: "space-between", alignItems: "center", padding: "16px 0" }}>
@@ -106,7 +109,20 @@ export default function Dashboard({ onOpenClient, onNewClient, onImportFile, ses
             <div style={{ fontSize: 11, letterSpacing: "0.12em", color: "#A9C6EA", textTransform: "uppercase", marginBottom: 2 }}>ALANA IT</div>
             <div style={{ fontSize: 18, fontWeight: 500 }}>Panel de Clientes</div>
           </div>
+
+          {/* Los tres botones van en orden de menos a mas compromiso: leer,
+              traer una ficha que ya existe, crear una nueva. Manual comparte
+              estilo con Importar -los dos secundarios- y el azul solido se
+              reserva para la unica accion que crea algo. */}
           <div style={{ display: "flex", gap: 10 }}>
+            <button onClick={() => setShowManual(true)} title="Cómo se usa la aplicación" style={{
+              padding: "9px 16px", background: "rgba(255,255,255,0.12)", color: "#fff",
+              border: "1px solid rgba(255,255,255,0.2)", borderRadius: 8, fontSize: 13,
+              fontWeight: 500, cursor: "pointer", fontFamily: "inherit",
+              display: "flex", alignItems: "center", gap: 7, whiteSpace: "nowrap",
+            }}>
+              <span style={{ fontSize: 14 }}>📘</span> Manual
+            </button>
             <button onClick={() => fileRef.current?.click()} disabled={importing} style={{
               padding: "9px 16px", background: "rgba(255,255,255,0.12)", color: "#fff",
               border: "1px solid rgba(255,255,255,0.2)", borderRadius: 8, fontSize: 13,
