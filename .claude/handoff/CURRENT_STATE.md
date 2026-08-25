@@ -1,12 +1,64 @@
 # Estado actual — ALANA IT Onboarding
 
-> Última actualización: 2026-08-24, al cerrar la sesión del motor 2.6.0.
-> Verificado contra el repositorio ejecutándolo, no solo contra la conversación.
->
-> **Antes que nada, lee el punto 0 de «Qué falta», y `KNOWN_ISSUES.md` § A0-bis.**
-> El orden de prioridades del proyecto **cambió el 24/08**: el bug histórico (A0)
-> no se puede arreglar antes que la fuga de los campos padre (A2), y eso está
-> medido, no supuesto.
+> Última actualización: 2026-08-25. Verificado contra el repositorio
+> ejecutándolo, no solo contra la conversación.
+
+---
+
+## ⏸ EL PROYECTO ESTÁ EN PAUSA
+
+**Esperando a que lo revise Joan Cuello (el jefe).** El correo de presentación
+está redactado pero **NO enviado**: Juan Carlos se lo mandará cuando Joan vuelva
+de vacaciones. Hasta que haya esa revisión, no se arranca fase nueva.
+
+El correo incluye instrucciones de registro y acceso, un resumen de para qué
+sirve, y los dos usos previstos: onboarding de clientes nuevos y documentación de
+la cartera de mantenimiento antigua.
+
+> **Tres avisos que se le dieron a Juan Carlos sobre ese correo y que siguen sin
+> resolver:** (1) Joan verá **datos reales de clientes**, no un entorno de
+> pruebas; (2) si su correo no es `@alanait.com` el registro le fallará; (3) el
+> borrador menciona «cinco clientes de ejemplo cargados», pero **el botón de
+> cargarlos se retiró de producción a propósito** (D11) — o se quita esa frase o
+> hay que cargárselos a mano en su cuenta.
+
+## Lo que hay pendiente, por orden
+
+**Siguiente fase declarada por el dueño: integrar con Hudu.** Que lo que se recoge
+en la visita pase a la documentación del cliente en Hudu y no haya que teclearlo
+dos veces. La configuración la hará él. Ya hay conectores MCP de Hudu en el
+entorno, y el asset de la propia aplicación está documentado en
+https://alanait.huducloud.com/a/d303da0ec8e2.
+
+Acciones manuales del dueño, ninguna hecha todavía:
+
+| | |
+|---|---|
+| Enviar el correo a **Joan Cuello** | cuando vuelva de vacaciones |
+| Ejecutar **`supabase-auditoria.sql`** | sin él no hay registro de accesos y la autoría del historial sigue mal |
+| Verificar el **Auth Hook** de restricción de altas | el registro por correo está ABIERTO (`disable_signup: false`, comprobado el 24/08) |
+| Abrir el **Manual** con sesión iniciada | nadie lo ha visto renderizado: está detrás del login |
+| Decidir sobre **`licenciamiento`** y **`sai`** | ver «Decisiones que tiene que tomar el dueño» |
+
+Trabajo de desarrollo, en orden de daño:
+
+1. **A2 — la fuga de los campos padre.** Es el punto 0 del motor y es
+   prerrequisito de A0. **No tiene diseño.** (`KNOWN_ISSUES.md` § A2 y § A0-bis.)
+2. **A7 — una sección sin decidir no cuesta nada.** Medido el 25/08 y **aplazado
+   por decisión del dueño** («ok no lo toquemos»). Las mediciones están guardadas
+   para no repetirlas. (`KNOWN_ISSUES.md` § A7.)
+3. **A0 — los capadores**, después de A2.
+4. **No hay recuperación de contraseña** (§ B). Quien olvide la suya se queda
+   fuera hasta que un administrador entre en Supabase.
+5. **AS1 — las políticas RLS** dan acceso total a cualquier cuenta autenticada.
+   Pesa más ahora que el registro está abierto.
+6. El resto de seguridad y de modelo, en sus apartados.
+
+> **Antes de tocar el motor, lee `KNOWN_ISSUES.md` § A0-bis.** El orden de
+> prioridades cambió el 24/08: A0 no se puede arreglar antes que A2, y eso está
+> medido sobre 28 rutas de ocultación, no supuesto.
+
+---
 
 ## Qué es el proyecto
 

@@ -240,6 +240,66 @@ todos los clientes pequeños. **Decisión de negocio, no técnica.**
 Peso 2. Pregunta si ALANA ya desplegó su RMM, que en un onboarding vale 0 para
 todos por definición. Está mal colocado.
 
+### A7. Una sección SIN DECIDIR no cuesta nada — medido y APLAZADO por el dueño
+
+**Lo reportó el dueño el 2026-08-25 con capturas de la app**, comparando la misma
+ficha con el antivirus sin marcar (84), marcado «No» (72) y marcado «Sí» con
+antivirus básico (75). Su lectura, textual: *«marcar o no marcar el NO del
+antivirus es indiferente»*. Tenía razón, y medido sobre un cliente perfecto sale
+peor de lo que se veía en sus capturas.
+
+**Decisión suya: no se toca de momento** («ok no lo toquemos»). Se guardan las
+mediciones porque volver a hacerlas cuesta media sesión.
+
+**Las cuatro entradas posibles**, cliente perfecto en todo lo demás:
+
+| sección | contestada | «sí» y VACÍA | **sin decidir** | «No» |
+|---|---|---|---|---|
+| antivirus | 100 | 92 | **100** | 91 |
+| backup | 100 | 82 | **100** | 59 |
+| correo | 100 | 83 | **100** | 89 |
+| red | 100 | 87 | **100** | 84 |
+| equipos | 100 | 89 | **100** | 87 |
+
+**Lo que hace este agujero distinto de A0 y A1, y por eso tiene arreglo barato:**
+el motor **ya hace lo correcto con «sí» y vacía** — ahí los criterios entran en el
+denominador valiendo 0 y la nota baja a 82–92. La regla 1 funciona. El agujero es
+**exclusivamente el estado «sin decidir»**: la sección no baja al denominador,
+desaparece del modelo entera. Con 6 secciones sin decidir el motor devuelve
+**nota 100 y evidencia 100 %**, que es sencillamente falso y es lo que el dueño ve
+como «99 % comprobado» a mitad de visita.
+
+**Las dos vías que se le presentaron:**
+
+- **(a) «sin decidir» = «no demostrado»** — que cueste exactamente lo mismo que
+  «sí y vacía». Recomendada. Deja antivirus en 92 frente a 91 del «No»
+  (indiferente, que es justo lo que pedía), no afirma nada sobre el cliente, y
+  **no abre escapatoria nueva**: la escapatoria sería marcar «sí» y no rellenar, y
+  ésa ya cuesta lo mismo. Backup seguiría descuadrado (~82 frente a 59) porque
+  esos 23 puntos son el cap por ausencia *confirmada* de copias.
+- **(b) «sin decidir» = «no tiene»** — indiferencia total, pero el informe
+  afirmaría carencias que nadie ha comprobado. Es el patrón que D1 y D6 ya
+  descartaron cuatro veces.
+
+**Lo primero y sin discusión, haga lo que haga la nota:** el arreglo de la
+**evidencia**. Que una sección sin decidir cuente en el denominador de la
+evidencia es el mismo arreglo que ya se hizo en 2.6.0 para las secciones negadas
+(`pesoRetirado`), aplicado a las no decididas. No afirma nada y quita el 100 %
+falso.
+
+**Argumento a favor que el dueño no llegó a formular y conviene no perder:** hoy
+la nota **empieza en 100 y baja según trabajas**. Para algo que D4 define como
+*medida de progreso durante la visita*, eso está del revés. Con el arreglo
+empieza baja y sube. Ojo: eso obliga a **reescribir una frase del Manual del
+técnico**, que hoy dice «empieza alta y baja según se abren secciones».
+
+**Efecto secundario que salió de paso y sigue abierto:** en **correo**, abrir la
+sección y no rellenarla (83) puntúa **peor** que declarar que no hay correo (89).
+Ahí sí hay algo torcido, y es pequeño.
+
+Scripts de medición: `jc-seccion-sin-decidir.mjs` y `jc-si-vacio.mjs` en el
+scratchpad de la sesión (se pierden; el contenido de las tablas es lo que vale).
+
 ---
 
 ## A-bis. Seguridad y privacidad (auditoría del 2026-08-21)
@@ -294,6 +354,17 @@ pie, y en tablet el formulario queda inservible.
 ---
 
 ## B. Deuda de interfaz
+
+- **NO HAY RECUPERACIÓN DE CONTRASEÑA.** Descubierto el 25/08 al documentar el
+  acceso en Hudu: `src/lib/auth.js` implementa `signUp`, `signIn` y `signOut`, y
+  nada más. La pantalla de acceso no tiene «he olvidado mi contraseña». **Quien
+  olvide la suya se queda fuera** hasta que un administrador entre en Supabase >
+  Authentication > Users a restablecérsela. Es pequeño de arreglar
+  (`resetPasswordForEmail` de Supabase más una pantalla de contraseña nueva) y
+  duele el día que pasa, que será durante una visita.
+- **El Manual solo está en el Panel de Clientes**, no en el editor — que es donde
+  al técnico le entran las dudas, con el cliente delante. Se le ofreció al dueño
+  ponerlo también allí (junto al icono del historial) y quedó sin contestar.
 
 - **`App.jsx` → `avanceSeccion`**: la barra del carril de secciones sigue midiendo
   campos rellenos, no criterios. Es la **tercera aparición** del mismo porcentaje
