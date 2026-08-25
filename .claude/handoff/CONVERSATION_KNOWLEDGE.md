@@ -255,3 +255,213 @@ gh api "repos/alanait/alanait-onboarding/deployments/<ID>/statuses" --jq '.[0].e
 Abrir esa URL en el navegador y leer la consola **antes de dar nada por bueno**.
 Ojo: abrir la URL del panel de Vercel (`vercel.com/...`) pide login y no sirve; la
 que vale es la `*.vercel.app` que devuelve `environment_url`.
+
+---
+
+## 15. Sesión del 2026-08-24/25 — personas, rumbo y estado
+
+### 15.1 Personas nuevas que aparecen
+
+- **Joan Cuello — el JEFE de Juan Carlos.** Es quien tiene que revisar la
+  aplicación. **Está de vacaciones**; el correo de presentación está redactado pero
+  **NO enviado**: se lo mandará cuando vuelva. Hasta esa revisión el proyecto está
+  en pausa deliberada.
+- El correo redactado **solo existió en la conversación, no está en el repo**.
+  Incluía instrucciones de registro y acceso paso a paso, qué es la herramienta y
+  los dos usos previstos. Si hay que reconstruirlo, el contenido está resumido aquí
+  y en CURRENT_STATE; **el texto exacto se ha perdido**.
+
+### 15.2 Los dos usos que el dueño quiere darle
+
+1. **Onboarding de clientes nuevos** — para lo que está pensada.
+2. **Documentar la cartera de mantenimiento ANTIGUA**, con sus palabras: *«la
+   podríamos usar para mantenimientos antiguos para documentar todo»*. El valor que
+   le ve: CiberScore comparable en toda la cartera.
+   > **Efecto que NADIE ha medido y conviene medir antes de prometerlo:** el dominio
+   > `saneamiento` pesa un 10 % y va **entero** de accesos heredados del proveedor
+   > saliente (`san_red_accesos`, `san_servidores_accesos`, `san_email_admins`,
+   > `san_backup_*`, `san_licenciamiento_*`). A un cliente que lleva doce años con
+   > ALANA eso no le aplica igual, y hoy no hay forma de declararlo. Puede falsear
+   > la comparación entre cartera nueva y antigua.
+
+### 15.3 Siguiente fase declarada: Hudu
+
+*«En la siguiente fase configuraré subir todo a Hudu»*. Que lo recogido en la visita
+pase a la documentación del cliente en Hudu en vez de quedarse solo en la app.
+**La configuración la hará él**, pero el desarrollo es nuestro.
+
+Datos de Hudu confirmados esta sesión (para no volver a buscarlos):
+
+| | |
+|---|---|
+| Empresa «Alana IT » (con espacio final) | id **3** |
+| Layout «Aplicaciones / Licencias» | id **8** |
+| Asset de la propia app | id **4476** · https://alanait.huducloud.com/a/d303da0ec8e2 |
+
+**No existe ningún layout llamado «App»**. Layouts disponibles: Almacenamiento,
+Antivirus, Aplicaciones/Licencias, Backup, Certificados, Dispositivos de Red,
+Domain AD, Email, Ordenadores, Partners, Printing, RMM, SAI/UPS, Servidores,
+Usuarios M365, VPN, WiFi. **Varios se parecen mucho a las secciones de la app**, lo
+cual es una pista fuerte para el mapeo de la integración.
+
+### 15.4 Lo que se documentó en Hudu
+
+El asset **ya existía** desde el 18/03/2026 con una sola línea, y **tenía tres
+contraseñas colgando** (GitHub, Supabase, credenciales de la app). Por eso se
+**actualizó en vez de crear uno nuevo**: un duplicado habría partido la
+documentación y dejado las contraseñas huérfanas. Se renombró de «Onboarding Alana
+IT» a **«Onboarding Técnico ALANA IT»** porque el anterior se confundía con el
+proceso de onboarding de un cliente.
+
+Contiene, por este orden: **cómo acceder**, **cómo registrarse**, dónde está
+alojado, nombres de las variables de entorno (**nunca los valores**), qué datos
+guarda con la lectura de RGPD, estado y puntos abiertos, dependencias de terceros y
+un puntero al Manual dentro de la app.
+
+**Hallazgo menor NO resuelto:** la contraseña «Supabase database password» apunta a
+`supabase.com/dashboard/new/vtydmylteayuysxshsch`. El `/new/` es la página de «crear
+proyecto» de la **organización**, así que ese identificador es el de la organización
+y no un proyecto equivocado — pero la URL útil sería
+`supabase.com/dashboard/project/zqdogsxqkmjjnbzkuxwq`. Además es la única de las
+tres que **no cuelga del asset**. Se ofreció arreglarlo y quedó **sin contestar**.
+
+### 15.5 Migración a infraestructura propia — estudiada y APLAZADA
+
+Preguntó si se puede migrar a una máquina Linux propia saliendo de Supabase y
+Vercel. Respondió **«ok, por ahora lo dejamos así»**. Conclusiones, para no repetir
+el análisis:
+
+- **Vercel es lo fácil**: no hay funciones de servidor, es una SPA estática.
+  nginx o Caddy con fallback a `index.html`. **Horas, no días.**
+- **Supabase tiene dos caminos:**
+  - **(A) Autoalojar Supabase** (docker-compose oficial). El código **no cambia**:
+    dos variables de entorno. **Las 1.001 líneas de SQL valen tal cual** porque
+    `auth.uid()` sigue existiendo. 1–2 días. **Es la recomendación.**
+  - **(B) Salir de Supabase de verdad**: reescribir 4 ficheros es lo de menos — hay
+    que **rehacer el modelo de seguridad entero**, porque RLS funciona gracias a que
+    PostgREST inyecta el JWT. Y la auditoría se queda sin su argumento («lo escribe
+    la base, no el navegador»). **Semanas.**
+- **El freno real NO es técnico:** la app se usa **en casa del cliente**, así que la
+  infra propia tendría que estar expuesta a internet y disponible durante las
+  visitas. Hoy, si se cae Vercel o Supabase es problema de otro; mañana es suyo, a
+  las once de la mañana con el cliente delante.
+- **Se perderían las previews por rama**, que son literalmente cómo verificamos.
+- Otros efectos: SMTP propio para los correos de auth, URLs firmadas de las
+  capturas, backups (`pg_dump` + volumen) **y probar la restauración**.
+- **Pregunta que se le hizo y NO contestó:** *por qué* quieren salir — coste,
+  RGPD/soberanía del dato, o exigencia de un cliente. Cambia la recomendación: **si
+  es RGPD, Supabase tiene región UE y quizá no haga falta migrar**. Conviene
+  comprobar en qué región está el proyecto antes de mover nada.
+
+### 15.6 El agujero que destapó con capturas y decidió NO tocar
+
+Mandó cinco capturas comparando la misma ficha y dijo: *«el hecho de no poner nada
+implica que los equipos no tengan antivirus… marcar o no marcar el NO del antivirus
+es indiferente»*. **Tenía razón.** Medición completa en KNOWN_ISSUES § A7.
+
+Su decisión: **«ok no lo toquemos»**. Se le presentaron dos vías —(a) «sin decidir»
+= «no demostrado», recomendada; (b) «sin decidir» = «no tiene», rechazable por
+D1/D6— y **no eligió ninguna**.
+
+> **Matiz de la respuesta que conviene conservar:** no se siguió su propuesta
+> literal («no poner nada implica que no tiene antivirus») porque a las 10:18 con 4
+> de 15 secciones decididas el silencio significa «todavía no he llegado», no «no
+> tiene». Tratarlo como ausencia confirmada pondría un hallazgo crítico rojo sobre
+> un cliente al que no se ha preguntado, y el técnico dejaría de creerse los
+> hallazgos — que es el fallo que ya se tuvo con los avisos ámbar.
+
+### 15.7 Correcciones y preferencias nuevas de esta sesión
+
+- **«ponlo cerca de Importar .alanait al lado, como siguiendo un orden»** — el botón
+  del Manual se había puesto centrado en la barra y lo quiso **junto a las
+  acciones**. Quedó: Manual · Importar · + Nuevo Cliente, de menos a más
+  compromiso, con Manual compartiendo estilo con Importar (los dos secundarios) y el
+  azul sólido reservado para la única acción que crea algo.
+- Pidió que el manual fuera **«visual y fácil de ver»** y que luego se pudiera
+  **poner dentro de la aplicación**. Por eso se hizo primero como artifact y después
+  como componente React con la paleta y la tipografía de la propia app.
+- **«Documenta la app en Hudu donde está alojada como Asset app»**, y después
+  **«explica también cómo registrarse y cómo acceder en el principio del asset»** —
+  el acceso va **arriba del todo**, antes de la descripción.
+- Al pedir el ticket: quería **resumen ejecutivo corto**, no un volcado técnico.
+
+### 15.8 Preguntas que se le hicieron y siguen SIN CONTESTAR
+
+1. ¿Poner el **Manual también en el editor**, junto al icono del historial? Es donde
+   surgen las dudas de verdad, con el cliente delante.
+2. ¿Arreglar la entrada de contraseña de Supabase en Hudu (URL + enlazarla al
+   asset)?
+3. ¿Añadir **recuperación de contraseña** a la app? Hoy no existe.
+4. ¿Borrar las ramas remotas `fase0/modularizar` y `fase4/informe`, ambas ancestros
+   de `main`? Se ha ofrecido **tres veces** en dos sesiones y nunca ha contestado.
+5. ¿Por qué quieren salir de Vercel/Supabase?
+6. Las dos decisiones de negocio de 2.6.0: `licenciamiento` queda negable solo si
+   nada más lo desmiente, y `sai` entra en el mecanismo del motivo.
+
+### 15.9 Tres avisos sobre el correo a Joan que siguen vivos
+
+1. Joan verá **datos reales de clientes**, no un entorno de pruebas.
+2. Si su correo no es `@alanait.com`, **el registro le fallará**.
+3. El borrador dice «cinco clientes de ejemplo cargados», pero **el botón de
+   cargarlos se retiró de producción a propósito** (D11). O se quita la frase, o hay
+   que cargárselos a mano en su cuenta.
+
+### 15.10 Método que volvió a funcionar, y su coste
+
+Se lanzó un **workflow de 13 agentes** (2,2 M de tokens, ~69 min) con fase
+adversarial: 2 midieron, 4 diseñaron una vía cada uno para A0, 4 refutaron, 2
+diseñaron secciones y auditoría, 1 sintetizó. **Los cuatro diseños de A0 cayeron**,
+cada uno con contraejemplo medido. De ahí salió el hallazgo estructural de la sesión
+(la «ley» de A0-bis), que ninguna revisión normal habría encontrado.
+
+**Y hay que verificar a los agentes:** el diseño de auditoría traía un fallo real
+—contar capturas en un trigger `AFTER DELETE`, cuando la cascada también es AFTER—
+que se corrigió antes de entregarlo. **La medición de A0 del 21/08 también estaba
+mal**: decía «22 de 24 capadores» y son **24 de 24**.
+
+### 15.11 Datos medidos el 24/25 de agosto que costaría reproducir
+
+- **La ley de A0-bis:** por cada punto que una vía baja la rama honesta, la ventaja
+  de esconder sube exactamente ese punto. **28 de 28 casos**, en tres vías. Ventaja
+  total de esconder: motor vivo **+43**; con tope suave, peso efectivo o techo de no
+  verificación, **+168 a +171**.
+- **Las 28 rutas de ocultación** de un capador: 19 = cerrar el `dep` contestando el
+  padre con otro valor; 9 = negar la sección. **El campo en blanco es solo una de
+  tres formas de esquivar**, y es la única que los cuatro diseños midieron.
+- **El atajo de negar secciones antes de 2.6.0:** hasta **+29 puntos** y **5
+  hallazgos críticos borrados**; sobre visita a medias movía `fiable` de false a
+  **true en las cinco fichas**. Después: **3 combinaciones de +1 punto**, ninguna
+  borra hallazgos.
+- **El peaje del todo-cloud honesto:** contestar la verdad en
+  `antivirus.servidores_av` daba **89**; mentir devolvía **100**. Con `depSeccion`,
+  la verdad da 100 y la mentira queda delatada por contradicción.
+- **El padre «No revisado»:** declarar el NAS y reconocer no haberlo mirado daba
+  **94**; contestar «No revisado» en el padre daba **100 y fiable**.
+- **Monotonía sobre las 5 fichas:** 14 casos de 804 antes de 2.6.0, **12 después**.
+- **Acoplamiento con Supabase:** 4 ficheros, 515 líneas; 22 de 26 ficheros
+  indiferentes; 1.001 líneas de SQL con 33 usos de superficie propia.
+- **Estructura 5/5/5 de las secciones** (columna vertebral del Manual): 5 con
+  precondición, 5 declarables, 5 de solo inventario. **280 campos, 105 puntúan.**
+
+### 15.12 Estado del registro de cuentas — verificado, no supuesto
+
+`GET /auth/v1/settings` contra producción el 24/08 devolvió **`disable_signup:
+false`**, `mailer_autoconfirm: false`, proveedor `email` activo. O sea: **el alta
+está ABIERTA** y la protección depende entera de que el Auth Hook esté activo.
+**No se puede comprobar el hook desde fuera sin dar de alta una cuenta**, y crear
+cuentas es algo que Claude no hace. Lo tiene que mirar el dueño en el panel.
+
+Antes de esto el dueño lo había desactivado y **se rompió el login** (comportamiento
+documentado de Supabase: «Enable signups» apaga el proveedor entero), así que
+**volvió a habilitarlo**. Esa es la razón de que esté abierto.
+
+### 15.13 Límite permanente de la verificación
+
+**Claude no puede iniciar sesión en la app** (no crea cuentas ni introduce
+contraseñas). Todo lo que solo se ve con sesión iniciada —formulario, panel lateral,
+Manual, Panel de Clientes— **lo tiene que mirar el dueño**. Lo que sí se puede
+verificar sin sesión: que la preview compila, que la página de login carga sin
+errores de consola, que el contenido está en el bundle, y un repaso estático de que
+ningún identificador queda fuera de ámbito.
+
+Esta limitación se aplicó tres veces esta sesión y siempre se avisó explícitamente.

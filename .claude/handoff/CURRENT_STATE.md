@@ -192,6 +192,33 @@ hay registro y la atribución del historial sigue equivocada.
 | `src/sections.js` | Esquema. **Los ids son claves de BD.** 406 campos. |
 | `src/print/informe.js` | Parte ejecutiva del PDF. |
 
+## Cambios sin commitear
+
+**Ninguno.** Árbol limpio, `main` sincronizado con `origin/main`.
+
+## Alcance de la sesión del 24-25/08
+
+**28 ficheros, +3.422 / −278** entre `ca7a4c5` y `HEAD`. Dos PR, los dos fusionados:
+[#16](https://github.com/alanait/alanait-onboarding/pull/16) (motor 2.6.0,
+autoguardado y auditoría) y
+[#17](https://github.com/alanait/alanait-onboarding/pull/17) (Manual del técnico).
+
+Ficheros **nuevos**: `src/lib/borrador.js`, `src/lib/auditoria.js`,
+`src/components/Manual.jsx`, `scripts/test-borrador.mjs`, `supabase-auditoria.sql`.
+
+## Instrumentos de medición disponibles
+
+En `.claude/handoff/analisis/` hay tres arneses ejecutables rescatados del
+scratchpad, **verificados desde esa ubicación**. El primero es además librería:
+
+```bash
+node .claude/handoff/analisis/arnes-capadores.mjs
+```
+
+Construye un cliente perfecto sintético a partir de los `CRITERIOS` reales, verifica
+el invariante del 100 y saca la tabla de los 24 capadores. **Es lo primero que hace
+falta para atacar A2 o A0.** Detalles en el README de esa carpeta.
+
 ## Tests
 
 **206 en verde, 0 fallos.**

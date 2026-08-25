@@ -538,3 +538,108 @@ historial en blanco.
 certificado (una cuenta con su token puede leer `clients` por la API sin dejar
 rastro); no cubre a quien tenga la `service_role` key; y el log es dato personal de
 los empleados, así que **hay que informarles** (RGPD art. 13, LOPDGDD 87-90).
+
+---
+
+## D23. El Manual del técnico vive DENTRO de la app, y sus cifras se derivan
+
+**Decisión.** `src/components/Manual.jsx`, una pantalla superpuesta que se abre desde
+el botón «Manual» del Panel de Clientes, junto a «Importar .alanait».
+
+**Por qué dentro de la app y no en un PDF, en Hudu o en el README.** Lo que explica
+—que solo 105 de los 280 campos mueven la nota, que «sin tocar» no es una respuesta,
+que avisos y hallazgos son listas distintas— son las dudas que le entran al técnico
+**con el cliente delante**. Un manual que hay que ir a buscar a otro sitio no se abre
+en ese momento.
+
+**Por qué las cifras se derivan de `SECTIONS`, `CAMPOS_QUE_PUNTUAN`, `DOMINIOS`,
+`TRAMOS` y `HINTS` en cada render, en vez de escribirse a mano.** El día que se añada
+un criterio, un manual con números fijos **empieza a mentir en silencio**. Es el
+mismo criterio por el que el informe se construye con los datos. La tabla de
+secciones y las tres tarjetas se generan solas: si `licenciamiento` deja de ser
+declarable, se mueve de columna sin tocar el manual.
+
+**La columna vertebral es una estructura real del modelo, no un invento
+pedagógico:** las 15 secciones son de tres tipos y hay **cinco de cada uno** — 5 con
+precondición (el «no» es hallazgo), 5 declarables (el «no» pide motivo) y 5 de solo
+inventario (cero criterios). No estaba dicho en ninguna parte, y sin ello un técnico
+puede documentar telefonía a conciencia sin saber que no mueve la nota.
+
+**Lo que el manual NO dice, a propósito: dónde están los atajos.** Dejar secciones sin
+marcar sube la nota hoy (§ A7), pero escribirlo en un manual **es publicar el atajo**
+— misma razón que la prohibición del contador de «faltan N comprobaciones» en
+`CLAUDE.md`. Dice la conducta que se quiere («decídelas todas antes de cerrar»), no
+el mecanismo.
+
+**Cuidado al arreglar A7:** el manual afirma hoy que la nota «empieza alta y baja
+según se abren secciones». Si se arregla A7 esa frase **hay que reescribirla**.
+
+**Sin fuentes nuevas:** usa Jost, que la app ya carga, y la paleta de `theme.js`.
+Cero peticiones de red añadidas. La primera versión (publicada como artifact) usaba
+IBM Plex; se descartó al llevarla dentro.
+
+**Colocación del botón, corregida por el dueño.** Se puso centrado en la barra
+razonando que «no es una acción». Él pidió ponerlo **junto a Importar, siguiendo un
+orden**. El resultado es mejor: los tres botones quedan de menos a más compromiso
+—leer, traer una ficha que ya existe, crear una nueva— y Manual comparte estilo con
+Importar porque los dos son secundarios; el azul sólido se reserva para la única
+acción que crea algo.
+
+---
+
+## D24. La documentación de la app en Hudu actualiza el asset existente
+
+**Decisión.** Se actualizó el asset **4476** («Onboarding Alana IT», creado el
+18/03/2026) en vez de crear uno nuevo, y se renombró a **«Onboarding Técnico ALANA
+IT»**.
+
+**Motivo.** El asset ya tenía **tres contraseñas colgando** (GitHub, Supabase,
+credenciales de la app). Crear un duplicado habría partido la documentación en dos y
+dejado esas contraseñas asociadas al asset equivocado. Además conserva su URL, que
+puede estar enlazada desde otros sitios.
+
+**El renombrado**, porque «Onboarding Alana IT» se confunde con el proceso de
+onboarding de un cliente, que es justo lo que la herramienta documenta.
+
+**Layout: «Aplicaciones / Licencias» (id 8).** No existe ningún layout llamado «App»;
+ése es el que ALANA usa para software.
+
+**Qué se anotó y qué no.** Nombres de variables de entorno, **nunca valores**. Y los
+puntos abiertos sin maquillar —SQL de auditoría sin ejecutar, alta de cuentas
+abierta, RLS permisivo—, porque una ficha de Hudu que solo cuenta lo que funciona no
+sirve el día que hay un incidente.
+
+**El acceso va ARRIBA DEL TODO** (cómo entrar, cómo registrarse, qué hacer si se
+olvida la contraseña), antes de la descripción. Lo pidió así el dueño: es lo que se
+busca cuando se abre esa ficha.
+
+---
+
+## D25. Salir de Vercel y Supabase: estudiado, viable, APLAZADO
+
+**Decisión del dueño: «por ahora lo dejamos así».** Se documenta el análisis para no
+repetirlo.
+
+**Lo que se midió:** la app apenas está acoplada —4 ficheros y 515 líneas, todos en
+`src/lib/`; 22 de los 26 ficheros de `src/` no saben que Supabase existe—. Lo
+acoplado es el **SQL: 1.001 líneas con 33 usos de superficie propia de Supabase**.
+No hay ninguna función de servidor: `vercel.json` son cinco líneas.
+
+**La recomendación fue autoalojar Supabase (opción A)**, no sustituirlo: el código no
+cambia y el SQL vale tal cual porque `auth.uid()` sigue existiendo. Sustituirlo de
+verdad (opción B) obliga a **rehacer el modelo de seguridad entero**, porque RLS
+funciona gracias a que PostgREST inyecta el JWT, y deja a la auditoría sin su
+argumento.
+
+**El freno decisivo NO es técnico:** la app se usa **en casa del cliente**. La infra
+propia tendría que estar expuesta a internet y disponible durante las visitas. Hoy
+una caída es problema de un tercero; con infra propia es propia, y se nota a las
+once de la mañana con el cliente delante.
+
+**Consecuencia de cambiar la decisión:** además de lo anterior, se pierden las
+previews por rama, que son **literalmente cómo se verifica este proyecto** (no hay
+`node_modules` local). Habría que montar un sustituto antes, no después.
+
+**Pregunta sin responder que condiciona todo:** por qué quieren salir. Si el motivo
+es RGPD o soberanía del dato, **Supabase tiene región UE** y puede que no haga falta
+migrar nada — conviene comprobar la región del proyecto antes de mover un dedo.

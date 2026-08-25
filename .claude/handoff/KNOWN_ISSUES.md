@@ -224,21 +224,34 @@ Sin arreglarlo, **`capadoresPendientes = 0` nunca es exigible**.
 
 ### A4. La media global deja esconder un dominio entero
 
-Dejando Perímetro (18) y Backup (18) sin tocar y el resto perfecto se llega a
-evidencia 60 %, `fiable = true`, y el PDF sale con dos tarjetas a **0/100**.
-Arreglo: umbral por dominio. **Requiere antes A1 y A3.**
+Dejando **Perímetro (16)** y **Backup (17)** sin tocar y el resto perfecto se llega
+a evidencia 60 %, `fiable = true`, y el PDF sale con dos tarjetas a **0/100**.
+Arreglo: umbral por dominio. **Requiere antes A1 y A3** — y va detrás de A2 y A7,
+que tocan el mismo mecanismo.
 
-### A5. Perímetro está calibrado para empresa mediana
+> Los pesos de este apartado eran los de antes de 2.4.0 (18 y 18) y estaban mal
+> desde entonces. Corregidos el 25/08.
 
-Un micro-cliente perfecto se queda en perímetro 37–57 porque firewall dedicado,
-UTM, VLANs, monitorización y línea de respaldo son controles de empresa mediana
-cuya ausencia **es** riesgo real. Con Perímetro pesando 18/100, arrastra la nota de
-todos los clientes pequeños. **Decisión de negocio, no técnica.**
+### A5. Perímetro calibrado para empresa mediana — EL DIAGNÓSTICO ERA FALSO
+
+**No repetir esta afirmación sin volver a medirla.** Este apartado decía que un
+micro-cliente perfecto se quedaba en **perímetro 37–57**. Se midió el 21/08 y sale
+**64, con nota global 93**. No hay problema de calibración demostrado.
+
+Y ese 93 estaba además inflado por el agujero A1 (sin SAI, el dominio *física*
+desaparecía del reparto); con precondición habría sido 86.
+
+Lo que sí es cierto y sigue en pie como **decisión de negocio**: firewall dedicado,
+UTM, VLANs, monitorización y línea de respaldo son controles de empresa mediana, y
+Perímetro pesa **16** (no 18: cambió en 2.4.0). Si se quiere recalibrar, hace falta
+medir con **3-4 fichas reales de clientes pequeños**, no con un cliente sintético.
 
 ### A6. `pcs_rmm_agente` mide nuestro trabajo, no el riesgo del cliente
 
-Peso 2. Pregunta si ALANA ya desplegó su RMM, que en un onboarding vale 0 para
-todos por definición. Está mal colocado.
+**Peso 1** (bajó de 2 a 1 en 2.4.0, D16, junto con los demás criterios que medían
+trabajo de ALANA o riesgo legal en vez de riesgo del cliente). Pregunta si ALANA ya
+desplegó su RMM, que en un onboarding vale 0 para todos por definición. Sigue mal
+colocado, pero ahora pesa lo mínimo.
 
 ### A7. Una sección SIN DECIDIR no cuesta nada — medido y APLAZADO por el dueño
 

@@ -6,11 +6,17 @@ la visita**. React + Vite + Supabase, desplegada en Vercel. Calcula un **CiberSc
 
 **Producción:** https://alanait-onboarding.vercel.app · **Rama por defecto:** `main`
 
-> **Al retomar trabajo existente, lee primero `.claude/handoff/`.** Ahí está el
-> estado actual, el porqué de cada decisión del modelo de puntuación, los agujeros
-> conocidos y los experimentos que ya fallaron. Especialmente `DECISIONS.md` antes
-> de tocar el motor: tres diseños de corrección "obvios" ya se descartaron por
-> reintroducir el mismo bug.
+> **Al retomar trabajo existente, lee primero `.claude/handoff/`.** Empieza por
+> `CURRENT_STATE.md`, que abre diciendo si el proyecto está en pausa y qué toca.
+> Ahí está también el porqué de cada decisión del modelo (`DECISIONS.md`), los
+> agujeros medidos (`KNOWN_ISSUES.md`), lo que solo se dijo hablando
+> (`CONVERSATION_KNOWLEDGE.md`) y lo que hay que saber antes de tocar según qué
+> parte (`PROJECT_KNOWLEDGE.md`).
+>
+> **`DECISIONS.md` y `KNOWN_ISSUES.md` § A0-bis son obligatorios antes de tocar el
+> motor: SIETE diseños de corrección «obvios» ya se han descartado con medición**
+> —tres en agosto y cuatro más el 24/08, estos últimos con revisión adversarial—
+> todos por reintroducir el mismo bug.
 
 ## Idioma
 
@@ -37,7 +43,9 @@ la visita**. React + Vite + Supabase, desplegada en Vercel. Calcula un **CiberSc
   un campo oculto por su `dep` conserva su valor y dispararía avisos fósiles.
 - **Nunca publicar un contador de "faltan N comprobaciones"** mientras exista la
   fuga de los campos padre (`KNOWN_ISSUES.md` § A2): publicar la cuenta atrás es
-  publicar el atajo.
+  publicar el atajo. Lo mismo vale para la **documentación de cara al técnico**: el
+  Manual dice la conducta que se quiere ("decide las 15 secciones antes de cerrar"),
+  nunca el mecanismo que la esquiva.
 - **Nunca republicar los ejemplos en `public/ejemplos/`**: el botón "Cargar
   ejemplos" se retiró de producción a propósito.
 - No entregar el PDF al cliente: es **interno**. La versión para cliente es una
@@ -82,10 +90,29 @@ Los seis guardarraíles (`check-ids`, `check-imports`, `check-score`,
   renderizar React aquí. El usuario prefiere **validar en previews de Vercel**.
 - **Tras tocar componentes React, abrir la preview y leer la consola del navegador
   antes de dar nada por bueno.** Los guardarraíles no detectan identificadores
-  fuera de ámbito; así llegó una pantalla en blanco a producción.
+  fuera de ámbito; así llegó una pantalla en blanco a producción. Un barrido con
+  regex para detectarlos se ha intentado dos veces y da demasiados falsos positivos
+  (nombres de propiedades CSS): la vía real sería ESLint con `no-undef`.
+- **Claude NO puede iniciar sesión en la app.** Todo lo que solo se ve con sesión
+  —formulario, panel lateral, Manual, Panel de Clientes— **lo tiene que mirar el
+  dueño, y hay que decírselo explícitamente** en vez de dar por buena la pantalla.
+  Sin sesión sí se puede comprobar: que la preview compila, que el login carga sin
+  errores de consola, que el contenido está en el bundle, y el repaso estático de
+  ámbito.
 - Para saber qué build sirve una URL, comparar el hash de `/assets/index-XXXX.js`.
 - El PDF imprime la versión del modelo en la caja «Alcance»: mirarla primero ante
   un reporte de nota rara.
+
+## Peculiaridad del entorno que muerde cada sesión
+
+**Los heredocs de bash y los `-e` de node con comillas corrompen el contenido**
+(escapes `\n`, `\s`, `$`, comillas simples). Ha pasado tres veces solo en la sesión
+del 24/08. **Para escribir código o texto con escapes, usar las herramientas
+`Write`/`Edit`, o volcar el contenido a un fichero del scratchpad y procesarlo con
+un script `.mjs`.** Ver `KNOWN_ISSUES.md` C2.
+
+Y tras editar por script, **verificar con `grep` que el cambio persiste**: hubo un
+caso de edición que desapareció sin aviso (C3).
 
 ## Flujo de trabajo
 
