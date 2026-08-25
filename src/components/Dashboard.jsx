@@ -110,23 +110,19 @@ export default function Dashboard({ onOpenClient, onNewClient, onImportFile, ses
             <div style={{ fontSize: 18, fontWeight: 500 }}>Panel de Clientes</div>
           </div>
 
-          {/* Manual, en el centro de la barra. Va aqui y no junto a las
-              acciones porque no es una accion: es lo que se abre cuando el
-              tecnico duda, y separado de "Importar" y "Nuevo Cliente" no se
-              pulsa por error. `flex: 1` a los lados lo centra de verdad aunque
-              los dos extremos midan distinto. */}
-          <div style={{ flex: 1, display: "flex", justifyContent: "center" }}>
+          {/* Los tres botones van en orden de menos a mas compromiso: leer,
+              traer una ficha que ya existe, crear una nueva. Manual comparte
+              estilo con Importar -los dos secundarios- y el azul solido se
+              reserva para la unica accion que crea algo. */}
+          <div style={{ display: "flex", gap: 10 }}>
             <button onClick={() => setShowManual(true)} title="Cómo se usa la aplicación" style={{
-              padding: "8px 16px", background: "transparent", color: "#A9C6EA",
-              border: "1px solid rgba(255,255,255,0.22)", borderRadius: 8,
-              fontSize: 13, fontWeight: 500, cursor: "pointer", fontFamily: "inherit",
+              padding: "9px 16px", background: "rgba(255,255,255,0.12)", color: "#fff",
+              border: "1px solid rgba(255,255,255,0.2)", borderRadius: 8, fontSize: 13,
+              fontWeight: 500, cursor: "pointer", fontFamily: "inherit",
               display: "flex", alignItems: "center", gap: 7, whiteSpace: "nowrap",
             }}>
               <span style={{ fontSize: 14 }}>📘</span> Manual
             </button>
-          </div>
-
-          <div style={{ display: "flex", gap: 10 }}>
             <button onClick={() => fileRef.current?.click()} disabled={importing} style={{
               padding: "9px 16px", background: "rgba(255,255,255,0.12)", color: "#fff",
               border: "1px solid rgba(255,255,255,0.2)", borderRadius: 8, fontSize: 13,
