@@ -41,7 +41,7 @@ export const CRITERIOS = [
   { id: "red_firewall_soporte", dominio: "perimetro", seccion: "red", campo: "firewall_soporte", peso: 3, mapa: { "En soporte": 1, "Fuera de soporte (EOL)": 0, "No revisado": 0 }, dep: { field: "firewall", value: "Sí" }, agregacion: "min", critico: { cuando: ["Fuera de soporte (EOL)"], capDominio: 59 },
     titular: "Firewall fuera de soporte del fabricante",
     porQue: "Un firewall EOL ya no recibe parches del fabricante: la proxima vulnerabilidad critica no se corregira nunca. Es el equivalente perimetral del servidor con SO fuera de soporte, y capea el dominio por el mismo motivo que aquel." },
-  { id: "red_firewall_gestion", dominio: "perimetro", seccion: "red", campo: "firewall_gestion", peso: 2, mapa: { Autogestionado: 1, "Gestionado por proveedor": 1, "Sin gestión activa": 0 }, dep: { field: "firewall", value: "Sí" }, agregacion: "min",
+  { id: "red_firewall_gestion", dominio: "perimetro", seccion: "red", campo: "firewall_gestion", peso: 2, mapa: { Autogestionado: 1, "Gestionado por ALANA IT": 1, "Gestionado por proveedor": 1, "Sin gestión activa": 0 }, dep: { field: "firewall", value: "Sí" }, agregacion: "min",
     porQue: "'Sin gestion activa' significa que nadie revisa reglas, firmware ni logs y el firewall envejece solo. Es indiferente quien lo gestione (cliente o proveedor) mientras alguien lo haga: la dependencia del MSP saliente ya la mide red_accesos_heredados y penalizarla tambien aqui seria contarla dos veces." },
   { id: "red_nat_reglas", dominio: "perimetro", seccion: "red", campo: "nat_reglas", peso: 2, mapa: { Documentadas: 1, "No hay": 1, "Existen sin documentar": 0.5, "No revisado": 0 }, agregacion: "min",
     porQue: "Cada regla NAT sin dueno conocido es una puerta heredada que nadie se atreve a cerrar. 'No hay' puntua igual que 'Documentadas' porque la superficie expuesta es cero; 'Existen sin documentar' se queda a medias: hay exposicion, pero todavia no consta que sea peligrosa." },
@@ -130,7 +130,7 @@ export const CRITERIOS = [
     porQue: "Navegador, Java y Acrobat son la via de entrada real; el parcheo de terceros se olvida mucho mas que el del sistema (CIS 7.4). 'Manual' no es cero del todo -significa que existe la costumbre de repasarlo, aunque sea a mano y a destiempo- pero se queda muy abajo porque en la practica se hace cuando algo falla, no cuando sale el parche" },
   { id: "pcs_cifrado_disco", dominio: "puestos", seccion: "pcs", campo: "cifrado_portatiles", peso: 3, mapa: { "Activo en todos": 1, "Activo en algunos": 0.5, "No activo": 0 }, agregacion: "min",
     porQue: "Un portátil sin cifrar que se pierde es una brecha de datos notificable a la AEPD, no una incidencia de hardware (CIS 3.6 / ENS mp.si.2)" },
-  { id: "pcs_cifrado_custodia", dominio: "puestos", seccion: "pcs", campo: "cifrado_claves", peso: 1, mapa: { "En AD / Entra ID": 1, "En Intune": 1, "En gestor de contraseñas del MSP": 1, "En el propio equipo o en papel": 0.5, "No se custodian": 0 }, dep: { field: "cifrado_portatiles", value: "Activo en todos" }, agregacion: "min",
+  { id: "pcs_cifrado_custodia", dominio: "puestos", seccion: "pcs", campo: "cifrado_claves", peso: 1, mapa: { "En AD / Entra ID": 1, "En Intune": 1, "En el gestor de contraseñas de ALANA IT": 1, "En gestor de contraseñas del MSP": 1, "En el propio equipo o en papel": 0.5, "No se custodian": 0 }, dep: { field: "cifrado_portatiles", value: "Activo en todos" }, agregacion: "min",
     porQue: "Cifrado sin custodia de la clave de recuperación es pérdida de datos garantizada en el primer arranque fallido; la clave guardada en el propio equipo no protege nada" },
   { id: "pcs_rmm_agente", dominio: "puestos", seccion: "pcs", campo: "rmm_agente", peso: 1, mapa: { "Sí, en todos": 1, "Sí, parcialmente": 0.5, No: 0 }, agregacion: "min",
     porQue: "Sin agente RMM no hay inventario ni parcheo ni respuesta remota: el equipo sin agente es el que nadie mira (CIS 1.1)" },
@@ -153,10 +153,10 @@ export const CRITERIOS = [
     porQue: "El servidor de ficheros es el objetivo del ransomware, no el PC del usuario; dejarlo fuera del antivirus es dejar fuera lo único que importa" },
   { id: "av_licencia_estado", dominio: "puestos", seccion: "antivirus", campo: "licencias_estado", peso: 2, mapa: { Vigente: 1, Caducada: 0, "En periodo de prueba": 0.5 }, agregacion: "min",
     porQue: "Una licencia caducada deja el agente instalado pero sin actualizaciones ni consola: aparenta protección y no la da" },
-  { id: "av_alertas_vigiladas", dominio: "puestos", seccion: "antivirus", campo: "alertas_monitorizadas", peso: 4, mapa: { "Proveedor / SOC (MDR)": 1, "El cliente": 0.5, Nadie: 0 }, agregacion: "min",
-    porQue: "Una detección que nadie lee no es una detección; el ransomware avisa horas antes en la consola y nadie la mira (CIS 8.11 / 17.x)" },
-  { id: "av_consola_control", dominio: "puestos", seccion: "antivirus", campo: "consola_acceso", peso: 2, mapa: { "El cliente": 1, "El proveedor anterior": 0.25, Ambos: 0.5, "Nadie / credenciales perdidas": 0 }, agregacion: "min",
-    porQue: "Si la consola la controla el proveedor anterior o nadie, el antivirus no se puede configurar, excluir ni desinstalar: la proteccion existe pero es ingobernable. Los dos casos no son iguales: con el proveedor anterior la consola es recuperable pidiendola en el traspaso, y hasta entonces alguien la esta mirando; con las credenciales perdidas no hay a quien pedirsela y se acaba reinstalando el agente equipo por equipo" },
+  { id: "av_alertas_vigiladas", dominio: "puestos", seccion: "antivirus", campo: "alertas_monitorizadas", peso: 4, mapa: { "ALANA IT (SOC / MDR 24/7)": 1, "ALANA IT (en horario laboral)": 0.75, "Proveedor / SOC (MDR)": 1, "El cliente": 0.5, Nadie: 0 }, agregacion: "min",
+    porQue: "Una detección que nadie lee no es una detección; el ransomware avisa horas antes en la consola y nadie la mira (CIS 8.11 / 17.x). Lo que se gradua es CUANDO se mira, no quien: un SOC 24/7 vale lo mismo sea de ALANA o de otro. ALANA en horario laboral queda por encima del cliente -hay un profesional mirando cada dia- pero por debajo del SOC, porque el cifrado se lanza de noche y en fin de semana, cuando nadie mira la consola" },
+  { id: "av_consola_control", dominio: "puestos", seccion: "antivirus", campo: "consola_acceso", peso: 2, mapa: { "El cliente": 1, "ALANA IT": 1, "El cliente y ALANA IT": 1, "El proveedor anterior": 0.25, Ambos: 0.5, "Nadie / credenciales perdidas": 0 }, agregacion: "min",
+    porQue: "Si la consola la controla el proveedor anterior o nadie, el antivirus no se puede configurar, excluir ni desinstalar: la proteccion existe pero es ingobernable. Los dos casos no son iguales: con el proveedor anterior la consola es recuperable pidiendola en el traspaso, y hasta entonces alguien la esta mirando; con las credenciales perdidas no hay a quien pedirsela y se acaba reinstalando el agente equipo por equipo. ALANA vale lo mismo que el cliente: lo que se mide es que la consola sea gobernable por quien presta el servicio hoy. 'Ambos' es cliente y proveedor ANTERIOR, y por eso se queda a medias: sigue habiendo un acceso que revocar" },
   { id: "srv_so_soporte", dominio: "servidores", seccion: "servidores", campo: "so_soporte", peso: 3,
     redundanteSi: [
       { campo: "so_windows_server", dep: { field: "so_familia", value: "Windows Server" } },
@@ -186,8 +186,8 @@ export const CRITERIOS = [
     porQue: "BIOS, controladora e iLO/iDRAC acumulan vulnerabilidades explotables por debajo del sistema operativo y corrigen errores de pérdida de datos de la controladora" },
   { id: "srv_snapshots", dominio: "servidores", seccion: "servidores", campo: "snapshots", peso: 1, mapa: { "Sin snapshots": 1, "1-2 snapshots recientes": 1, "Snapshots antiguos acumulados": 0 }, dep: { field: "tipo", value: "Virtual" }, agregacion: "min",
     porQue: "Los snapshots antiguos llenan el datastore y degradan el rendimiento; cuando el disco se llena la máquina se para, y además rompen los backups" },
-  { id: "srv_licencia_titular", dominio: "servidores", seccion: "servidores", campo: "so_licencia_titular", peso: 1, mapa: { "A nombre del cliente": 1, "A nombre del proveedor anterior": 0 }, agregacion: "min",
-    porQue: "Si la licencia del SO y las CALs están a nombre del proveedor anterior, el cliente está ejecutando su servidor con una licencia que no es suya y que le pueden retirar" },
+  { id: "srv_licencia_titular", dominio: "servidores", seccion: "servidores", campo: "so_licencia_titular", peso: 1, mapa: { "A nombre del cliente": 1, "A nombre de ALANA IT (SPLA)": 1, "A nombre del proveedor anterior": 0 }, agregacion: "min",
+    porQue: "Si la licencia del SO y las CALs están a nombre del proveedor anterior, el cliente está ejecutando su servidor con una licencia que no es suya y que le pueden retirar. A nombre de ALANA (SPLA) vale 1: el riesgo que se mide es el de un proveedor que se va y se la lleva, y el SPLA es la forma normal de licenciar un servidor que ALANA aloja" },
   { id: "srv_gpos", dominio: "servidores", seccion: "servidores", campo: "gpos_revisadas", peso: 2, mapa: { "Revisado, correcto": 1, "Revisado, con hallazgos": 0, "Pendiente de revisar": 0 }, dep: { field: "dominio", value: "Sí" }, agregacion: "min",
     porQue: "Las GPO son donde vive de verdad la configuracion de seguridad de un dominio Windows: politica de contrasenas, quien es administrador local, si se puede ejecutar desde el escritorio, si el firewall del puesto esta encendido. Un juego de GPO heredado y sin revisar suele llevar dentro excepciones que alguien puso hace anos para que funcionara un programa concreto y que nadie ha vuelto a quitar" },
 
@@ -215,21 +215,28 @@ export const CRITERIOS = [
   { id: "correo_licencias_revisadas", dominio: "correo", seccion: "email", campo: "licencias_revisadas", peso: 1, mapa: { "Revisado, correcto": 1, "Revisado, con hallazgos": 0, "Pendiente de revisar": 0 }, agregacion: "min",
     porQue: "Licencias mal asignadas dejan usuarios sin las protecciones del plan que la empresa ya esta pagando (Defender, DLP, archivado), ademas del coste tirado." },
 
-  // ── Saneamiento del onboarding ──────────────────────────
+  // ── Saneamiento de accesos ──────────────────────────────
+  // Nacio como "saneamiento del onboarding": lo que deja el proveedor saliente.
+  // Al usar la app tambien en mantenimientos las preguntas pasaron a decir
+  // "accesos heredados" (proveedor anterior, exempleados, integradores), que
+  // vale para los dos casos con las mismas opciones y el mismo mapa. NO se
+  // anadio un interruptor onboarding/mantenimiento que retirase el dominio:
+  // marcar "mantenimiento" en un onboarding borraria 10 puntos de accesos sin
+  // revisar nada, que es el patron que este proyecto prohibe.
   { id: "san_red_accesos", dominio: "saneamiento", seccion: "red", campo: "accesos_heredados", peso: 3, mapa: { Revocados: 1, "Pendiente de revocar": 0, "No existían": 1, "No revisado": 0 }, computa: ["No revisado"], agregacion: "min", critico: { cuando: ["Pendiente de revocar"], capDominio: 50 },
-    titular: "El proveedor anterior conserva acceso al router o al firewall",
+    titular: "Accesos heredados sin revocar en el router o el firewall",
     porQue: "Quien conserva el administrador del firewall conserva la puerta de la empresa: puede abrir un NAT o una VPN cuando quiera. No haberlo revisado es no haber hecho el saneamiento, que es justo lo que mide este dominio" },
   { id: "san_servidores_accesos", dominio: "saneamiento", seccion: "servidores", campo: "accesos_heredados", peso: 3, mapa: { Revocados: 1, "Pendiente de revocar": 0, "No existían": 1, "No revisado": 0 }, computa: ["No revisado"], agregacion: "min", critico: { cuando: ["Pendiente de revocar"], capDominio: 50 },
-    titular: "El proveedor anterior conserva acceso a los servidores",
+    titular: "Accesos heredados sin revocar en los servidores",
     porQue: "Una cuenta del proveedor anterior en un servidor suele ser administrador del dominio, y ninguna otra medida del onboarding vale nada mientras siga viva" },
   { id: "san_email_admins", dominio: "saneamiento", seccion: "email", campo: "admins_heredados", peso: 3, mapa: { Revocados: 1, "Pendiente de revocar": 0, "No existían": 1, "No revisado": 0 }, computa: ["No revisado"], agregacion: "min", critico: { cuando: ["Pendiente de revocar"], capDominio: 50 },
-    titular: "El proveedor anterior conserva administración del correo",
+    titular: "Administradores heredados sin revocar en el correo",
     porQue: "Un administrador global heredado en el tenant lee cualquier buzón, crea reglas de reenvío y se reasigna permisos: es el acceso más silencioso que existe" },
   { id: "san_backup_consola_accesos", dominio: "saneamiento", seccion: "backup", campo: "consola_accesos_heredados", peso: 3, mapa: { Revocados: 1, "Pendiente de revocar": 0, "No existían": 1, "No revisado": 0 }, computa: ["No revisado"], agregacion: "min", critico: { cuando: ["Pendiente de revocar"], capDominio: 50 },
-    titular: "El proveedor anterior conserva acceso a la consola de copias",
+    titular: "Accesos heredados sin revocar en la consola de copias",
     porQue: "Desde la consola de backup se borran las copias y se desprograman los trabajos; es el acceso que convierte un incidente recuperable en uno definitivo" },
   { id: "san_backup_repo_accesos", dominio: "saneamiento", seccion: "backup", campo: "repo_accesos_heredados", peso: 3, mapa: { Revocados: 1, "Pendiente de revocar": 0, "No existían": 1, "No revisado": 0 }, computa: ["No revisado"], dep: { field: "repo_dedicado", value: "Sí" }, agregacion: "min", critico: { cuando: ["Pendiente de revocar"], capDominio: 50 },
-    titular: "El proveedor anterior conserva acceso al repositorio de copias",
+    titular: "Accesos heredados sin revocar en el repositorio de copias",
     porQue: "El repositorio es el último recurso frente a ransomware; una credencial heredada con permiso de borrado sobre el NAS anula esa última línea" },
   { id: "san_pcs_accesos", dominio: "saneamiento", seccion: "pcs", campo: "accesos_heredados", peso: 2, mapa: { Revocados: 1, "Pendiente de revocar": 0, "No existían": 1, "No revisado": 0 }, computa: ["No revisado"], agregacion: "min",
     porQue: "Las cuentas locales de soporte del proveedor anterior sobreviven a los cambios de dominio y dan administrador local para saltar al resto de la red" },
@@ -242,8 +249,8 @@ export const CRITERIOS = [
   { id: "san_licenciamiento_panel", dominio: "saneamiento", seccion: "licenciamiento", campo: "acceso_panel", peso: 2, mapa: { "Sí, credenciales en poder del cliente o ALANA": 1, "Sí, pero las tiene el proveedor anterior": 0, "No hay acceso": 0, "No revisado": 0 }, computa: ["No revisado"], agregacion: "min", critico: { cuando: ["Sí, pero las tiene el proveedor anterior"], capDominio: 50 },
     titular: "El proveedor anterior conserva el panel de licencias y dominios",
     porQue: "Quien controla el panel del registrador o del distribuidor de licencias puede dejar caducar un dominio, mover los DNS o no renovar: no hace falta entrar en ningun servidor para dejar al cliente sin correo ni sin web. 'No hay acceso' tambien puntua cero porque el resultado practico es el mismo, nadie del lado del cliente puede tocarlo. Es el mismo tipo de acceso heredado que el resto del dominio y por eso computa aunque nadie lo haya mirado" },
-  { id: "san_licenciamiento_titular", dominio: "saneamiento", seccion: "licenciamiento", campo: "titularidad", peso: 2, mapa: { "A nombre del cliente": 1, "A nombre del proveedor anterior": 0, "No revisado": 0 }, computa: ["No revisado"], agregacion: "min",
-    porQue: "Licencias, dominios y certificados a nombre del proveedor saliente son activos del cliente que el cliente no posee: al terminar la relacion se los puede llevar, y recuperarlos es una negociacion, no un tramite. Complementa a srv_licencia_titular, que solo mira el SO de los servidores" },
+  { id: "san_licenciamiento_titular", dominio: "saneamiento", seccion: "licenciamiento", campo: "titularidad", peso: 2, mapa: { "A nombre del cliente": 1, "A nombre de ALANA IT": 1, "A nombre del proveedor anterior": 0, "No revisado": 0 }, computa: ["No revisado"], agregacion: "min",
+    porQue: "Licencias, dominios y certificados a nombre del proveedor saliente son activos del cliente que el cliente no posee: al terminar la relacion se los puede llevar, y recuperarlos es una negociacion, no un tramite. Complementa a srv_licencia_titular, que solo mira el SO de los servidores. A nombre de ALANA vale 1 por decision del dueno: el riesgo medido es el del proveedor que se va, no el del que presta el servicio hoy" },
 
   // ── Infraestructura física ──────────────────────────────
   { id: "sai_existe", dominio: "fisica", seccion: "sai", campo: "sai_existe", peso: 3, mapa: { "Sí": 1, No: 0, "No revisado": 0 }, agregacion: "max", critico: { cuando: ["No"], capDominio: 59 },

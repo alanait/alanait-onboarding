@@ -30,6 +30,9 @@ la visita**. React + Vite + Supabase, desplegada en Vercel. Calcula un **CiberSc
 - **Nunca renombrar ni borrar un `id` de sección o campo de `src/sections.js`.**
   Son claves de base de datos permanentes (JSONB en Supabase). Solo cambios
   aditivos. `scripts/check-ids.mjs` rompe el build si se viola.
+  **Lo mismo vale para el texto de cada opción**: es el valor que se guarda. Si una
+  opción vieja se vuelve ambigua, se cambia cómo se LEE con `textoOpciones` en el
+  campo, nunca la cadena (`DECISIONS.md` D26).
 - **Nunca introducir nada que premie esconder información.** Si contestar la verdad
   de un problema, abrir una sección o declarar que algo existe da peor nota que
   callarlo o mentir, el diseño está mal. Este proyecto ha corregido ese patrón
@@ -73,8 +76,8 @@ No hace falta migración: la nota no se guarda en BD, se recalcula.
 
 ```bash
 npm run build     # 6 guardarraíles encadenados + vite build
-node scripts/test-score.mjs          # 115 pruebas del motor
-node scripts/test-informe.mjs        # 58 pruebas del informe
+node scripts/test-score.mjs          # 130 pruebas del motor
+node scripts/test-informe.mjs        # 61 pruebas del informe
 node scripts/test-borrador.mjs       # 33 pruebas del borrador local
 node scripts/puntuar-ejemplos.mjs    # notas de las 5 fichas de ejemplo
 node scripts/etiquetar-ejemplos.mjs  # reetiquetar tras cambiar el modelo

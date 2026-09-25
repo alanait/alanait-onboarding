@@ -28,7 +28,7 @@ export const DOMINIOS = {
   puestos:     { nombre: "Puestos y antivirus",        peso: 13 },
   servidores:  { nombre: "Servidores",                 peso: 11 },
   correo:      { nombre: "Correo y colaboración",      peso: 11 },
-  saneamiento: { nombre: "Saneamiento del onboarding", peso: 10 },
+  saneamiento: { nombre: "Saneamiento de accesos",     peso: 10 },
   fisica:      { nombre: "Infraestructura física",     peso: 7 },
 };
 
@@ -212,8 +212,8 @@ export const EVIDENCIA_MINIMA = 60;
 //
 // Medido despues: de las 64 combinaciones que subian la nota y se publicaban
 // quedan 3, todas de +1 punto y ninguna borra un hallazgo; en visita a medias
-// `fiable` sigue en false en las cinco fichas; el barrido de monotonia no se
-// mueve (14 de 804, los mismos casos, todos de campo padre); y un cliente
+// `fiable` sigue en false en las cinco fichas; el barrido de monotonia baja de
+// 14 a 12 casos de 804, todos de campo padre; y un cliente
 // perfecto sigue dando exactamente 100.
 //
 // La nota al negar una seccion NO cambia, y es deliberado: retirar el peso de
@@ -244,4 +244,36 @@ export const EVIDENCIA_MINIMA = 60;
 // ventaja total de esconder pasaba de +43 a +168 en las tres vias que mueven la
 // nota. Cerrar A0 por la nota exige cerrar antes la fuga de los campos padre
 // (KNOWN_ISSUES A2), y eso todavia no tiene diseno.
-export const SCORE_MODEL_VERSION = "2.6.0";
+//
+// 2.7.0: ALANA IT pasa a ser una respuesta posible en los campos de "quien
+// gestiona / quien controla / a nombre de quien". La app se va a usar tambien
+// en los mantenimientos de clientes que ya son nuestros, y ahi la unica forma
+// de contestar la verdad era elegir algo falso.
+//
+// El caso que lo destapo, visto por el dueno en la consola del antivirus: un
+// cliente gestionado por ALANA tenia que elegir "Ambos" o "El proveedor
+// anterior". El primero valia 0,5 y el segundo 0,25, y los dos disparaban un
+// aviso de "revocar el acceso del proveedor anterior" que era mentira.
+//
+// Valores nuevos, todos iguales o por debajo del maximo de su mapa, asi que el
+// cliente perfecto sigue dando 100 sin tocar ningun peso:
+//   - consola del antivirus: "ALANA IT" y "El cliente y ALANA IT" = 1, como el
+//     cliente. Lo que se mide es que sea gobernable por quien presta el
+//     servicio hoy.
+//   - quien vigila las alertas: "ALANA IT (SOC / MDR 24/7)" = 1, igual que el
+//     SOC de otro; "ALANA IT (en horario laboral)" = 0,75, entre el cliente
+//     (0,5) y el SOC, porque el cifrado se lanza de noche.
+//   - firewall, custodia de claves de cifrado y titularidad de licencias (SO y
+//     licenciamiento) = 1. En titularidad el riesgo medido es el del proveedor
+//     que se va y se lleva las licencias, no el del que las gestiona hoy.
+//
+// Tambien las nueve preguntas de "accesos del proveedor anterior" pasan a
+// decir "accesos heredados (proveedor anterior, exempleados, integradores)", y
+// el dominio se renombra a "Saneamiento de accesos". Solo textos: mismas
+// opciones, mismo mapa, misma nota. Ver la nota en CRITERIOS sobre por que no
+// se anadio un interruptor onboarding/mantenimiento.
+//
+// Ninguna opcion existente se ha reescrito: "Ambos", "Proveedor / SOC (MDR)",
+// "Gestionado por proveedor" e "Infraestructura proveedor" se ENSENAN con otro
+// texto (`textoOpciones` en sections.js) y se guardan igual que antes.
+export const SCORE_MODEL_VERSION = "2.7.0";

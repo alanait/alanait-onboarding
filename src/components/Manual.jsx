@@ -503,7 +503,7 @@ export default function Manual({ onClose }) {
                     </div>
                     <div className="mn-aviso">
                       <span className="mn-nom">{TIPOS_HINT.legado.icono} Legado</span>
-                      <span className="mn-desc">Accesos del proveedor anterior</span>
+                      <span className="mn-desc">Accesos heredados que hay que retirar</span>
                       <span className="mn-cuenta">{cuentaAviso("legado")}</span>
                     </div>
                     <div className="mn-aviso">

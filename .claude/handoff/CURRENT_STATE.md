@@ -22,6 +22,25 @@ la cartera de mantenimiento antigua.
 > cargarlos se retiró de producción a propósito** (D11) — o se quita esa frase o
 > hay que cargárselos a mano en su cuenta.
 
+## Cambio del 25/09/2026, con el proyecto en pausa: ALANA IT como respuesta
+
+Pedido por el dueño al ver la consola del antivirus: la app se va a usar también en
+**mantenimientos de clientes que ya son nuestros**, y en los campos de «quién
+gestiona / quién controla / a nombre de quién» no existía ALANA IT. Un cliente
+nuestro tenía que elegir «Ambos» (0,5) o «El proveedor anterior» (0,25), y los dos
+disparaban un aviso falso de revocar accesos.
+
+Rama **`feat/alana-it-opciones`**, modelo **2.7.0**. El porqué completo y los valores
+elegidos, en `DECISIONS.md` D26. Resumen: 8 opciones nuevas que puntúan, 4
+informativas, un campo nuevo (`pcs.rmm_gestor`), las 9 preguntas de accesos
+heredados reescritas en genérico y un mecanismo nuevo, **`textoOpciones`**, para
+cambiar cómo se LEE una opción vieja sin tocar lo que se guarda. Las 5 fichas de
+ejemplo y el barrido de capadores dan **exactamente lo mismo que en `main`**.
+
+> **Pendiente del dueño:** abrir la preview con sesión y mirar la sección Antivirus
+> (el desplegable de la consola debe mostrar «El cliente y el proveedor anterior»
+> donde antes ponía «Ambos»). Claude no puede iniciar sesión.
+
 ## Lo que hay pendiente, por orden
 
 **Siguiente fase declarada por el dueño: integrar con Hudu.** Que lo que se recoge
@@ -73,7 +92,9 @@ calcula un **CiberScore** 0–100 y genera un **informe PDF interno**.
 
 ## Dónde estamos exactamente
 
-**Modelo de puntuación: `SCORE_MODEL_VERSION = "2.6.0"`** (`src/score/dominios.js`).
+**Modelo de puntuación: `SCORE_MODEL_VERSION = "2.7.0"`** (`src/score/dominios.js`)
+desde el 25/09 (opciones de ALANA IT, D26). Lo que sigue de esta sección es el
+estado del 24/08, ya fusionado en `main`.
 
 Trabajo del 24/08 en la rama **`fix/capadores-autoguardado-auditoria`**, no en `main`:
 

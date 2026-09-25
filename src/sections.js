@@ -37,8 +37,8 @@ export const SECTIONS = [
       { id: "firewall_firmware", label: "Versión de firmware", type: "text", placeholder: "Ej: FortiOS 7.4.3", dep: { field: "firewall", value: "Sí" }, group: "Router y Firewall perimetral" },
       { id: "firewall_firmware_ok", label: "¿Firmware actualizado?", type: "radio", options: ["Sí", "No", "No revisado"], dep: { field: "firewall", value: "Sí" }, group: "Router y Firewall perimetral" },
       { id: "firewall_soporte", label: "Garantía / soporte del fabricante", type: "select", options: ["En soporte", "Fuera de soporte (EOL)", "No revisado"], dep: { field: "firewall", value: "Sí" }, group: "Router y Firewall perimetral" },
-      { id: "firewall_gestion", label: "Gestión del Firewall", type: "select", options: ["Autogestionado", "Gestionado por proveedor", "Sin gestión activa"], dep: { field: "firewall", value: "Sí" }, group: "Router y Firewall perimetral" },
-      { id: "accesos_heredados", label: "Accesos del proveedor anterior (router/firewall)", type: "radio", options: ["Revocados", "Pendiente de revocar", "No existían", "No revisado"], group: "Router y Firewall perimetral" },
+      { id: "firewall_gestion", label: "Gestión del Firewall", type: "select", options: ["Autogestionado", "Gestionado por ALANA IT", "Gestionado por proveedor", "Sin gestión activa"], textoOpciones: { "Gestionado por proveedor": "Gestionado por otro proveedor" }, dep: { field: "firewall", value: "Sí" }, group: "Router y Firewall perimetral" },
+      { id: "accesos_heredados", label: "Accesos heredados al router/firewall (proveedor anterior, exempleados, integradores)", type: "radio", options: ["Revocados", "Pendiente de revocar", "No existían", "No revisado"], group: "Router y Firewall perimetral" },
       { id: "nat_reglas", label: "Reglas NAT / port-forwarding activas", type: "radio", options: ["Documentadas", "Existen sin documentar", "No hay", "No revisado"], group: "Router y Firewall perimetral" },
       { id: "rdp_expuesto", label: "¿RDP (3389) u otros puertos de riesgo expuestos a internet?", type: "radio", options: ["Sí", "No", "No revisado"], group: "Router y Firewall perimetral" },
       { id: "vpns_auditadas", label: "VPNs configuradas (site-to-site / acceso remoto)", type: "radio", options: ["Auditadas", "Pendiente de auditar", "No hay VPNs"], group: "Router y Firewall perimetral" },
@@ -101,7 +101,7 @@ export const SECTIONS = [
       { id: "so", label: "Versión exacta / notas del sistema", type: "text", placeholder: "Ej: Windows Server 2022 Standard 21H2", group: "Sistema operativo" },
       { id: "so_soporte", label: "¿El sistema operativo está en soporte?", type: "select", deducible: { desde: (leer) => ({ "Windows Server": "so_windows_server", "Windows (escritorio)": "so_windows_cliente", "Linux": "so_linux" })[leer("so_familia")] ?? "" }, options: ["En soporte", "Fuera de soporte (EOL)", "No revisado"], group: "Sistema operativo" },
       { id: "so_parcheo", label: "Nivel de parches", type: "select", options: ["Al día", "Parches pendientes", "Muy desactualizado", "No revisado"], group: "Sistema operativo" },
-      { id: "so_licencia_titular", label: "Titularidad de la licencia del SO y CALs", type: "radio", options: ["A nombre del cliente", "A nombre del proveedor anterior", "No revisado"], group: "Sistema operativo" },
+      { id: "so_licencia_titular", label: "Titularidad de la licencia del SO y CALs", type: "radio", options: ["A nombre del cliente", "A nombre de ALANA IT (SPLA)", "A nombre del proveedor anterior", "No revisado"], group: "Sistema operativo" },
 
       // ── Virtualización (solo servidores virtuales) ───────────────────────
       { id: "hipervisor", label: "Plataforma de virtualización", type: "select", options: ["VMware ESXi", "Hyper-V", "Proxmox", "KVM", "Citrix XenServer", "Otro"], dep: { field: "tipo", value: "Virtual" }, group: "Virtualización" },
@@ -118,8 +118,8 @@ export const SECTIONS = [
       { id: "dominio_cuentas", label: "Auditoría de usuarios y grupos del dominio", type: "select", options: ["Revisado, correcto", "Revisado, con hallazgos", "Pendiente de revisar", "No aplica"], dep: { field: "dominio", value: "Sí" }, group: "Dominio y accesos" },
       { id: "gpos_revisadas", label: "GPOs activas revisadas", type: "select", options: ["Revisado, correcto", "Revisado, con hallazgos", "Pendiente de revisar", "No aplica"], dep: { field: "dominio", value: "Sí" }, group: "Dominio y accesos" },
       { id: "acceso_remoto", label: "Acceso remoto habilitado", type: "select", options: ["RDP", "SSH", "Ambos", "Ninguno"], group: "Dominio y accesos" },
-      { id: "herramientas_acceso", label: "Herramientas de acceso remoto instaladas", type: "checks", options: ["RDP", "TeamViewer", "AnyDesk", "VNC", "VPN corporativa", "RMM del proveedor anterior", "Ninguna"], group: "Dominio y accesos" },
-      { id: "accesos_heredados", label: "Accesos del proveedor anterior al servidor", type: "radio", options: ["Revocados", "Pendiente de revocar", "No existían", "No revisado"], group: "Dominio y accesos" },
+      { id: "herramientas_acceso", label: "Herramientas de acceso remoto instaladas", type: "checks", options: ["RDP", "TeamViewer", "AnyDesk", "VNC", "VPN corporativa", "RMM de ALANA IT", "RMM del proveedor anterior", "Ninguna"], group: "Dominio y accesos" },
+      { id: "accesos_heredados", label: "Accesos heredados al servidor (proveedor anterior, exempleados, integradores)", type: "radio", options: ["Revocados", "Pendiente de revocar", "No existían", "No revisado"], group: "Dominio y accesos" },
 
       { id: "notas", label: "Notas", type: "textarea", group: "Notas" },
     ]
@@ -147,15 +147,20 @@ export const SECTIONS = [
       { id: "gestion_tipo", label: "Herramienta de gestión", type: "text", dep: { field: "gestion_central", value: "Sí" }, group: "Dominio y gestión" },
       { id: "rmm_agente", label: "¿Agente RMM desplegado?", type: "select", options: ["Sí, en todos", "Sí, parcialmente", "No", "No revisado"], group: "Dominio y gestión" },
       { id: "rmm_producto", label: "RMM utilizado", type: "select", options: ["NinjaOne", "Acronis", "Otro", "Ninguno", "No revisado"], group: "Dominio y gestión" },
+      // El producto no dice de quien es: un NinjaOne puede ser el nuestro o el
+      // del proveedor saliente, y en ese caso es un acceso remoto con permisos
+      // de sistema en cada puesto que hay que retirar. No puntua: es inventario
+      // y dispara el aviso de retirada.
+      { id: "rmm_gestor", label: "¿Quién gestiona ese RMM?", type: "select", options: ["ALANA IT", "El proveedor anterior", "El cliente", "No revisado"], group: "Dominio y gestión" },
       { id: "moviles", label: "¿Dispositivos móviles corporativos?", type: "radio", options: ["Sí", "No"], group: "Dominio y gestión" },
       { id: "moviles_mdm", label: "¿MDM para móviles?", type: "radio", options: ["Sí", "No"], dep: { field: "moviles", value: "Sí" }, group: "Dominio y gestión" },
 
       // ── Cuentas locales y cifrado ────────────────────────────────────────
       { id: "admin_local", label: "¿Los usuarios son administradores locales?", type: "select", options: ["Ninguno es administrador", "Solo algunos usuarios", "Todos son administradores", "No revisado"], group: "Cuentas locales y cifrado" },
       { id: "admin_local_password", label: "Contraseña de administrador local", type: "select", options: ["Única por equipo (LAPS o gestor)", "La misma en todos los equipos", "No revisado"], group: "Cuentas locales y cifrado" },
-      { id: "accesos_heredados", label: "Cuentas locales del proveedor anterior", type: "radio", options: ["Revocados", "Pendiente de revocar", "No existían", "No revisado"], group: "Cuentas locales y cifrado" },
+      { id: "accesos_heredados", label: "Cuentas locales heredadas (proveedor anterior, exempleados)", type: "radio", options: ["Revocados", "Pendiente de revocar", "No existían", "No revisado"], group: "Cuentas locales y cifrado" },
       { id: "cifrado_portatiles", label: "Cifrado de disco (BitLocker / FileVault)", type: "select", options: ["Activo en todos", "Activo en algunos", "No activo", "No aplica", "No revisado"], group: "Cuentas locales y cifrado" },
-      { id: "cifrado_claves", label: "Custodia de las claves de recuperación", type: "select", options: ["En AD / Entra ID", "En Intune", "En gestor de contraseñas del MSP", "En el propio equipo o en papel", "No se custodian", "No revisado"], dep: { field: "cifrado_portatiles", value: "Activo en todos" }, group: "Cuentas locales y cifrado" },
+      { id: "cifrado_claves", label: "Custodia de las claves de recuperación", type: "select", options: ["En AD / Entra ID", "En Intune", "En el gestor de contraseñas de ALANA IT", "En gestor de contraseñas del MSP", "En el propio equipo o en papel", "No se custodian", "No revisado"], dep: { field: "cifrado_portatiles", value: "Activo en todos" }, group: "Cuentas locales y cifrado" },
 
       { id: "notas", label: "Notas adicionales", type: "textarea", group: "Notas" },
     ]
@@ -171,7 +176,7 @@ export const SECTIONS = [
       { id: "consola_acronis", label: "Consola Acronis (URL / tipo)", type: "text", placeholder: "Ej: Acronis Cyber Protect Cloud", dep: { field: "software", value: "Acronis" }, group: "Solución" },
       { id: "agentes_acronis", label: "Nº de agentes desplegados", type: "number", dep: { field: "software", value: "Acronis" }, group: "Solución" },
       { id: "plan_proteccion", label: "Plan de protección activo", type: "text", placeholder: "Ej: Advanced Backup, Disaster Recovery...", dep: { field: "software", value: "Acronis" }, group: "Solución" },
-      { id: "consola_accesos_heredados", label: "Accesos del proveedor anterior a la consola", type: "radio", options: ["Revocados", "Pendiente de revocar", "No existían", "No revisado"], group: "Solución" },
+      { id: "consola_accesos_heredados", label: "Accesos heredados a la consola de copias (proveedor anterior, exempleados)", type: "radio", options: ["Revocados", "Pendiente de revocar", "No existían", "No revisado"], group: "Solución" },
 
       // -- Que se copia y politica --
       { id: "backup_cobertura", label: "¿Qué se copia?", type: "checks", options: ["Servidores (SO completo / VM)", "Datos y ficheros compartidos", "Bases de datos / ERP", "Correo (Exchange / M365 / Google)", "SharePoint / OneDrive / Teams", "PCs de usuario", "Configuración de red (firewall / switches)"], group: "Qué se copia y política" },
@@ -205,7 +210,7 @@ export const SECTIONS = [
       { id: "repo_parcheo", label: "Sistema / firmware del repositorio", type: "select", options: ["Al día", "Parches pendientes", "Muy desactualizado", "No revisado"], dep: { field: "repo_dedicado", value: "Sí" }, group: "Repositorio de copias" },
       { id: "repo_expuesto", label: "¿El repositorio está publicado a internet?", type: "select", options: ["No, solo LAN", "Sí, únicamente por VPN", "Sí, publicado directamente", "No revisado"], dep: { field: "repo_dedicado", value: "Sí" }, group: "Repositorio de copias" },
       { id: "repo_mfa", label: "¿MFA en el acceso al repositorio?", type: "radio", options: ["Sí", "No", "No revisado"], dep: { field: "repo_dedicado", value: "Sí" }, group: "Repositorio de copias" },
-      { id: "repo_accesos_heredados", label: "Accesos del proveedor anterior al repositorio", type: "radio", options: ["Revocados", "Pendiente de revocar", "No existían", "No revisado"], dep: { field: "repo_dedicado", value: "Sí" }, group: "Repositorio de copias" },
+      { id: "repo_accesos_heredados", label: "Accesos heredados al repositorio (proveedor anterior, exempleados)", type: "radio", options: ["Revocados", "Pendiente de revocar", "No existían", "No revisado"], dep: { field: "repo_dedicado", value: "Sí" }, group: "Repositorio de copias" },
       { id: "repo_seguridad", label: "Seguridad aplicada en el repositorio", type: "checks", options: ["Cifrado de datos en reposo", "Snapshots inmutables / bloqueo de borrado", "VLAN o red dedicada para backup", "Antivirus del NAS activo", "Papelera / retención de borrados", "Registro de accesos activo"], dep: { field: "repo_dedicado", value: "Sí" }, group: "Repositorio de copias" },
 
       { id: "notas", label: "Notas adicionales", type: "textarea", group: "Notas" },
@@ -226,7 +231,7 @@ export const SECTIONS = [
 
       // -- Usuarios y administradores --
       { id: "admins_revisados", label: "Administradores del tenant revisados", type: "select", options: ["Revisado, correcto", "Revisado, con hallazgos", "Pendiente de revisar", "No aplica"], group: "Usuarios y administradores" },
-      { id: "admins_heredados", label: "Accesos de administrador del proveedor anterior", type: "radio", options: ["Revocados", "Pendiente de revocar", "No existían", "No revisado"], group: "Usuarios y administradores" },
+      { id: "admins_heredados", label: "Administradores heredados del tenant (proveedor anterior, exempleados)", type: "radio", options: ["Revocados", "Pendiente de revocar", "No existían", "No revisado"], group: "Usuarios y administradores" },
       { id: "usuarios_inactivos", label: "Usuarios inactivos revisados", type: "select", options: ["Revisado, correcto", "Revisado, con hallazgos", "Pendiente de revisar", "No aplica"], group: "Usuarios y administradores" },
       { id: "licencias_revisadas", label: "Licencias asignadas revisadas", type: "select", options: ["Revisado, correcto", "Revisado, con hallazgos", "Pendiente de revisar", "No aplica"], group: "Usuarios y administradores" },
 
@@ -271,8 +276,12 @@ export const SECTIONS = [
       // -- Consola y gestion --
       { id: "consola", label: "¿Consola de gestión centralizada?", type: "radio", options: ["Sí", "No"], group: "Consola y gestión" },
       { id: "consola_url", label: "URL de la consola", type: "text", dep: { field: "consola", value: "Sí" }, group: "Consola y gestión" },
-      { id: "consola_acceso", label: "¿Quién controla la consola?", type: "select", options: ["El cliente", "El proveedor anterior", "Ambos", "Nadie / credenciales perdidas", "No revisado"], group: "Consola y gestión" },
-      { id: "alertas_monitorizadas", label: "¿Quién vigila las alertas?", type: "select", options: ["Proveedor / SOC (MDR)", "El cliente", "Nadie", "No revisado"], group: "Consola y gestión" },
+      // Las opciones de ALANA se anadieron al usar la app tambien en
+      // mantenimientos. Con tres partes posibles "Ambos" y "Proveedor" dejaban
+      // de entenderse: se muestran con otro texto (textoOpciones) pero el valor
+      // guardado no cambia, porque es la clave de lo ya documentado.
+      { id: "consola_acceso", label: "¿Quién controla la consola?", type: "select", options: ["El cliente", "ALANA IT", "El cliente y ALANA IT", "El proveedor anterior", "Ambos", "Nadie / credenciales perdidas", "No revisado"], textoOpciones: { "Ambos": "El cliente y el proveedor anterior" }, group: "Consola y gestión" },
+      { id: "alertas_monitorizadas", label: "¿Quién vigila las alertas?", type: "select", options: ["ALANA IT (SOC / MDR 24/7)", "ALANA IT (en horario laboral)", "Proveedor / SOC (MDR)", "El cliente", "Nadie", "No revisado"], textoOpciones: { "Proveedor / SOC (MDR)": "Otro proveedor / SOC (MDR)" }, group: "Consola y gestión" },
 
       { id: "notas", label: "Notas adicionales", type: "textarea", group: "Notas" },
     ]
@@ -293,7 +302,7 @@ export const SECTIONS = [
       { id: "cifrado", label: "Cifrado de la red principal", type: "select", options: ["WPA3", "WPA2-Enterprise (802.1X)", "WPA2-PSK", "WPA/WPA2 mixto", "WEP", "Abierta (sin contraseña)", "No revisado"], group: "Redes y cifrado" },
       { id: "invitados", label: "¿Red de invitados separada?", type: "radio", options: ["Sí", "No"], group: "Redes y cifrado" },
       { id: "invitados_aislado", label: "Aislamiento de la red de invitados", type: "select", options: ["VLAN aislada, sin acceso a la LAN", "Separada solo por SSID, misma red", "Con acceso a la LAN", "No hay red de invitados", "No revisado"], group: "Redes y cifrado" },
-      { id: "password_heredada", label: "Contraseñas WiFi heredadas del proveedor anterior", type: "radio", options: ["Cambiadas", "Pendiente de cambiar", "No aplica", "No revisado"], group: "Redes y cifrado" },
+      { id: "password_heredada", label: "Contraseñas WiFi heredadas (las conoce el proveedor anterior o exempleados)", type: "radio", options: ["Cambiadas", "Pendiente de cambiar", "No aplica", "No revisado"], group: "Redes y cifrado" },
 
       // -- Infraestructura --
       { id: "controlador", label: "¿Controlador WiFi centralizado?", type: "select", options: ["Sí (cloud)", "Sí (local)", "No, APs autónomos"], group: "Infraestructura" },
@@ -301,7 +310,7 @@ export const SECTIONS = [
       { id: "cantidad", label: "Número de APs", type: "number", group: "Infraestructura" },
       { id: "aps_soporte", label: "¿Los APs están en soporte?", type: "select", options: ["En soporte", "Fuera de soporte (EOL)", "No revisado"], group: "Infraestructura" },
       { id: "cobertura", label: "¿Cobertura suficiente?", type: "radio", options: ["Sí", "No", "Parcial"], group: "Infraestructura" },
-      { id: "accesos_heredados", label: "Accesos del proveedor anterior a la controladora", type: "radio", options: ["Revocados", "Pendiente de revocar", "No existían", "No revisado"], group: "Infraestructura" },
+      { id: "accesos_heredados", label: "Accesos heredados a la controladora (proveedor anterior, exempleados)", type: "radio", options: ["Revocados", "Pendiente de revocar", "No existían", "No revisado"], group: "Infraestructura" },
 
       { id: "notas", label: "Notas adicionales", type: "textarea", group: "Notas" },
     ]
@@ -321,7 +330,7 @@ export const SECTIONS = [
       { id: "solucion", label: "Solución / Fabricante", type: "text", placeholder: "Ej: Fortinet, Cisco AnyConnect…" },
       { id: "usuarios", label: "Número de usuarios VPN", type: "number" },
       { id: "mfa", label: "¿MFA en la VPN?", type: "radio", options: ["Sí", "No"] },
-      { id: "uso", label: "Uso principal", type: "checks", options: ["Teletrabajo", "Conexión entre sedes", "Proveedores externos", "Otro"] },
+      { id: "uso", label: "Uso principal", type: "checks", options: ["Teletrabajo", "Conexión entre sedes", "Soporte de ALANA IT", "Proveedores externos", "Otro"] },
       { id: "notas", label: "Notas adicionales", type: "textarea" },
     ]
   },
@@ -451,7 +460,7 @@ export const SECTIONS = [
       { id: "tipo", label: "Tipo", type: "select", options: ["ERP", "CRM", "Contabilidad", "Gestión documental", "Ofimática", "CAD/CAM", "Facturación", "RRHH", "Otro"] },
       { id: "proveedor", label: "Proveedor / Fabricante", type: "text" },
       { id: "version", label: "Versión actual", type: "text" },
-      { id: "alojamiento", label: "Alojamiento", type: "select", options: ["On-Premise", "Cloud/SaaS", "Servidor propio", "Infraestructura proveedor"] },
+      { id: "alojamiento", label: "Alojamiento", type: "select", options: ["On-Premise", "Cloud/SaaS", "Servidor propio", "Infraestructura de ALANA IT", "Infraestructura proveedor"], textoOpciones: { "Infraestructura proveedor": "Infraestructura de otro proveedor" } },
       { id: "licencias", label: "Nº licencias / usuarios", type: "number" },
       { id: "soporte", label: "¿Soporte activo del fabricante?", type: "radio", options: ["Sí", "No", "No sabe"] },
       { id: "partner", label: "Partner / Implantador", type: "text" },
@@ -483,7 +492,7 @@ export const SECTIONS = [
       { id: "contrato", label: "Contrato asociado", type: "text", placeholder: "Nº contrato o referencia", group: "Servicio contratado" },
 
       // -- Titularidad, renovacion y acceso --
-      { id: "titularidad", label: "Titularidad", type: "radio", options: ["A nombre del cliente", "A nombre del proveedor anterior", "No revisado"], group: "Titularidad y renovación" },
+      { id: "titularidad", label: "Titularidad", type: "radio", options: ["A nombre del cliente", "A nombre de ALANA IT", "A nombre del proveedor anterior", "No revisado"], group: "Titularidad y renovación" },
       { id: "fecha_renovacion", label: "Fecha de renovación", type: "text", placeholder: "Ej: 12/2026", group: "Titularidad y renovación" },
       { id: "renovacion_automatica", label: "¿Renovación automática?", type: "radio", options: ["Sí", "No", "No revisado"], group: "Titularidad y renovación" },
       { id: "coste", label: "Coste", type: "text", placeholder: "Ej: 12,50€/usuario/mes", group: "Titularidad y renovación" },
@@ -494,7 +503,7 @@ export const SECTIONS = [
       { id: "ssl_estado", label: "Estado del certificado", type: "select", options: ["Vigente (más de 60 días)", "Caduca en menos de 60 días", "Caducado", "Autofirmado / no válido", "No revisado"], dep: { field: "tipo_servicio", value: "Certificado SSL" }, group: "Detalle del servicio" },
       { id: "cloud_plataforma", label: "Plataforma cloud", type: "select", options: ["Microsoft Azure", "Amazon AWS", "Google Cloud", "Dropbox", "Jotelulu", "Otro"], dep: { field: "tipo_servicio", value: "Servicio cloud" }, group: "Detalle del servicio" },
       { id: "cloud_mfa", label: "¿MFA en el acceso cloud?", type: "radio", options: ["Sí", "No", "Parcialmente", "No revisado"], dep: { field: "tipo_servicio", value: "Servicio cloud" }, group: "Detalle del servicio" },
-      { id: "cloud_cuentas_heredadas", label: "Cuentas del proveedor anterior en el cloud", type: "radio", options: ["Revocados", "Pendiente de revocar", "No existían", "No revisado"], dep: { field: "tipo_servicio", value: "Servicio cloud" }, group: "Detalle del servicio" },
+      { id: "cloud_cuentas_heredadas", label: "Cuentas heredadas en el cloud (proveedor anterior, exempleados)", type: "radio", options: ["Revocados", "Pendiente de revocar", "No existían", "No revisado"], dep: { field: "tipo_servicio", value: "Servicio cloud" }, group: "Detalle del servicio" },
 
       { id: "notas", label: "Notas", type: "textarea", group: "Notas" },
     ]
@@ -533,6 +542,19 @@ export function lectorEfectivo(sectionId, getVal, idx) {
     if (campo?.dep && getVal(sectionId, campo.dep.field, idx) !== campo.dep.value) return "";
     return getVal(sectionId, campoId, idx);
   };
+}
+
+/**
+ * Texto con el que se ENSENA una opcion, que no siempre es el que se GUARDA.
+ *
+ * El valor guardado es la cadena de la opcion y no se puede reescribir sin
+ * dejar huerfano lo ya documentado (check-ids lo impide). Cuando una opcion
+ * vieja se vuelve ambigua -"Ambos" dejo de entenderse al entrar ALANA IT como
+ * tercera parte- se cambia solo como se lee, con `textoOpciones` en el campo.
+ * El motor y los avisos siguen casando por el valor guardado.
+ */
+export function textoOpcion(campo, valor) {
+  return campo?.textoOpciones?.[valor] ?? valor;
 }
 
 /**

@@ -643,3 +643,72 @@ previews por rama, que son **literalmente cómo se verifica este proyecto** (no 
 **Pregunta sin responder que condiciona todo:** por qué quieren salir. Si el motivo
 es RGPD o soberanía del dato, **Supabase tiene región UE** y puede que no haga falta
 migrar nada — conviene comprobar la región del proyecto antes de mover un dedo.
+
+---
+
+## D26. ALANA IT es una respuesta posible, y las opciones viejas se reetiquetan sin reescribirse
+
+**Decisión (25/09/2026, modelo 2.7.0).** Los campos de «quién gestiona / quién
+controla / a nombre de quién» ofrecen ALANA IT. El dueño lo pidió al ver la consola
+del antivirus —«hay que añadir ALANA IT»— porque la app se va a usar también en los
+**mantenimientos de clientes que ya son nuestros**, y dejó los valores a criterio de
+Claude: «pon lo que creas que está bien».
+
+**El caso que lo destapó no era estético.** En «¿Quién controla la consola?» un
+cliente gestionado por ALANA solo podía elegir «Ambos» (0,5) o «El proveedor
+anterior» (0,25), y los dos disparaban un aviso de «revocar el acceso del proveedor
+anterior» que era falso. Contestar la verdad era imposible.
+
+**Valores elegidos:**
+
+| Campo | Opción nueva | Vale |
+|---|---|---|
+| `antivirus.consola_acceso` | «ALANA IT», «El cliente y ALANA IT» | 1, como el cliente |
+| `antivirus.alertas_monitorizadas` | «ALANA IT (SOC / MDR 24/7)» | 1, como el SOC de otro |
+| | «ALANA IT (en horario laboral)» | **0,75**: por encima del cliente (0,5), por debajo del SOC, porque el cifrado se lanza de noche |
+| `red.firewall_gestion` | «Gestionado por ALANA IT» | 1 (el criterio ya decía que da igual quién) |
+| `pcs.cifrado_claves` | «En el gestor de contraseñas de ALANA IT» | 1 |
+| `servidores.so_licencia_titular` | «A nombre de ALANA IT (SPLA)» | 1 |
+| `licenciamiento.titularidad` | «A nombre de ALANA IT» | 1 |
+
+En titularidad se discutió dar 0,5 —un dominio a nombre de ALANA sigue sin ser del
+cliente— y se eligió 1: el riesgo que mide el criterio es el del proveedor **que se
+va y se lleva** las licencias, no el del que presta el servicio hoy. Si algún día se
+quiere ser estricto, es cambiar un número.
+
+Informativas, sin nota: «RMM de ALANA IT» (`servidores.herramientas_acceso`),
+«Soporte de ALANA IT» (`vpn.uso`), «Infraestructura de ALANA IT» (`erp.alojamiento`)
+y un **campo nuevo `pcs.rmm_gestor`** («¿Quién gestiona ese RMM?»), porque el
+producto —NinjaOne— no dice si es el nuestro o el del proveedor saliente. Si es del
+saliente dispara el aviso de legado `pcs_rmm_gestor_legado`.
+
+**Las 9 preguntas de «Accesos del proveedor anterior»** pasan a decir «Accesos
+heredados (proveedor anterior, exempleados, integradores)», sus titulares de hallazgo
+y los avisos se generalizan igual, y el dominio se renombra de «Saneamiento del
+onboarding» a **«Saneamiento de accesos»**. Solo textos: mismas opciones, mismo mapa,
+misma nota. Así sirven para onboarding y para mantenimiento a la vez.
+
+**Lo que se descartó a propósito: un interruptor onboarding / mantenimiento** que
+retirase el dominio de saneamiento. Marcar «mantenimiento» en un onboarding borraría
+10 puntos de accesos heredados sin mirar nada: es exactamente el patrón de premiar
+esconder que este proyecto prohíbe.
+
+**Mecanismo nuevo: `textoOpciones`.** La cadena de una opción ES el dato guardado y
+`check-ids` impide reescribirla. Pero con tres partes posibles «Ambos» ya no se
+entiende. `textoOpciones: { "Ambos": "El cliente y el proveedor anterior" }` cambia
+solo cómo se LEE, en el formulario (`fields.jsx`) y en el PDF (`buildPrintHTML.js`),
+vía `textoOpcion()` de `sections.js`. El motor, los avisos y la base de datos siguen
+casando por el valor guardado. Se usa en cuatro opciones: «Ambos», «Proveedor / SOC
+(MDR)», «Gestionado por proveedor» e «Infraestructura proveedor» — todas ganan un
+«otro» delante porque ahora hay un proveedor que no es otro. `test-score` verifica
+que toda clave de `textoOpciones` sea una opción que existe.
+
+**Las opciones nuevas se insertaron en su sitio lógico, no al final.** Es seguro: el
+valor guardado es la cadena y nada en `src/` indexa `options` por posición
+(comprobado con grep). El comentario de `roles` que pide añadir «al final» es más
+prudente de lo necesario.
+
+**Medido:** cliente perfecto 100 exacto; las 5 fichas de ejemplo y el arnés de
+capadores dan salida **idéntica byte a byte** a `main`; ninguna opción de ALANA vale
+más que el máximo de su mapa ni es un literal de «no aplica» o «sin comprobar», así
+que no abre ninguna ruta de ocultación nueva.

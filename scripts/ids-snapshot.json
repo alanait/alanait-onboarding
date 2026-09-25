@@ -100,6 +100,7 @@
     "type": "select",
     "options": [
       "Autogestionado",
+      "Gestionado por ALANA IT",
       "Gestionado por proveedor",
       "Sin gestión activa"
     ]
@@ -393,6 +394,7 @@
     "type": "radio",
     "options": [
       "A nombre del cliente",
+      "A nombre de ALANA IT (SPLA)",
       "A nombre del proveedor anterior",
       "No revisado"
     ]
@@ -486,6 +488,7 @@
       "AnyDesk",
       "VNC",
       "VPN corporativa",
+      "RMM de ALANA IT",
       "RMM del proveedor anterior",
       "Ninguna"
     ]
@@ -607,6 +610,15 @@
       "No revisado"
     ]
   },
+  "pcs.rmm_gestor": {
+    "type": "select",
+    "options": [
+      "ALANA IT",
+      "El proveedor anterior",
+      "El cliente",
+      "No revisado"
+    ]
+  },
   "pcs.moviles": {
     "type": "radio",
     "options": [
@@ -662,6 +674,7 @@
     "options": [
       "En AD / Entra ID",
       "En Intune",
+      "En el gestor de contraseñas de ALANA IT",
       "En gestor de contraseñas del MSP",
       "En el propio equipo o en papel",
       "No se custodian",
@@ -1175,6 +1188,8 @@
     "type": "select",
     "options": [
       "El cliente",
+      "ALANA IT",
+      "El cliente y ALANA IT",
       "El proveedor anterior",
       "Ambos",
       "Nadie / credenciales perdidas",
@@ -1184,6 +1199,8 @@
   "antivirus.alertas_monitorizadas": {
     "type": "select",
     "options": [
+      "ALANA IT (SOC / MDR 24/7)",
+      "ALANA IT (en horario laboral)",
       "Proveedor / SOC (MDR)",
       "El cliente",
       "Nadie",
@@ -1338,6 +1355,7 @@
     "options": [
       "Teletrabajo",
       "Conexión entre sedes",
+      "Soporte de ALANA IT",
       "Proveedores externos",
       "Otro"
     ]
@@ -1842,6 +1860,7 @@
       "On-Premise",
       "Cloud/SaaS",
       "Servidor propio",
+      "Infraestructura de ALANA IT",
       "Infraestructura proveedor"
     ]
   },
@@ -1929,6 +1948,7 @@
     "type": "radio",
     "options": [
       "A nombre del cliente",
+      "A nombre de ALANA IT",
       "A nombre del proveedor anterior",
       "No revisado"
     ]
@@ -2194,6 +2214,10 @@
     "options": null
   },
   "__hints__.pcs.pcs_rmm_agente_seguridad_2": {
+    "type": "hint",
+    "options": null
+  },
+  "__hints__.pcs.pcs_rmm_gestor_legado": {
     "type": "hint",
     "options": null
   },

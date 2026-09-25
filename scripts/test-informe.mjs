@@ -237,6 +237,25 @@ console.log("\nEl inventario no imprime un campo oculto por su dep");
   es("pero si imprime el campo que si esta vigente", html.includes(">No<"), true);
 }
 
+// ── Una opcion se imprime como se ensena, no como se guarda ──────────────
+// "Ambos" era cliente + proveedor anterior. Al entrar ALANA IT como tercera
+// parte dejo de entenderse, y no se puede reescribir sin dejar huerfano lo ya
+// guardado: se ensena con otro texto. El PDF tiene que decir lo mismo que el
+// formulario, o el tecnico lee una cosa y el comercial otra.
+console.log("\nEl inventario imprime el texto de la opción, no el valor guardado");
+{
+  const c = {
+    clientData: { empresa: "Opciones SL" },
+    sectionEnabled: { antivirus: "si" },
+    formData: { antivirus: { 0: { consola: "Sí", consola_acceso: "Ambos", alertas_monitorizadas: "ALANA IT (en horario laboral)" } } },
+    instanceCounts: {}, sectionImages: {},
+  };
+  const { html } = informe(c);
+  es("'Ambos' sale como cliente y proveedor anterior", html.includes("El cliente y el proveedor anterior"), true);
+  es("y no como 'Ambos' a secas", html.includes(">Ambos<"), false);
+  es("una opción sin texto propio sale tal cual", html.includes("ALANA IT (en horario laboral)"), true);
+}
+
 // ── Casos limite ────────────────────────────────────────────────────────────
 console.log("\nCasos límite");
 {

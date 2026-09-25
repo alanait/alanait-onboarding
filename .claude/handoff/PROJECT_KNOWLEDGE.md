@@ -4,7 +4,8 @@
 > leyendo el código por encima. `README.md` y `KB.md` cubren el «qué es la app»;
 > esto cubre el cómo y los límites.
 >
-> Actualizado el 2026-08-25 (modelo 2.6.0).
+> Actualizado el 2026-08-25 (modelo 2.6.0). Ampliado el 2026-09-25 con 2.7.0
+> (opciones de ALANA IT y `textoOpciones`, D26).
 
 ---
 
@@ -133,10 +134,15 @@ permanentes.** Se guardan literalmente en el JSONB de Supabase.
 
 - **Solo cambios ADITIVOS.** Nunca renombrar ni borrar un id.
 - `scripts/check-ids.mjs` **rompe el build**. Compara contra
-  `scripts/ids-snapshot.json` (**406 campos** desde 2.6.0).
+  `scripts/ids-snapshot.json` (**408 claves** desde 2.7.0: 406 más `pcs.rmm_gestor`
+  y el aviso `pcs_rmm_gestor_legado`).
 - Acepta campos nuevos automáticamente («+N campos nuevos»), pero para fijarlos en
   la instantánea hay que ejecutar `node scripts/check-ids.mjs --update`.
 - El guardarraíl vigila también los arrays de `options`.
+- **El texto de una opción es el dato guardado.** Para cambiar cómo se ve una opción
+  vieja sin romper lo guardado existe `textoOpciones` en el campo, que leen
+  `fields.jsx` y el inventario del PDF a través de `textoOpcion()`. El motor y los
+  avisos casan siempre por el valor guardado. Desde 2.7.0 (D26).
 
 **Corolario:** añadir una opción a un desplegable es seguro; quitarla o
 reescribirla, no.
