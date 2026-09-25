@@ -426,7 +426,7 @@ export function bloquePlan(score, sectionEnabled, formData, instanceCounts) {
   <div style="page-break-before:always;">
     <h2 style="font-size:16px;font-weight:500;color:${C.azul};margin:0 0 4px;">Plan de acción</h2>
     <p style="font-size:11px;color:${C.gris};margin:0 0 12px;">
-      Tareas de seguridad y de limpieza del proveedor anterior que siguen abiertas, en orden de prioridad.
+      Tareas de seguridad y de limpieza de accesos heredados que siguen abiertas, en orden de prioridad.
       Lo que ya aparece como hallazgo crítico no se repite aquí.
     </p>
     <div style="border-top:2px solid ${C.azul};">${filas}</div>

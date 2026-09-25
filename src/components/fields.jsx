@@ -4,7 +4,7 @@
 import React, { useState } from "react";
 import { C, inp } from "../theme.js";
 import { hintsVisibles, claveHint } from "../hints.js";
-import { lectorEfectivo } from "../sections.js";
+import { lectorEfectivo, textoOpcion } from "../sections.js";
 import { soporteDe } from "../score/soporteSO.js";
 import { CAMPOS_QUE_PUNTUAN } from "../score/criterios.js";
 import HintBanner from "./HintBanner.jsx";
@@ -108,7 +108,7 @@ function Field({ section, field, instanceIdx, getVal, setVal, fechaVisita = "" }
       ) : field.type === "select" ? (
         <select value={v} onChange={e => set(e.target.value)} style={inp}>
           <option value="">— Seleccionar —</option>
-          {field.options.map(o => <option key={o}>{o}</option>)}
+          {field.options.map(o => <option key={o} value={o}>{textoOpcion(field, o)}</option>)}
         </select>
       ) : field.type === "radio" ? (
         <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
@@ -120,7 +120,7 @@ function Field({ section, field, instanceIdx, getVal, setVal, fechaVisita = "" }
                 border: sel ? `1.5px solid ${C.blue}` : `1.5px solid ${C.border}`,
                 background: sel ? C.blueLight : "#fff", color: sel ? C.blue : C.gray,
                 fontWeight: sel ? "600" : "400", transition: "all 0.15s",
-              }}>{o}</button>
+              }}>{textoOpcion(field, o)}</button>
             );
           })}
         </div>
@@ -135,7 +135,7 @@ function Field({ section, field, instanceIdx, getVal, setVal, fechaVisita = "" }
                 border: sel ? `1.5px solid ${C.blue}` : `1.5px solid ${C.border}`,
                 background: sel ? C.blueLight : "#fff", color: sel ? C.blue : C.gray,
                 fontWeight: sel ? "600" : "400", transition: "all 0.15s",
-              }}>{sel ? "✓ " : ""}{o}</button>
+              }}>{sel ? "✓ " : ""}{textoOpcion(field, o)}</button>
             );
           })}
         </div>

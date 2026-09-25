@@ -4,7 +4,7 @@
 // (html2pdf) como la vista de impresion del navegador (Ctrl+P). Antes habia
 // dos implementaciones paralelas que habia que mantener en paralelo.
 
-import { SECTIONS, lectorEfectivo } from "../sections.js";
+import { SECTIONS, lectorEfectivo, textoOpcion } from "../sections.js";
 import { LOGO_ALANA } from "../assets/logo.js";
 import { selloNota, paginaDiagnostico, bloqueHallazgos, bloqueDeclaraciones, bloquePlan, bloqueOportunidades } from "./informe.js";
 
@@ -126,7 +126,7 @@ export function buildPrintFragment(clientData, sectionEnabled, formData, instanc
         const g = f.group || "";
         if (!porGrupo.has(g)) { porGrupo.set(g, []); orden.push(g); }
         porGrupo.get(g).push(
-          `<tr class="pdf-avoid"><td style="${tdL}">${esc(f.label)}</td><td style="${tdV}">${esc(Array.isArray(v) ? v.join(", ") : v)}</td></tr>`
+          `<tr class="pdf-avoid"><td style="${tdL}">${esc(f.label)}</td><td style="${tdV}">${esc(Array.isArray(v) ? v.map(o => textoOpcion(f, o)).join(", ") : textoOpcion(f, v))}</td></tr>`
         );
       });
 

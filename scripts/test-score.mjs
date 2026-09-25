@@ -9,7 +9,8 @@ import { computeScore } from "../src/score/computeScore.js";
 // bloque de deduccion del soporte necesita el modelo REAL: depende de ids
 // concretos y de la tabla de fin de soporte.
 import { CRITERIOS, PRECONDICIONES, CAMPOS_QUE_PUNTUAN, LITERALES_NO_APLICA, LITERALES_SIN_COMPROBAR, CONTRADICCIONES, MOTIVOS_INEXISTENCIA, MOTIVO_OTRO } from "../src/score/criterios.js";
-import { SECTIONS } from "../src/sections.js";
+import { SECTIONS, textoOpcion } from "../src/sections.js";
+import { hintsVisibles } from "../src/hints.js";
 
 let ok = 0, fallos = 0;
 const es = (etiqueta, real, esperado) => {
@@ -604,6 +605,66 @@ console.log("\nUn literal declarado sin comprobar no cierra el capador");
   es("pero el literal sigue puntuando (no sale del denominador)",
      declarado.dominios.find(d => d.id === "perimetro").criteriosEvaluados >
      blanco.dominios.find(d => d.id === "perimetro").criteriosEvaluados, true);
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// 2.7.0 — ALANA IT como respuesta posible
+// ═══════════════════════════════════════════════════════════════════════════
+
+// Modelo REAL a proposito: lo que se fija aqui son literales concretos del
+// catalogo, y el fallo que se corrige era justo que el literal verdadero no
+// existia.
+console.log("\nALANA IT como respuesta (modelo 2.7.0)");
+{
+  const crit = (id) => CRITERIOS.find(c => c.id === id);
+  const maximo = (c) => Math.max(...Object.values(c.mapa));
+
+  // El caso que lo destapo: un cliente gestionado por ALANA solo podia elegir
+  // "Ambos" (0,5) o "El proveedor anterior" (0,25) en la consola del antivirus.
+  const consola = crit("av_consola_control");
+  es("consola: 'ALANA IT' vale lo mismo que el cliente", consola.mapa["ALANA IT"], consola.mapa["El cliente"]);
+  es("consola: 'El cliente y ALANA IT' tambien", consola.mapa["El cliente y ALANA IT"], consola.mapa["El cliente"]);
+  es("consola: 'Ambos' sigue valiendo lo que valia (es cliente + proveedor anterior)", consola.mapa["Ambos"], 0.5);
+
+  // ...y los dos disparaban un "revocar el acceso del proveedor anterior" falso.
+  const avisosConsola = (valor) => hintsVisibles("antivirus", (f) => ({ consola: "Sí", consola_acceso: valor })[f] ?? "")
+    .filter(h => h.anchor === "consola_acceso").length;
+  es("'ALANA IT' no pide revocar a nadie", avisosConsola("ALANA IT"), 0);
+  es("'El cliente y ALANA IT' tampoco", avisosConsola("El cliente y ALANA IT"), 0);
+  es("'Ambos' si lo sigue pidiendo", avisosConsola("Ambos"), 1);
+
+  const alertas = crit("av_alertas_vigiladas");
+  es("alertas: el SOC 24/7 de ALANA vale lo mismo que el de otro",
+     alertas.mapa["ALANA IT (SOC / MDR 24/7)"], alertas.mapa["Proveedor / SOC (MDR)"]);
+  es("alertas: ALANA en horario laboral queda entre el cliente y el SOC",
+     alertas.mapa["El cliente"] < alertas.mapa["ALANA IT (en horario laboral)"]
+       && alertas.mapa["ALANA IT (en horario laboral)"] < alertas.mapa["ALANA IT (SOC / MDR 24/7)"], true);
+
+  // Ninguna opcion de ALANA puede valer mas que el maximo de su mapa: el
+  // cliente perfecto se construye con el mejor literal y tiene que seguir
+  // dando 100. Y ninguna puede ser un literal de "no aplica" ni de "sin
+  // comprobar": son respuestas afirmativas, no una forma de salirse.
+  const conAlana = CRITERIOS.flatMap(c => Object.keys(c.mapa ?? {})
+    .filter(l => l.includes("ALANA")).map(l => ({ c, l })));
+  // 8 nuevas en 2.7.0 mas la que ya existia en el panel de licencias ("Si,
+  // credenciales en poder del cliente o ALANA").
+  es("hay 9 respuestas de ALANA que puntuan", conAlana.length, 9);
+  es("ninguna vale mas que el maximo de su mapa", conAlana.every(({ c, l }) => c.mapa[l] <= maximo(c)), true);
+  es("ninguna es 'no aplica' ni 'sin comprobar'",
+     conAlana.some(({ l }) => LITERALES_NO_APLICA.includes(l) || LITERALES_SIN_COMPROBAR.includes(l)), false);
+  es("todas son opciones reales del formulario",
+     conAlana.every(({ c, l }) => SECTIONS.find(s => s.id === c.seccion).fields.find(f => f.id === c.campo).options.includes(l)), true);
+
+  // textoOpciones cambia como se LEE una opcion, nunca lo que se guarda. Una
+  // clave mal escrita no daria error: la opcion se ensenaria con su texto
+  // viejo y nadie lo notaria.
+  const renombradas = SECTIONS.flatMap(s => s.fields.filter(f => f.textoOpciones)
+    .flatMap(f => Object.keys(f.textoOpciones).map(k => ({ f, k, seccion: s.id }))));
+  es("cada texto alternativo corresponde a una opcion que existe",
+     renombradas.filter(({ f, k }) => !f.options.includes(k)).map(({ seccion, f, k }) => `${seccion}.${f.id}: ${k}`), []);
+  const campoConsola = SECTIONS.find(s => s.id === "antivirus").fields.find(f => f.id === "consola_acceso");
+  es("'Ambos' se ensena como cliente y proveedor anterior", textoOpcion(campoConsola, "Ambos"), "El cliente y el proveedor anterior");
+  es("una opcion sin texto propio se ensena tal cual", textoOpcion(campoConsola, "ALANA IT"), "ALANA IT");
 }
 
 console.log("\nInvariantes duros del modelo REAL");

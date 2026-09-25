@@ -31,7 +31,7 @@ export const HINTS = {
       tipo: "seguridad",
       anchor: "accesos_heredados",
       when: { field: "accesos_heredados", valueIn: ["Pendiente de revocar", "No revisado"] },
-      texto: "Riesgo de seguridad: recuerda eliminar contraseñas de gestión anteriores y revocar VPNs o accesos remotos heredados antes de cerrar el onboarding.",
+      texto: "Riesgo de seguridad: recuerda eliminar contraseñas de gestión anteriores y revocar VPNs o accesos remotos heredados (proveedor anterior, exempleados, integradores) antes de cerrar la visita.",
     },
     {
       id: "red_utm_comercial",
@@ -251,6 +251,13 @@ export const HINTS = {
       texto: "Completar el despliegue del agente RMM en los equipos que todavía no lo tienen.",
     },
     {
+      id: "pcs_rmm_gestor_legado",
+      tipo: "legado",
+      anchor: "rmm_gestor",
+      when: { field: "rmm_gestor", value: "El proveedor anterior" },
+      texto: "El RMM instalado es del proveedor anterior: es un acceso remoto con permisos de sistema en cada equipo. Desinstalar su agente de todos los puestos, comprobar en su consola que ya no reportan y desplegar el de ALANA.",
+    },
+    {
       id: "pcs_gral_doc",
       tipo: "doc",
       texto: "Volcar el inventario de equipos al RMM y a la documentación (Hudu) al cerrar el alta; el conteo del formulario es la base del contrato de mantenimiento.",
@@ -295,7 +302,7 @@ export const HINTS = {
       tipo: "seguridad",
       anchor: "accesos_heredados",
       when: { field: "accesos_heredados", value: "Pendiente de revocar" },
-      texto: "Eliminar las cuentas locales del proveedor anterior y las huérfanas en cada equipo.",
+      texto: "Eliminar las cuentas locales heredadas (proveedor anterior, exempleados) y las huérfanas en cada equipo.",
     },
     {
       id: "pcs_admin_local_seguridad",
@@ -376,7 +383,7 @@ export const HINTS = {
       tipo: "seguridad",
       anchor: "consola_accesos_heredados",
       when: { field: "consola_accesos_heredados", value: "Pendiente de revocar" },
-      texto: "Cambiar la contraseña de administrador de la consola de backup y eliminar las cuentas del proveedor anterior. Guardar las nuevas credenciales en el gestor de ALANA.",
+      texto: "Cambiar la contraseña de administrador de la consola de backup y eliminar las cuentas heredadas (proveedor anterior, exempleados). Guardar las nuevas credenciales en el gestor de ALANA.",
     },
     {
       id: "backup_gral_seguridad_2",
@@ -409,7 +416,7 @@ export const HINTS = {
       tipo: "seguridad",
       anchor: "repo_accesos_heredados",
       when: { field: "repo_accesos_heredados", value: "Pendiente de revocar" },
-      texto: "Eliminar las cuentas del proveedor anterior, revisar el grupo administradores del NAS y dejar solo cuentas de ALANA y del cliente. Renombrar o deshabilitar la cuenta admin por defecto.",
+      texto: "Eliminar las cuentas heredadas (proveedor anterior, exempleados), revisar el grupo administradores del NAS y dejar solo cuentas de ALANA y del cliente. Renombrar o deshabilitar la cuenta admin por defecto.",
     },
     {
       id: "backup_repo_mfa_seguridad",
@@ -489,7 +496,7 @@ export const HINTS = {
       tipo: "seguridad",
       anchor: "admins_heredados",
       when: { field: "admins_heredados", value: "Pendiente de revocar" },
-      texto: "Revocar los accesos de administrador del proveedor anterior, eliminar sus cuentas de servicio y cerrar sus sesiones activas.",
+      texto: "Revocar los accesos de administrador heredados (proveedor anterior, exempleados), eliminar sus cuentas de servicio y cerrar sus sesiones activas.",
     },
     {
       id: "email_admins_revisados_seguridad",
@@ -653,7 +660,7 @@ export const HINTS = {
       tipo: "seguridad",
       anchor: "password_heredada",
       when: { field: "password_heredada", value: "Pendiente de cambiar" },
-      texto: "La clave WiFi la conoce el proveedor saliente (y probablemente medio edificio). Cambiarla y repartirla solo por el canal acordado con el cliente.",
+      texto: "La clave WiFi la conoce gente que ya no debería (proveedor anterior, exempleados, probablemente medio edificio). Cambiarla y repartirla solo por el canal acordado con el cliente.",
     },
     {
       id: "wifi_cifrado_seguridad",
@@ -820,7 +827,8 @@ export const HINTS = {
 // ─────────────────────────────────────────────────────────────────────────
 //
 // seguridad  Riesgo activo que hay que corregir.
-// legado     Herencia del proveedor anterior que hay que limpiar.
+// legado     Herencia que hay que limpiar: proveedor anterior, exempleados,
+//            integradores.
 // comercial  Oportunidad de servicio detectada. INTERNO: nunca sale en un
 //            informe que pueda acabar en manos del cliente.
 // doc        Recordatorio de que revisar o documentar durante la visita.
