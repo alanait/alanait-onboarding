@@ -9,7 +9,7 @@ import { computeScore } from "../src/score/computeScore.js";
 // bloque de deduccion del soporte necesita el modelo REAL: depende de ids
 // concretos y de la tabla de fin de soporte.
 import { CRITERIOS, PRECONDICIONES, CAMPOS_QUE_PUNTUAN, LITERALES_NO_APLICA, LITERALES_SIN_COMPROBAR, CONTRADICCIONES, MOTIVOS_INEXISTENCIA, MOTIVO_OTRO } from "../src/score/criterios.js";
-import { SECTIONS, textoOpcion } from "../src/sections.js";
+import { SECTIONS, textoOpcion, reindexarHints } from "../src/sections.js";
 import { hintsVisibles } from "../src/hints.js";
 
 let ok = 0, fallos = 0;
@@ -665,6 +665,30 @@ console.log("\nALANA IT como respuesta (modelo 2.7.0)");
   const campoConsola = SECTIONS.find(s => s.id === "antivirus").fields.find(f => f.id === "consola_acceso");
   es("'Ambos' se ensena como cliente y proveedor anterior", textoOpcion(campoConsola, "Ambos"), "El cliente y el proveedor anterior");
   es("una opcion sin texto propio se ensena tal cual", textoOpcion(campoConsola, "ALANA IT"), "ALANA IT");
+}
+
+// ── Borrar una instancia solo mueve los avisos de su seccion ─────────────
+// Estuvo en produccion del 18/08 al 01/10: reindexarHints recorria TODAS las
+// claves de avisos. Borrar la aplicacion 1 se llevaba el "Hecho" del primer
+// aviso de Red y subia un puesto la marca de la licencia 2, que pasaba a
+// cerrar una tarea de la licencia 1.
+console.log("\nBorrar una instancia solo reindexa los avisos de su sección");
+{
+  const antes = {
+    "erp_gral_legado@0": "hecho", "erp_gral_legado@1": "na",
+    "licenciamiento_acceso_panel_seguridad@1": "hecho",
+    "red_gral_seguridad@0": "hecho", "email_gral_doc@2": "pendiente",
+  };
+  const despues = reindexarHints(antes, "erp", 0, 2);
+  es("la marca de la instancia borrada se va con ella", "erp_gral_legado@0" in despues && despues["erp_gral_legado@0"] === "hecho", false);
+  es("la siguiente instancia de la misma seccion sube un puesto", despues["erp_gral_legado@0"], "na");
+  es("una marca de otra seccion en la misma posicion se conserva", despues["red_gral_seguridad@0"], "hecho");
+  es("las marcas de otra seccion no cambian de instancia", despues["licenciamiento_acceso_panel_seguridad@1"], "hecho");
+  es("...ni aparecen en la instancia anterior", "licenciamiento_acceso_panel_seguridad@0" in despues, false);
+  es("una posicion mas alta de otra seccion tampoco se mueve", despues["email_gral_doc@2"], "pendiente");
+  es("no se pierde ni se inventa ninguna clave ajena", Object.keys(despues).length, 4);
+  const sinIndice = reindexarHints({ "red_gral_seguridad": "hecho" }, "red", 0, 1);
+  es("una clave sin '@' se conserva", sinIndice, { "red_gral_seguridad": "hecho" });
 }
 
 console.log("\nInvariantes duros del modelo REAL");

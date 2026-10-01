@@ -1,4 +1,5 @@
 import { MOTIVOS_INEXISTENCIA, MOTIVO_OTRO } from "./score/criterios.js";
+import { HINTS } from "./hints.js";
 
 // ─────────────────────────────────────────────────────────────────────────
 // Esquema del cuestionario de onboarding.
@@ -574,14 +575,24 @@ export function preguntaDe(sectionId, campoId) {
   return { seccion: seccion?.label ?? sectionId, pregunta: campo?.label ?? campoId };
 }
 
-/** Reindexa las claves `hintId@idx` al eliminar la instancia `idx` de una seccion. */
+/**
+ * Reindexa las claves `hintId@idx` al eliminar la instancia `idx` de una seccion.
+ *
+ * Solo toca los avisos de ESA seccion. La clave no lleva la seccion
+ * ("red_gral_seguridad@0"), asi que hay que saber de quien es cada aviso por
+ * su id. La version anterior recorria todas las claves: borrar la aplicacion 1
+ * se llevaba el "Hecho" del aviso @0 de Red, Backup o Correo y subia un puesto
+ * los de las demas secciones, que acababan marcando la instancia equivocada.
+ * Paso en las 15 secciones desde ffd550a (18/08/2026) cada vez que alguien
+ * pulsaba "Eliminar".
+ */
 export function reindexarHints(hints, sectionId, idxBorrado, total) {
-  const ids = (SECTIONS.find(s => s.id === sectionId)?.fields ?? []) && Object.keys(hints);
+  const deEstaSeccion = new Set((HINTS[sectionId] ?? []).map(h => h.id));
   const salida = {};
-  for (const clave of ids) {
+  for (const clave of Object.keys(hints)) {
     const [hintId, i] = clave.split("@");
     const n = Number(i);
-    if (Number.isNaN(n)) { salida[clave] = hints[clave]; continue; }
+    if (!deEstaSeccion.has(hintId) || i === undefined || Number.isNaN(n)) { salida[clave] = hints[clave]; continue; }
     if (n < idxBorrado) salida[clave] = hints[clave];
     else if (n === idxBorrado) continue;                       // se va con la instancia
     else salida[`${hintId}@${n - 1}`] = hints[clave];          // sube un puesto

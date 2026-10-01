@@ -8,6 +8,7 @@
 import { SECTIONS } from '../src/sections.js';
 import { CRITERIOS, PRECONDICIONES, LITERALES_NO_APLICA, LITERALES_SIN_COMPROBAR, CONTRADICCIONES, MOTIVOS_INEXISTENCIA, MOTIVO_OTRO } from '../src/score/criterios.js';
 import { DOMINIOS } from '../src/score/dominios.js';
+import { HINTS } from '../src/hints.js';
 
 const campoDe = (sid, fid) => SECTIONS.find(s => s.id === sid)?.fields.find(f => f.id === fid);
 let fallos = 0;
@@ -129,6 +130,22 @@ for (const [sec, motivos] of Object.entries(MOTIVOS_INEXISTENCIA)) {
   if (!motivos.includes(MOTIVO_OTRO)) mal(`MOTIVOS_INEXISTENCIA: ${sec} no ofrece "${MOTIVO_OTRO}"`);
   if (JSON.stringify(campo.options) !== JSON.stringify(motivos)) {
     mal(`MOTIVOS_INEXISTENCIA: las opciones de ${sec}.sin_servicio_motivo no coinciden con la lista`);
+  }
+}
+
+// Los avisos se guardan como "hintId@instancia", sin la seccion. Al borrar una
+// instancia, reindexarHints sabe que avisos son de esa seccion SOLO por su id:
+// un id repetido entre secciones, o que no empiece por el id de su seccion,
+// haria que borrar la aplicacion 1 moviese las marcas de otra seccion, que es
+// el fallo que estuvo en produccion desde el 18/08.
+const avisoVisto = new Map();
+for (const [sec, lista] of Object.entries(HINTS)) {
+  if (!SECTIONS.some(s => s.id === sec)) mal(`HINTS: la seccion ${sec} no existe`);
+  for (const h of lista) {
+    if (avisoVisto.has(h.id)) mal(`aviso ${h.id} repetido en ${avisoVisto.get(h.id)} y ${sec}`);
+    avisoVisto.set(h.id, sec);
+    if (!h.id.startsWith(`${sec}_`)) mal(`aviso ${h.id}: su id tiene que empezar por "${sec}_"`);
+    if (h.id.includes('@')) mal(`aviso ${h.id}: el id no puede llevar "@", es el separador de la instancia`);
   }
 }
 
