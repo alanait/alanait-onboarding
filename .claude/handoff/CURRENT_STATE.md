@@ -1,9 +1,37 @@
 # Estado actual — ALANA IT Onboarding
 
 > Última actualización: 2026-08-25. Verificado contra el repositorio
-> ejecutándolo, no solo contra la conversación.
+> ejecutándolo, no solo contra la conversación. Bloque del 01/10/2026 añadido
+> justo debajo.
 
 ---
+
+## ▶ 01/10/2026: el dueño retoma el trabajo con tres peticiones
+
+La pausa de abajo sigue en pie para **fases nuevas**, pero el dueño pidió tres
+cosas, todas en ramas y nunca directo a `main`:
+
+1. **Juntar «Aplicaciones / ERP / Licencias» y «Licenciamiento y contratos».**
+   Analizado con un workflow de 13 agentes (3 diseños, 9 revisores adversariales).
+   Recomendación: **juntarlas solo en pantalla**, una tarjeta con las dos preguntas
+   de sí/no y sin interruptor común; datos y nota intactos. La fusión real se
+   descartó con medición (las 5 fichas pasan a no fiables y documentar una aplicación
+   puntuaría peor que no hacerlo). **Pendiente de que el dueño elija** entre solo
+   pantalla o lista única. No implementado.
+2. **PDF seleccionable.** Hecho en la rama **`feat/pdf-texto-seleccionable`**: capa
+   de texto invisible sobre la imagen (D27). Pendiente de revisión del dueño en la
+   preview, también en Firefox/Safari si los usa.
+3. **Documento para que lo rellene el cliente.** Solo investigado, como pidió.
+   Recomendación por fases: PDF en blanco para imprimir (1,5–2 días) → Excel con
+   bandeja de revisión campo a campo (6–8 días) → enlace editable solo después de
+   cerrar AS1, el alta abierta, la auditoría y AS5. **Pendiente de decisión.**
+
+Y una rama aparte, **`fix/reindexar-hints-por-seccion`** (PR #19): fallo en
+producción desde el 18/08 por el que borrar una instancia movía las marcas de
+avisos de todas las secciones (KNOWN_ISSUES C9, en esa rama).
+
+Los informes completos de los agentes **no están en el repo**: vivían en el
+scratchpad de la sesión, que se pierde. Lo esencial está en D27 y en este bloque.
 
 ## ⏸ EL PROYECTO ESTÁ EN PAUSA
 
