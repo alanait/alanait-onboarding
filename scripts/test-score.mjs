@@ -9,8 +9,8 @@ import { computeScore } from "../src/score/computeScore.js";
 // bloque de deduccion del soporte necesita el modelo REAL: depende de ids
 // concretos y de la tabla de fin de soporte.
 import { CRITERIOS, PRECONDICIONES, CAMPOS_QUE_PUNTUAN, LITERALES_NO_APLICA, LITERALES_SIN_COMPROBAR, CONTRADICCIONES, MOTIVOS_INEXISTENCIA, MOTIVO_OTRO } from "../src/score/criterios.js";
-import { SECTIONS, textoOpcion, reindexarHints } from "../src/sections.js";
-import { hintsVisibles } from "../src/hints.js";
+import { SECTIONS, textoOpcion, reindexarHints, TARJETAS, BLOQUES, estadoTarjeta } from "../src/sections.js";
+import { hintsVisibles, HINTS } from "../src/hints.js";
 
 let ok = 0, fallos = 0;
 const es = (etiqueta, real, esperado) => {
@@ -689,6 +689,45 @@ console.log("\nBorrar una instancia solo reindexa los avisos de su sección");
   es("no se pierde ni se inventa ninguna clave ajena", Object.keys(despues).length, 4);
   const sinIndice = reindexarHints({ "red_gral_seguridad": "hecho" }, "red", 0, 1);
   es("una clave sin '@' se conserva", sinIndice, { "red_gral_seguridad": "hecho" });
+}
+
+// ── Tarjetas: como se ensenan las secciones ──────────────────────────────
+// "Aplicaciones de negocio" y "Licencias y contratos" se ven en una tarjeta,
+// pero siguen siendo dos secciones guardadas con su propio si/no. Si una
+// seccion se quedara fuera de TARJETAS desapareceria del formulario sin que
+// fallase nada; si estuviera en dos, se pintaria dos veces.
+console.log("\nTarjetas del formulario");
+{
+  const enTarjetas = TARJETAS.flatMap(t => t.miembros.map(m => m.id));
+  es("cada sección está en exactamente una tarjeta, en el orden del esquema", enTarjetas, SECTIONS.map(s => s.id));
+  es("las 15 secciones se ven en 14 tarjetas", [SECTIONS.length, TARJETAS.length], [15, 14]);
+  const apps = TARJETAS.find(t => t.id === "apps_licencias");
+  es("la tarjeta agrupa Aplicaciones y Licencias", apps?.miembros.map(m => m.id), ["erp", "licenciamiento"]);
+  es("todo bloque usado está definido", SECTIONS.filter(s => s.bloque && !BLOQUES[s.bloque]).map(s => s.id), []);
+  // El informe une nombres de seccion con ", ": una coma dentro del nombre de
+  // una parte de la tarjeta haria ilegible "faltan: Aplicaciones, licencias,
+  // WiFi". (La de "Internet y Red (Router, Switches, Firewall)" es anterior y va
+  // entre parentesis.)
+  es("los nombres de sección son únicos", new Set(SECTIONS.map(s => s.label)).size, SECTIONS.length);
+  es("las partes de una tarjeta no llevan comas",
+     TARJETAS.filter(t => t.miembros.length > 1).flatMap(t => t.miembros).filter(m => m.label.includes(",")).map(m => m.label), []);
+
+  // Sin si/no comun: la tarjeta solo cuenta como contestada con las dos
+  // preguntas decididas, y dice cuales faltan.
+  const caso = (erp, lic) => {
+    const r = estadoTarjeta(apps, { erp, licenciamiento: lic });
+    return [r.estado, r.faltan.map(m => m.id)];
+  };
+  es("sin decidir ninguna", caso(undefined, undefined), [undefined, ["erp", "licenciamiento"]]);
+  es("una en sí y la otra sin decidir no cuenta como contestada", caso("si", undefined), [undefined, ["licenciamiento"]]);
+  es("una en no y la otra sin decidir tampoco", caso(undefined, "no"), [undefined, ["erp"]]);
+  es("sí y no: la tarjeta tiene contenido", caso("si", "no"), ["si", []]);
+  es("no y sí: igual", caso("no", "si"), ["si", []]);
+  es("las dos en sí", caso("si", "si"), ["si", []]);
+  es("las dos en no: la tarjeta entera es 'no'", caso("no", "no"), ["no", []]);
+
+  const avisoDoc = HINTS.pcs.find(h => h.id === "pcs_gral_doc_2");
+  es("el aviso que manda las licencias a otra sección nombra la tarjeta vigente", avisoDoc.texto.includes(BLOQUES.apps_licencias.label), true);
 }
 
 console.log("\nInvariantes duros del modelo REAL");

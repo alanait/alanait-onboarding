@@ -127,7 +127,9 @@ export function paginaDiagnostico(score, sectionEnabled, fecha) {
   let lectura;
   if (!score.fiable) {
     if (score.motivoNoFiable === "secciones") {
-      lectura = `Sin nota: quedan ${score.sinResponder.length} secciones sin responder (${esc(score.sinResponder.join(", "))}). Mientras no se decida si el cliente tiene esos servicios, cualquier puntuación sería engañosa.`;
+      // Por su nombre, no por su id interno: el informe decia "licenciamiento".
+      const nombres = score.sinResponder.map(s => SECTIONS.find(x => x.id === s)?.label ?? s);
+      lectura = `Sin nota: quedan ${score.sinResponder.length} secciones sin responder (${esc(nombres.join(", "))}). Mientras no se decida si el cliente tiene esos servicios, cualquier puntuación sería engañosa.`;
     } else if (score.motivoNoFiable === "contradicciones") {
       // No se acusa al cliente de nada: se dice que el formulario se contradice,
       // que es un hecho del propio formulario (D6). Publicar una nota sobre un

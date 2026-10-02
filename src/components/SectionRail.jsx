@@ -5,9 +5,24 @@
 // caben el nombre completo, el avance y los avisos, que en una tira horizontal
 // de 15 iconos no cabian.
 
+//
+// Va por TARJETAS, no por secciones: "Aplicaciones de negocio" y "Licencias y
+// contratos" se ven juntas en el formulario y aqui son una sola entrada. Su
+// punto de estado solo sale con las dos preguntas decididas, y al pulsarla se
+// salta a la primera que falte.
+
 import React from "react";
 import { C } from "../theme.js";
-import { SECTIONS } from "../sections.js";
+import { TARJETAS, estadoTarjeta } from "../sections.js";
+
+// Avance de una tarjeta. Si alguna de sus secciones en "si" tiene campos que
+// puntuan, se suman solo esos; si ninguna puntua, el inventario de todas.
+// Sumar los dos tipos mezclaria cosas que no se miden igual.
+function avanceTarjeta(t, sectionEnabled, avance) {
+  const partes = t.miembros.filter(m => sectionEnabled[m.id] === "si").map(m => avance(m.id));
+  const usadas = partes.some(p => p.puntua) ? partes.filter(p => p.puntua) : partes;
+  return usadas.reduce((a, p) => ({ total: a.total + p.total, rellenos: a.rellenos + p.rellenos }), { total: 0, rellenos: 0 });
+}
 
 export default function SectionRail({ abierto, sectionEnabled, avance, avisos, activa, onIr }) {
   return (
@@ -25,18 +40,19 @@ export default function SectionRail({ abierto, sectionEnabled, avance, avisos, a
           Secciones
         </div>
 
-        {SECTIONS.map(s => {
-          const est = sectionEnabled[s.id];
-          const a = avance(s.id);
-          const n = est === "si" ? avisos(s) : 0;
-          const act = activa === s.id;
+        {TARJETAS.map(t => {
+          const s = t.bloque ?? t.miembros[0];
+          const { estado: est, faltan } = estadoTarjeta(t, sectionEnabled);
+          const a = avanceTarjeta(t, sectionEnabled, avance);
+          const n = t.miembros.reduce((suma, m) => suma + (sectionEnabled[m.id] === "si" ? avisos(m) : 0), 0);
+          const act = t.miembros.some(m => m.id === activa);
           const pct = a.total ? Math.round((a.rellenos / a.total) * 100) : 0;
 
           return (
             <button
-              key={s.id}
-              onClick={() => onIr(s.id)}
-              title={s.label}
+              key={t.id}
+              onClick={() => onIr((faltan[0] ?? t.miembros[0]).id)}
+              title={faltan.length && t.miembros.length > 1 ? `${s.label} · falta decidir: ${faltan.map(m => m.label).join(" y ")}` : s.label}
               style={{
                 display: "flex", alignItems: "center", gap: 9, width: "100%",
                 padding: "7px 8px", marginBottom: 1, borderRadius: 7,
