@@ -75,16 +75,18 @@ No hace falta migración: la nota no se guarda en BD, se recalcula.
 ## Comandos
 
 ```bash
-npm run build     # 6 guardarraíles encadenados + vite build
+npm run build     # 7 guardarraíles encadenados + vite build
 node scripts/test-score.mjs          # 130 pruebas del motor
 node scripts/test-informe.mjs        # 61 pruebas del informe
 node scripts/test-borrador.mjs       # 33 pruebas del borrador local
+node scripts/test-capa-texto.mjs     # 23 pruebas de la capa de texto del PDF
+node scripts/verificar-pdf.mjs informe.pdf "búsqueda"   # ¿el PDF lleva texto? (fuera del build)
 node scripts/puntuar-ejemplos.mjs    # notas de las 5 fichas de ejemplo
 node scripts/etiquetar-ejemplos.mjs  # reetiquetar tras cambiar el modelo
 ```
 
-Los seis guardarraíles (`check-ids`, `check-imports`, `check-score`,
-`test-score`, `test-informe`, `test-borrador`) están encadenados en
+Los siete guardarraíles (`check-ids`, `check-imports`, `check-score`,
+`test-score`, `test-informe`, `test-borrador`, `test-capa-texto`) están encadenados en
 `npm run build`, así que **fallan el deploy**, no solo avisan.
 
 ## Verificación

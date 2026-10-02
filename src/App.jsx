@@ -217,16 +217,29 @@ export default function App() {
 
       const nombre = clientData.empresa ? clientData.empresa.replace(/[^a-zA-Z0-9áéíóúñÁÉÍÓÚÑ ]/g, "_") : "onboarding";
       const fecha = new Date().toISOString().split("T")[0];
-      await exportarInformePdf(container, `${nombre}_${fecha}.pdf`);
+      try {
+        const { palabrasCapa } = await exportarInformePdf(container, `${nombre}_${fecha}.pdf`, { titulo: clientData.empresa });
 
-      // El informe es INTERNO y lleva el inventario, las capturas y las
-      // oportunidades comerciales. Que se genero uno queda registrado.
-      registrarEvento("pdf_generado", {
-        clientId: currentClientId, empresa: clientData.empresa,
-        detalle: { nota: score.nota, fiable: score.fiable, modelo: score.version },
-      });
+        // El informe es INTERNO y lleva el inventario, las capturas y las
+        // oportunidades comerciales. Que se genero uno queda registrado. El
+        // numero de palabras de la capa de texto es telemetria sin contenido:
+        // 0 o null dice que el PDF salio sin texto buscable.
+        registrarEvento("pdf_generado", {
+          clientId: currentClientId, empresa: clientData.empresa,
+          detalle: { nota: score.nota, fiable: score.fiable, modelo: score.version, capaPalabras: palabrasCapa },
+        });
 
-      document.body.removeChild(container);
+        // Si la capa fallo el PDF sale igual, solo con la imagen. Se dice: el
+        // tecnico que lo va a buscar con Ctrl+F tiene que saber por que no
+        // encuentra nada.
+        if (!palabrasCapa) {
+          alert("El PDF se ha generado, pero sin texto seleccionable: no se podrá buscar ni copiar en él. Vuelve a generarlo y, si se repite, avisa a soporte.");
+        }
+      } finally {
+        // En un finally: si la exportacion fallaba, el contenedor del informe
+        // se quedaba colgado del documento hasta recargar la pagina.
+        if (container.parentNode) container.parentNode.removeChild(container);
+      }
     } catch (err) {
       console.error('PDF export error:', err);
       alert("Error al generar PDF: " + err.message);

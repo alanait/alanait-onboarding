@@ -195,12 +195,18 @@ peso**: solo dice cuáles son.
 **Decisión.** `src/print/exportarPdf.js` renderiza **un** canvas y lo corta a mano
 en páginas, usando el mismo alto de página que usó el plugin de marcadores.
 
-**Motivo.** `.save()` de html2pdf delega en el plugin context2d de jsPDF con
-`autoPaging`, que decide dónde partir **mientras dibuja**, con su propio cálculo de
-alto de página. Los marcadores (`pdf-avoid`, `pdf-break-before`) los inserta *otro*
-plugin con *otro* cálculo. Los dos no coinciden y el error se acumula: invisible en
+**Motivo.** `toPdf()` de html2pdf.js 0.14.0 trocea el canvas con su **propio** alto
+de página, `floor(canvas.width * ratio)`. Los marcadores (`pdf-avoid`,
+`pdf-break-before`) los inserta `toContainer()` con **otro** alto,
+`pageSize.inner.px.height`. Los dos no coinciden y el error se acumula: invisible en
 las primeras páginas, hacia la 8-9 cortaba títulos de sección por la mitad.
 Con una sola fuente de verdad para el alto de página, ambos coinciden siempre.
+
+> **Corregido el 01/10/2026.** Hasta entonces esta decisión atribuía el desajuste al
+> plugin context2d de jsPDF con `autoPaging`. Comprobado en el código de la 0.14.0:
+> no es así, es el troceo de `toPdf()` descrito arriba. El arreglo sigue siendo el
+> correcto; solo estaba mal la explicación. Y confirma que volver a `.save()` nunca
+> habría dado texto seleccionable (D27).
 
 **Configuración exacta y por qué.** `pagebreak: { mode: ['legacy'], before: '.pdf-break-before', avoid: '.pdf-avoid' }`.
 `avoid-all` queda **fuera a propósito**: mirando el código de html2pdf, ese modo
@@ -712,3 +718,67 @@ prudente de lo necesario.
 capadores dan salida **idéntica byte a byte** a `main`; ninguna opción de ALANA vale
 más que el máximo de su mapa ni es un literal de «no aplica» o «sin comprobar», así
 que no abre ninguna ruta de ocultación nueva.
+
+---
+
+## D27. El PDF lleva una capa de texto invisible encima de la imagen
+
+**Decisión (01/10/2026).** Pedido por el dueño: «el documento que se genera tiene que
+ser seleccionable con OCR». El PDF sigue siendo una imagen JPEG por página (D9), y
+encima de cada imagen va el texto real en modo de pintado 3 («invisible»), colocado
+palabra a palabra (`src/print/capaTexto.js`). Es lo que hacen los PDF escaneados con
+OCR, pero el texto sale **exacto del DOM**: no hay reconocimiento que se equivoque.
+
+**Medido con el exportador real de la rama**, sobre las fichas 01 (con una nota de
+caracteres difíciles y una URL larga) y 05:
+- Hoy: **0 caracteres**. Con la capa: **11 510 y 12 701**, unas 2 000 palabras.
+- Las búsquedas «Diagnóstico», «¿Copia offline verificada?», «Ñandú», «50 €», «l·l»,
+  «contraseña» y la URL partida en varias líneas: todas encontradas.
+- **Las imágenes de las páginas son idénticas byte a byte** a las de `main`.
+- +61 KB (+1,8 %) y unos 40 ms. Sin dependencias nuevas: el jsPDF 4.0.0 que va dentro
+  de html2pdf.js 0.14.0 ya trae el modo invisible y `horizontalScale`.
+
+**Las cinco trampas, cada una con su prueba en `scripts/test-capa-texto.mjs`:**
+1. Helvetica se escribe en cp1252. **Un solo carácter fuera** (un emoji del título
+   de sección) hace que jsPDF recodifique la cadena entera en UCS-2 sin BOM, y al
+   extraerla sale basura. `aWinAnsi` sanea carácter a carácter; la prueba barre todos
+   los puntos de código hasta 0x2FFFF.
+2. Hay que medir el DOM **entre `toContainer()` y `toCanvas()`**: antes no están los
+   huecos de los saltos de página, y después `toCanvas()` ya ha quitado el clon.
+3. El clon vive en un overlay con `opacity:0`: la visibilidad se mira solo hasta la
+   raíz del informe, o todo el informe cuenta como invisible.
+4. `mmPorCss` se calcula con la **escala** de html2canvas, no con el ancho del canvas,
+   que redondea.
+5. Se mide el ancho **sin kerning**, porque `Tj` lo pinta sin él.
+
+**Si la capa falla, el PDF sale igual**, solo con la imagen, y el técnico ve un aviso
+de que no podrá buscar en él. Perder el informe por la capa sería peor que no tenerla.
+El número de palabras va a la auditoría (`capaPalabras`) como telemetría sin
+contenido, cuando `supabase-auditoria.sql` esté ejecutado.
+
+**Metadatos nuevos:** título con la empresa, asunto «Uso interno - no entregar al
+cliente» (cubre AS6 en parte) e idioma `es-ES`.
+
+**Descartado:**
+- **`window.print()` / Ctrl+P:** pierde la descarga directa, el nombre del fichero y
+  la auditoría. Además, según midió un agente en modo headless, hoy probablemente
+  imprime en blanco (`beforeprint` sin `flushSync`). No lo he comprobado en la app.
+- **jsPDF `.html()`:** medido, perdía 58 palabras, ignoraba los saltos y descolocaba
+  el sello de la nota. Y el jsPDF empaquetado ni siquiera lo expone.
+- **pdfmake / react-pdf / pdf-lib:** rompen la fuente única `buildPrintFragment` y son
+  semanas.
+- **Chromium en servidor:** la app no tiene servidor.
+- **tesseract.js:** reconocería por OCR un texto que ya tenemos exacto. Solo tendría
+  sentido para el texto de **dentro de las capturas**, que sigue siendo imagen.
+
+**Lo que no está probado:** Firefox y Safari/iPad (solo Chromium). Si su html2canvas
+maqueta con otro ajuste de línea, la selección podría quedar desplazada, aunque el
+texto seguiría siendo buscable. Lo tiene que mirar el dueño.
+
+**Consecuencia que decide el dueño:** el texto del PDF interno pasa a ser buscable,
+copiable e indexable (búsqueda de Windows, SharePoint), credenciales del inventario
+incluidas. Antes ya se podían sacar pasando un OCR, pero ahora es directo. La
+alternativa sería excluir de la capa una lista de campos sensibles.
+
+**Para comprobar un PDF real:** `node scripts/verificar-pdf.mjs fichero.pdf "búsqueda"`.
+No va en el build porque el PDF se genera en el navegador.
