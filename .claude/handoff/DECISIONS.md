@@ -801,6 +801,15 @@ de negocio» y «Licencias y contratos». Siguen siendo las secciones `erp` y
 > mantenimiento?». Cada elemento es «Servicio 1, 2…». Solo textos: el id
 > `apps_licencias` del bloque y todo lo guardado siguen igual.
 
+> **Y separadas otra vez, también el 02/10, tras verlo en producción:** el dueño
+> prefirió **dos tarjetas**, «Aplicaciones de negocio» y «Servicios contratados»,
+> conservando los nombres nuevos. El mecanismo de `TARJETAS` **se queda en el código
+> sin ningún grupo** (`BLOQUES = {}`): está probado, con todas las tarjetas de una
+> sola sección se comporta exactamente como antes, y volver a agrupar es añadir un
+> bloque y poner `bloque:` en las secciones. Lo que sigue valiendo de esta decisión
+> es el razonamiento: si alguna vez se vuelven a juntar, **sin sí/no común** y
+> **sin juntar los datos**.
+
 **Por qué no una sola lista** (lo analizó un workflow de 13 agentes: 3 diseños y 9
 revisores adversariales). Pasar las aplicaciones a ser elementos de `licenciamiento`:
 - dejaba las 5 fichas de ejemplo como **no fiables** (la aplicación queda sin

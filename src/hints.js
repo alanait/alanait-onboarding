@@ -349,7 +349,7 @@ export const HINTS = {
     {
       id: "pcs_gral_doc_2",
       tipo: "doc",
-      texto: "El detalle de licencias del software crítico va en la tarjeta 'Aplicaciones y servicios contratados'; aquí solo se inventaría qué está instalado en los puestos.",
+      texto: "El detalle de licencias del software crítico va en las secciones 'Aplicaciones de negocio' y 'Servicios contratados'; aquí solo se inventaría qué está instalado en los puestos.",
     },
     {
       id: "pcs_software_licencias_comercial",

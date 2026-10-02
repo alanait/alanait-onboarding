@@ -17,7 +17,7 @@
 
 import React from "react";
 import { C, FUENTE } from "../theme.js";
-import { SECTIONS, BLOQUES } from "../sections.js";
+import { SECTIONS } from "../sections.js";
 import { CAMPOS_QUE_PUNTUAN, PRECONDICIONES, MOTIVOS_INEXISTENCIA, CRITERIOS } from "../score/criterios.js";
 import { DOMINIOS, TRAMOS, EVIDENCIA_MINIMA, SCORE_MODEL_VERSION } from "../score/dominios.js";
 import { HINTS, TIPOS_HINT } from "../hints.js";
@@ -299,8 +299,7 @@ export default function Manual({ onClose }) {
                 <span className="mn-orden">DESPUÉS</span>
                 <h3>Sí o no a las {SECTIONS.length} secciones</h3>
                 <p>Recorre la lista y decide qué tiene el cliente. Es lo que abre cada formulario
-                y lo que define el alcance de la auditoría. «{BLOQUES.apps_licencias.label}»
-                es una sola tarjeta con dos preguntas: contesta las dos.</p>
+                y lo que define el alcance de la auditoría.</p>
               </div>
               <div className="mn-fase">
                 <span className="mn-orden">EL GRUESO</span>

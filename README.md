@@ -26,7 +26,7 @@ La app cubre 15 areas de infraestructura IT:
 | Almacenamiento | NAS, cloud, permisos, sincronizacion |
 | Telefonia | VoIP, centralita, extensiones, moviles |
 | Impresion | Impresoras, IPs, consumibles, mantenimiento |
-| Aplicaciones de negocio | ERP, CRM, soporte, alojamiento (misma tarjeta que la siguiente) |
+| Aplicaciones de negocio | ERP, CRM, soporte, alojamiento |
 | Servicios contratados | Licencias, dominios, hosting, SSL, cloud y contratos: producto, renovacion, coste, partner |
 | Otros dispositivos | TPV, control de acceso/presencia, camaras, IoT, perifericos |
 

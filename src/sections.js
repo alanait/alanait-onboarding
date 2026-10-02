@@ -452,15 +452,12 @@ export const SECTIONS = [
       { id: "notas", label: "Notas adicionales", type: "textarea" },
     ]
   },
-  // `erp` y `licenciamiento` se ENSENAN juntas en una sola tarjeta (`bloque`,
-  // ver TARJETAS al final), pero siguen siendo dos secciones guardadas, cada una
-  // con su si/no. Juntarlas tambien en los datos se descarto con medicion:
-  // documentar una aplicacion pasaba a puntuar peor que no documentarla, y
-  // obligaba a migrar las fichas viejas para siempre (DECISIONS.md D28).
+  // `erp` y `licenciamiento` se probaron juntas en una sola tarjeta y el dueno
+  // prefirio volver a dos, con nombres que no se pisen (DECISIONS.md D28).
   // "Licencias" sale de la etiqueta de erp porque invitaba a apuntar alli M365,
-  // donde no puntua.
+  // donde no puntua: las licencias van en "Servicios contratados".
   {
-    id: "erp", label: "Aplicaciones de negocio", icon: "📊", bloque: "apps_licencias",
+    id: "erp", label: "Aplicaciones de negocio", icon: "📊",
     question: "¿Usa ERP, CRM u otras aplicaciones de negocio?",
     multi: true, multiLabel: "Aplicación",
     fields: [
@@ -481,7 +478,7 @@ export const SECTIONS = [
     // dominios, hosting, certificados SSL y servicios cloud (tipo_servicio). La
     // pregunta, que se ve justo debajo del nombre, los enumera para que se sepa
     // que va aqui. El nombre no lleva comas: el informe une secciones con ", ".
-    id: "licenciamiento", label: "Servicios contratados", icon: "📋", bloque: "apps_licencias",
+    id: "licenciamiento", label: "Servicios contratados", icon: "📋",
     question: "¿Tiene licencias, dominios, hosting, certificados SSL, servicios cloud o contratos de mantenimiento?",
     multi: true, multiLabel: "Servicio",
     fields: [
@@ -548,15 +545,15 @@ export const SECTIONS = [
 //     M365/Google eso subia la nota +5 con sello.
 // Con dos preguntas separadas cada clic hace exactamente lo mismo que antes:
 // la tarjeta no abre ningun estado de la ficha al que no se llegara ya.
+//
+// HOY NO HAY NINGUN GRUPO: cada seccion es su propia tarjeta. Se probo juntar
+// "Aplicaciones de negocio" y "Servicios contratados" y el dueno prefirio dos
+// tarjetas (D28). El mecanismo se queda porque esta probado y volver a agrupar
+// es anadir aqui un bloque y poner `bloque: "<id>"` en las secciones. Cada
+// bloque lleva { label, icon, subtitulo }.
 // ─────────────────────────────────────────────────────────────────────────
 
-export const BLOQUES = {
-  apps_licencias: {
-    label: "Aplicaciones y servicios contratados",
-    icon: "📋",
-    subtitulo: "Dos preguntas: las aplicaciones de negocio, y los servicios contratados (licencias, dominios, hosting, SSL, cloud y contratos de mantenimiento). Contesta las dos.",
-  },
-};
+export const BLOQUES = {};
 
 // Derivado de SECTIONS conservando su orden: una tarjeta por seccion suelta, y
 // una por bloque en la posicion de su primera seccion.
