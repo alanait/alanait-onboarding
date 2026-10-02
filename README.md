@@ -27,7 +27,7 @@ La app cubre 15 areas de infraestructura IT:
 | Telefonia | VoIP, centralita, extensiones, moviles |
 | Impresion | Impresoras, IPs, consumibles, mantenimiento |
 | Aplicaciones de negocio | ERP, CRM, soporte, alojamiento (misma tarjeta que la siguiente) |
-| Licencias y contratos | Producto, tipo de licencia, renovacion, coste, partner, dominios, SSL, cloud |
+| Servicios contratados | Licencias, dominios, hosting, SSL, cloud y contratos: producto, renovacion, coste, partner |
 | Otros dispositivos | TPV, control de acceso/presencia, camaras, IoT, perifericos |
 
 Ademas hay una seccion final de **Datos adicionales** con notas libres y capturas

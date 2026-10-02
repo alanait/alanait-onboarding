@@ -793,6 +793,14 @@ ERP / Licencias» y «Licenciamiento y contratos» se ven como **una tarjeta**,
 de negocio» y «Licencias y contratos». Siguen siendo las secciones `erp` y
 `licenciamiento` en los datos, el motor, los avisos y el PDF.
 
+> **Renombrado el mismo día, a petición del dueño:** la parte de `licenciamiento`
+> pasa a **«Servicios contratados»** y la tarjeta a **«Aplicaciones y servicios
+> contratados»**, porque ahí caben también dominios, hosting, SSL y cloud. Lo que
+> entra lo dice la pregunta, que se ve justo debajo del nombre: «¿Tiene licencias,
+> dominios, hosting, certificados SSL, servicios cloud o contratos de
+> mantenimiento?». Cada elemento es «Servicio 1, 2…». Solo textos: el id
+> `apps_licencias` del bloque y todo lo guardado siguen igual.
+
 **Por qué no una sola lista** (lo analizó un workflow de 13 agentes: 3 diseños y 9
 revisores adversariales). Pasar las aplicaciones a ser elementos de `licenciamiento`:
 - dejaba las 5 fichas de ejemplo como **no fiables** (la aplicación queda sin

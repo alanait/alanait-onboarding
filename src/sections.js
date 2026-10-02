@@ -477,9 +477,13 @@ export const SECTIONS = [
     ]
   },
   {
-    id: "licenciamiento", label: "Licencias y contratos", icon: "📋", bloque: "apps_licencias",
-    question: "¿Dispone de licencias, dominios o contratos de mantenimiento?",
-    multi: true, multiLabel: "Licencia / Contrato",
+    // "Servicios contratados" y no "Licencias y contratos": aqui caben tambien
+    // dominios, hosting, certificados SSL y servicios cloud (tipo_servicio). La
+    // pregunta, que se ve justo debajo del nombre, los enumera para que se sepa
+    // que va aqui. El nombre no lleva comas: el informe une secciones con ", ".
+    id: "licenciamiento", label: "Servicios contratados", icon: "📋", bloque: "apps_licencias",
+    question: "¿Tiene licencias, dominios, hosting, certificados SSL, servicios cloud o contratos de mantenimiento?",
+    multi: true, multiLabel: "Servicio",
     fields: [
       // Campos del "no": solo se pintan cuando la seccion se declara
       // INEXISTENTE, no cuando se rellena (soloSiNo). Declarar que el
@@ -548,9 +552,9 @@ export const SECTIONS = [
 
 export const BLOQUES = {
   apps_licencias: {
-    label: "Aplicaciones, licencias y contratos",
+    label: "Aplicaciones y servicios contratados",
     icon: "📋",
-    subtitulo: "Dos preguntas: las aplicaciones de negocio y las licencias, dominios o contratos. Contesta las dos.",
+    subtitulo: "Dos preguntas: las aplicaciones de negocio, y los servicios contratados (licencias, dominios, hosting, SSL, cloud y contratos de mantenimiento). Contesta las dos.",
   },
 };
 

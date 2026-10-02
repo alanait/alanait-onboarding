@@ -692,7 +692,7 @@ console.log("\nBorrar una instancia solo reindexa los avisos de su sección");
 }
 
 // ── Tarjetas: como se ensenan las secciones ──────────────────────────────
-// "Aplicaciones de negocio" y "Licencias y contratos" se ven en una tarjeta,
+// "Aplicaciones de negocio" y "Servicios contratados" se ven en una tarjeta,
 // pero siguen siendo dos secciones guardadas con su propio si/no. Si una
 // seccion se quedara fuera de TARJETAS desapareceria del formulario sin que
 // fallase nada; si estuviera en dos, se pintaria dos veces.
