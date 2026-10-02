@@ -53,7 +53,7 @@ function resumir({ sectionEnabled, getVal, getCount, getHint }) {
         const marcable = TIPOS_HINT[h.tipo].marcable;
         const estado = getHint(h.id, i);
         if (marcable && estado !== "hecho" && estado !== "na") {
-          abiertos.push({ ...h, seccion: s.label, icono: s.icon, instancia: getCount(s.id) > 1 ? i + 1 : null });
+          abiertos.push({ ...h, seccion: s.label, seccionId: s.id, icono: s.icon, instancia: getCount(s.id) > 1 ? i + 1 : null });
         }
       }
     }
@@ -116,7 +116,7 @@ export default function ReportPanel({ sectionEnabled, formData, instanceCounts, 
                 separado y ya diferian. El orden -la evidencia por delante de
                 los campos sueltos- esta razonado en computeScore. */}
             {score.motivoNoFiable === "secciones"
-              ? `Faltan ${score.sinResponder.length} secciones por responder: ${score.sinResponder.join(", ")}. Márcalas como "sí" o "no" antes de cerrar la visita.`
+              ? `Faltan ${score.sinResponder.length} secciones por responder: ${score.sinResponder.map(s => SECTIONS.find(x => x.id === s)?.label ?? s).join(", ")}. Márcalas como "sí" o "no" antes de cerrar la visita.`
               : score.motivoNoFiable === "contradicciones"
                 ? `El formulario se contradice: ${score.contradicciones.map(k => k.texto).join(" ")}`
                 : score.motivoNoFiable === "sin_motivo"
@@ -296,7 +296,7 @@ export default function ReportPanel({ sectionEnabled, formData, instanceCounts, 
               return (
                 <button
                   key={h.id + i}
-                  onClick={() => onIrASeccion(SECTIONS.find(s => s.label === h.seccion)?.id)}
+                  onClick={() => onIrASeccion(h.seccionId)}
                   style={{
                     display: "block", width: "100%", textAlign: "left", cursor: "pointer",
                     background: col.bg, border: "none", borderLeft: `2px solid ${col.c}`,

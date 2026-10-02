@@ -7,7 +7,7 @@ import { getSession, onAuthChange, signOut, getUserName } from "./lib/auth.js";
 import { saveClient as saveToCloud, loadClient, resolveImagesToBase64, searchClients } from "./lib/clientService.js";
 import { guardarBorrador, leerBorrador, borrarBorrador, borradorTieneContenido, haceCuanto } from "./lib/borrador.js";
 import { registrarEvento } from "./lib/auditoria.js";
-import { SECTIONS, lectorEfectivo, reindexarHints } from "./sections.js";
+import { SECTIONS, TARJETAS, estadoTarjeta, lectorEfectivo, reindexarHints } from "./sections.js";
 import { C, inp, FUENTE } from "./theme.js";
 import { SiNoToggle, ImageZone, SectionFields } from "./components/fields.jsx";
 import { buildPrintFragment } from "./print/buildPrintHTML.js";
@@ -128,6 +128,9 @@ export default function App() {
 
   const addInstance = (id) => setInstanceCounts(prev => ({ ...prev, [id]: getCount(id) + 1 }));
 
+  // Se cuentan las 15 preguntas de si/no, no las tarjetas: la tarjeta que
+  // agrupa dos secciones tiene dos preguntas y cada una cuenta. Asi la cifra
+  // coincide con la del motor y el PDF ("faltan N secciones").
   const answered = SECTIONS.filter(s => sectionEnabled[s.id] !== undefined).length;
   const progress = Math.round((answered / SECTIONS.length) * 100);
 
@@ -195,7 +198,9 @@ export default function App() {
     // ahi no hay nota que medir, asi que se muestra el avance del inventario
     // en vez de fingir que algo puntua. Mismo criterio que el contador doble
     // de fields.jsx cuando un grupo no tiene ningun campo que puntue.
-    return total > 0 ? { total, rellenos } : { total: totalBruto, rellenos: rellenosBruto };
+    // `puntua` deja al carril sumar varias secciones de una tarjeta sin mezclar
+    // campos que puntuan con campos de inventario.
+    return total > 0 ? { total, rellenos, puntua: true } : { total: totalBruto, rellenos: rellenosBruto, puntua: false };
   };
   const [confirmDelete, setConfirmDelete] = useState(null);
   const [showUnsaved, setShowUnsaved] = useState(false);
@@ -618,6 +623,150 @@ export default function App() {
     );
   }
 
+  // Una seccion del formulario: cabecera con su si/no, instancias, capturas y
+  // el motivo del "no". `anidada` la pinta como parte de una tarjeta que agrupa
+  // varias secciones (TARJETAS): sin borde ni sombra propios, separada por una
+  // linea. Es una funcion INTERNA de App a proposito: hereda exactamente el
+  // mismo ambito que tenia el bloque cuando estaba dentro del map, y un
+  // identificador fuera de ambito no lo cazan los guardarrailes (KNOWN_ISSUES C1).
+  const renderSeccion = (section, anidada = false) => {
+    const enabled = sectionEnabled[section.id];
+    const pendientes = enabled === "si" ? hintsPendientes(section) : 0;
+    return (
+      <div key={section.id} ref={el => { seccionRefs.current[section.id] = el; }} style={anidada
+        // Dentro de una tarjeta: el borde y la sombra los pone la tarjeta. Cada
+        // seccion conserva su ancla, asi que el carril y el panel siguen
+        // saltando a la pregunta exacta.
+        ? { borderTop: `1px solid ${C.border}`, scrollMarginTop: 12 }
+        : { background: "#fff", borderRadius: 10, border: `1px solid ${enabled === "si" ? C.blueBorder : enabled === "no" ? C.redBorder : C.border}`, marginBottom: 14, overflow: "hidden", boxShadow: "0 1px 4px rgba(0,0,0,0.05)", transition: "border-color 0.2s", scrollMarginTop: 12 }}>
+        <div style={{ padding: "14px 20px", display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: enabled === "si" ? `1px solid ${C.border}` : "none", background: enabled === "si" ? C.blueLight : enabled === "no" ? C.redLight : C.grayLight }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <span style={{ fontSize: 20 }}>{section.icon}</span>
+            <div>
+              <div style={{ fontWeight: 500, fontSize: 15, color: C.navy, display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+                {section.label}
+                {pendientes > 0 && (
+                  <span style={{
+                    fontSize: 11, fontWeight: 500, color: C.amber, background: C.amberLight,
+                    border: `1px solid ${C.amberBorder}`, borderRadius: 10, padding: "1px 8px",
+                    whiteSpace: "nowrap",
+                  }}>
+                    {pendientes} {pendientes === 1 ? "aviso" : "avisos"}
+                  </span>
+                )}
+              </div>
+              <div style={{ fontSize: 12, color: C.textLight, marginTop: 2 }}>{section.question}</div>
+            </div>
+          </div>
+          <SiNoToggle value={enabled} onChange={v => { setSectionEnabled(p => ({ ...p, [section.id]: p[section.id] === v ? undefined : v })); setIsDirty(true); }} />
+        </div>
+
+        {enabled === "si" && (
+          <div style={{ padding: "20px" }}>
+            <>
+              {Array.from({ length: getCount(section.id) }, (_, i) => (
+                <div key={i} style={{ marginBottom: getCount(section.id) > 1 ? 24 : 0, paddingBottom: getCount(section.id) > 1 ? 24 : 0, borderBottom: getCount(section.id) > 1 ? `1px dashed ${C.border}` : "none" }}>
+                  {getCount(section.id) > 1 && (
+                    <div style={{ fontSize: 12, fontWeight: 500, color: C.blue, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 12, paddingBottom: 6, borderBottom: `1px solid ${C.blueBorder}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                      <span>{section.multiLabel} {i + 1}</span>
+                      <button onClick={() => {
+                        setFormData(prev => {
+                          const sec = { ...(prev[section.id] || {}) };
+                          const count = getCount(section.id);
+                          for (let j = i; j < count - 1; j++) sec[j] = sec[j + 1] || {};
+                          delete sec[count - 1];
+                          // Los estados de aviso van indexados por instancia
+                          // (hintId@2): si no se reindexan aqui, al borrar la
+                          // instancia 1 los avisos resueltos de la 2 se quedan
+                          // colgados y aparecen sobre datos que no son suyos.
+                          return {
+                            ...prev,
+                            [section.id]: sec,
+                            __hints__: reindexarHints(prev.__hints__ ?? {}, section.id, i, count),
+                          };
+                        });
+                        setInstanceCounts(prev => ({ ...prev, [section.id]: Math.max(1, getCount(section.id) - 1) }));
+                        setIsDirty(true);
+                      }} style={{ background: "transparent", border: "none", color: "#ef4444", cursor: "pointer", fontSize: 12, padding: "2px 6px", fontWeight: 500 }}>✕ Eliminar</button>
+                    </div>
+                  )}
+                  <SectionFields section={section} instanceIdx={i} getVal={getVal} setVal={setVal} getHint={getHint} setHint={setHint} fechaVisita={clientData.fecha} />
+                </div>
+              ))}
+              <button onClick={() => { addInstance(section.id); setIsDirty(true); }} style={{ marginTop: 8, padding: "7px 16px", border: `1.5px dashed ${C.blue}`, background: C.blueLight, color: C.blue, borderRadius: 7, fontSize: 13, fontWeight: 500, cursor: "pointer" }}>
+                + Añadir {section.multiLabel}
+              </button>
+              <ImageZone sectionId={section.id} images={sectionImages[section.id] || []} addImage={addImage} removeImage={removeImage} updateCaption={updateCaption} />
+            </>
+          </div>
+        )}
+
+        {enabled === "no" && (() => {
+          // Algunas secciones capan por precondicion al marcarse "no"
+          // (backup, antivirus, y desde 2.2.0 tambien email, red, pcs
+          // y sai salvo que no haya servidores): eso es un hallazgo
+          // critico, no un simple "no se documenta". Decirlo aqui
+          // mismo, donde el tecnico acaba de marcar el "no", es donde
+          // de verdad hace falta verlo.
+          const pre = PRECONDICIONES.find(p => p.seccion === section.id && p.cuando === "no"
+            && !(p.salvoSi && sectionEnabled[p.salvoSi.seccion] === p.salvoSi.cuando));
+          if (pre) return (
+            <div style={{ padding: "10px 20px", fontSize: 13, color: C.red, background: C.redLight, borderTop: `1px solid ${C.redBorder}` }}>
+              <b>Hallazgo crítico:</b> {pre.texto}
+            </div>
+          );
+
+          // Secciones cuyo "no" retira peso del modelo: se pide el
+          // MOTIVO. No es un castigo ni un hallazgo -el "no" puede ser
+          // perfectamente cierto- pero declarar que el cliente no tiene
+          // algo saca esa parte del modelo de la nota, asi que tiene
+          // que quedar escrito por que, igual que queda escrita
+          // cualquier otra respuesta. Sin motivo el informe no publica.
+          const campoMotivo = section.fields.find(f => f.id === "sin_servicio_motivo");
+          if (!campoMotivo) {
+            return (
+              <div style={{ padding: "10px 20px", fontSize: 13, color: C.red, fontStyle: "italic" }}>
+                Sin servicio — no se documentará esta sección.
+              </div>
+            );
+          }
+          const motivo = getVal(section.id, "sin_servicio_motivo", 0);
+          const detalle = getVal(section.id, "sin_servicio_detalle", 0);
+          const faltaDetalle = motivo === MOTIVO_OTRO && !String(detalle || "").trim();
+          return (
+            <div style={{ padding: "12px 20px", borderTop: `1px solid ${C.redBorder}`, background: C.redLight }}>
+              <label style={{ fontWeight: 500, fontSize: 13, color: C.text, display: "block", marginBottom: 6 }}>
+                ¿Por qué no tiene esto? <span style={{ color: C.red }}>*</span>
+              </label>
+              <select
+                value={motivo}
+                onChange={e => setVal(section.id, "sin_servicio_motivo", e.target.value, 0)}
+                style={{ ...inp, width: "100%", maxWidth: 520 }}
+              >
+                <option value="">— Seleccionar —</option>
+                {campoMotivo.options.map(o => <option key={o} value={o}>{o}</option>)}
+              </select>
+              {motivo === MOTIVO_OTRO && (
+                <input
+                  type="text"
+                  value={detalle}
+                  onChange={e => setVal(section.id, "sin_servicio_detalle", e.target.value, 0)}
+                  placeholder="Indica el motivo"
+                  style={{ ...inp, width: "100%", maxWidth: 520, marginTop: 8 }}
+                />
+              )}
+              <div style={{ fontSize: 12, color: !motivo || faltaDetalle ? C.red : C.textLight, marginTop: 7, lineHeight: 1.45 }}>
+                {!motivo || faltaDetalle
+                  ? "Sin motivo no se publica la nota: declarar que el cliente no tiene esto retira esa parte del modelo."
+                  : "Queda escrito en el informe, junto al alcance de la visita."}
+              </div>
+            </div>
+          );
+        })()}
+      </div>
+    );
+  };
+
   return (
     <>
       <style>{`
@@ -968,135 +1117,33 @@ export default function App() {
           </div>
 
           {/* Sections */}
-          {SECTIONS.map(section => {
-            const enabled = sectionEnabled[section.id];
-            const pendientes = enabled === "si" ? hintsPendientes(section) : 0;
+          {TARJETAS.map(t => {
+            if (t.miembros.length === 1) return renderSeccion(t.miembros[0]);
+            // Tarjeta que agrupa varias secciones: cabecera SIN si/no propio
+            // (cada seccion conserva el suyo, ver TARJETAS en sections.js) y
+            // un aviso mientras falte decidir alguna.
+            const { estado, faltan } = estadoTarjeta(t, sectionEnabled);
             return (
-              <div key={section.id} ref={el => { seccionRefs.current[section.id] = el; }} style={{ background: "#fff", borderRadius: 10, border: `1px solid ${enabled === "si" ? C.blueBorder : enabled === "no" ? C.redBorder : C.border}`, marginBottom: 14, overflow: "hidden", boxShadow: "0 1px 4px rgba(0,0,0,0.05)", transition: "border-color 0.2s", scrollMarginTop: 12 }}>
-                <div style={{ padding: "14px 20px", display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: enabled === "si" ? `1px solid ${C.border}` : "none", background: enabled === "si" ? C.blueLight : enabled === "no" ? C.redLight : C.grayLight }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                    <span style={{ fontSize: 20 }}>{section.icon}</span>
-                    <div>
-                      <div style={{ fontWeight: 500, fontSize: 15, color: C.navy, display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-                        {section.label}
-                        {pendientes > 0 && (
-                          <span style={{
-                            fontSize: 11, fontWeight: 500, color: C.amber, background: C.amberLight,
-                            border: `1px solid ${C.amberBorder}`, borderRadius: 10, padding: "1px 8px",
-                            whiteSpace: "nowrap",
-                          }}>
-                            {pendientes} {pendientes === 1 ? "aviso" : "avisos"}
-                          </span>
-                        )}
-                      </div>
-                      <div style={{ fontSize: 12, color: C.textLight, marginTop: 2 }}>{section.question}</div>
-                    </div>
-                  </div>
-                  <SiNoToggle value={enabled} onChange={v => { setSectionEnabled(p => ({ ...p, [section.id]: p[section.id] === v ? undefined : v })); setIsDirty(true); }} />
-                </div>
-
-                {enabled === "si" && (
-                  <div style={{ padding: "20px" }}>
-                    <>
-                      {Array.from({ length: getCount(section.id) }, (_, i) => (
-                        <div key={i} style={{ marginBottom: getCount(section.id) > 1 ? 24 : 0, paddingBottom: getCount(section.id) > 1 ? 24 : 0, borderBottom: getCount(section.id) > 1 ? `1px dashed ${C.border}` : "none" }}>
-                          {getCount(section.id) > 1 && (
-                            <div style={{ fontSize: 12, fontWeight: 500, color: C.blue, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 12, paddingBottom: 6, borderBottom: `1px solid ${C.blueBorder}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                              <span>{section.multiLabel} {i + 1}</span>
-                              <button onClick={() => {
-                                setFormData(prev => {
-                                  const sec = { ...(prev[section.id] || {}) };
-                                  const count = getCount(section.id);
-                                  for (let j = i; j < count - 1; j++) sec[j] = sec[j + 1] || {};
-                                  delete sec[count - 1];
-                                  // Los estados de aviso van indexados por instancia
-                                  // (hintId@2): si no se reindexan aqui, al borrar la
-                                  // instancia 1 los avisos resueltos de la 2 se quedan
-                                  // colgados y aparecen sobre datos que no son suyos.
-                                  return {
-                                    ...prev,
-                                    [section.id]: sec,
-                                    __hints__: reindexarHints(prev.__hints__ ?? {}, section.id, i, count),
-                                  };
-                                });
-                                setInstanceCounts(prev => ({ ...prev, [section.id]: Math.max(1, getCount(section.id) - 1) }));
-                                setIsDirty(true);
-                              }} style={{ background: "transparent", border: "none", color: "#ef4444", cursor: "pointer", fontSize: 12, padding: "2px 6px", fontWeight: 500 }}>✕ Eliminar</button>
-                            </div>
-                          )}
-                          <SectionFields section={section} instanceIdx={i} getVal={getVal} setVal={setVal} getHint={getHint} setHint={setHint} fechaVisita={clientData.fecha} />
-                        </div>
-                      ))}
-                      <button onClick={() => { addInstance(section.id); setIsDirty(true); }} style={{ marginTop: 8, padding: "7px 16px", border: `1.5px dashed ${C.blue}`, background: C.blueLight, color: C.blue, borderRadius: 7, fontSize: 13, fontWeight: 500, cursor: "pointer" }}>
-                        + Añadir {section.multiLabel}
-                      </button>
-                      <ImageZone sectionId={section.id} images={sectionImages[section.id] || []} addImage={addImage} removeImage={removeImage} updateCaption={updateCaption} />
-                    </>
-                  </div>
-                )}
-
-                {enabled === "no" && (() => {
-                  // Algunas secciones capan por precondicion al marcarse "no"
-                  // (backup, antivirus, y desde 2.2.0 tambien email, red, pcs
-                  // y sai salvo que no haya servidores): eso es un hallazgo
-                  // critico, no un simple "no se documenta". Decirlo aqui
-                  // mismo, donde el tecnico acaba de marcar el "no", es donde
-                  // de verdad hace falta verlo.
-                  const pre = PRECONDICIONES.find(p => p.seccion === section.id && p.cuando === "no"
-                    && !(p.salvoSi && sectionEnabled[p.salvoSi.seccion] === p.salvoSi.cuando));
-                  if (pre) return (
-                    <div style={{ padding: "10px 20px", fontSize: 13, color: C.red, background: C.redLight, borderTop: `1px solid ${C.redBorder}` }}>
-                      <b>Hallazgo crítico:</b> {pre.texto}
-                    </div>
-                  );
-
-                  // Secciones cuyo "no" retira peso del modelo: se pide el
-                  // MOTIVO. No es un castigo ni un hallazgo -el "no" puede ser
-                  // perfectamente cierto- pero declarar que el cliente no tiene
-                  // algo saca esa parte del modelo de la nota, asi que tiene
-                  // que quedar escrito por que, igual que queda escrita
-                  // cualquier otra respuesta. Sin motivo el informe no publica.
-                  const campoMotivo = section.fields.find(f => f.id === "sin_servicio_motivo");
-                  if (!campoMotivo) {
-                    return (
-                      <div style={{ padding: "10px 20px", fontSize: 13, color: C.red, fontStyle: "italic" }}>
-                        Sin servicio — no se documentará esta sección.
-                      </div>
-                    );
-                  }
-                  const motivo = getVal(section.id, "sin_servicio_motivo", 0);
-                  const detalle = getVal(section.id, "sin_servicio_detalle", 0);
-                  const faltaDetalle = motivo === MOTIVO_OTRO && !String(detalle || "").trim();
-                  return (
-                    <div style={{ padding: "12px 20px", borderTop: `1px solid ${C.redBorder}`, background: C.redLight }}>
-                      <label style={{ fontWeight: 500, fontSize: 13, color: C.text, display: "block", marginBottom: 6 }}>
-                        ¿Por qué no tiene esto? <span style={{ color: C.red }}>*</span>
-                      </label>
-                      <select
-                        value={motivo}
-                        onChange={e => setVal(section.id, "sin_servicio_motivo", e.target.value, 0)}
-                        style={{ ...inp, width: "100%", maxWidth: 520 }}
-                      >
-                        <option value="">— Seleccionar —</option>
-                        {campoMotivo.options.map(o => <option key={o} value={o}>{o}</option>)}
-                      </select>
-                      {motivo === MOTIVO_OTRO && (
-                        <input
-                          type="text"
-                          value={detalle}
-                          onChange={e => setVal(section.id, "sin_servicio_detalle", e.target.value, 0)}
-                          placeholder="Indica el motivo"
-                          style={{ ...inp, width: "100%", maxWidth: 520, marginTop: 8 }}
-                        />
+              <div key={t.id} style={{ background: "#fff", borderRadius: 10, border: `1px solid ${estado === "si" ? C.blueBorder : estado === "no" ? C.redBorder : C.border}`, marginBottom: 14, overflow: "hidden", boxShadow: "0 1px 4px rgba(0,0,0,0.05)", transition: "border-color 0.2s" }}>
+                <div style={{ padding: "14px 20px", display: "flex", alignItems: "center", gap: 10, background: C.grayLight }}>
+                  <span style={{ fontSize: 20 }}>{t.bloque.icon}</span>
+                  <div>
+                    <div style={{ fontWeight: 600, fontSize: 15, color: C.navy, display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+                      {t.bloque.label}
+                      {faltan.length > 0 && (
+                        <span style={{
+                          fontSize: 11, fontWeight: 500, color: C.amber, background: C.amberLight,
+                          border: `1px solid ${C.amberBorder}`, borderRadius: 10, padding: "1px 8px",
+                          whiteSpace: "nowrap",
+                        }}>
+                          Falta decidir: {faltan.map(m => m.label).join(" y ")}
+                        </span>
                       )}
-                      <div style={{ fontSize: 12, color: !motivo || faltaDetalle ? C.red : C.textLight, marginTop: 7, lineHeight: 1.45 }}>
-                        {!motivo || faltaDetalle
-                          ? "Sin motivo no se publica la nota: declarar que el cliente no tiene esto retira esa parte del modelo."
-                          : "Queda escrito en el informe, junto al alcance de la visita."}
-                      </div>
                     </div>
-                  );
-                })()}
+                    <div style={{ fontSize: 12, color: C.textLight, marginTop: 2 }}>{t.bloque.subtitulo}</div>
+                  </div>
+                </div>
+                {t.miembros.map(m => renderSeccion(m, true))}
               </div>
             );
           })}

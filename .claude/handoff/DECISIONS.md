@@ -782,3 +782,57 @@ alternativa sería excluir de la capa una lista de campos sensibles.
 
 **Para comprobar un PDF real:** `node scripts/verificar-pdf.mjs fichero.pdf "búsqueda"`.
 No va en el build porque el PDF se genera en el navegador.
+
+---
+
+## D28. Aplicaciones y Licencias se juntan en pantalla, no en los datos
+
+**Decisión (02/10/2026, del dueño: «prueba una sola pantalla»).** «Aplicaciones /
+ERP / Licencias» y «Licenciamiento y contratos» se ven como **una tarjeta**,
+«Aplicaciones, licencias y contratos», con **dos preguntas de sí/no**: «Aplicaciones
+de negocio» y «Licencias y contratos». Siguen siendo las secciones `erp` y
+`licenciamiento` en los datos, el motor, los avisos y el PDF.
+
+**Por qué no una sola lista** (lo analizó un workflow de 13 agentes: 3 diseños y 9
+revisores adversariales). Pasar las aplicaciones a ser elementos de `licenciamiento`:
+- dejaba las 5 fichas de ejemplo como **no fiables** (la aplicación queda sin
+  `tipo_servicio`);
+- hacía que **documentar una aplicación puntuase peor que no documentarla**: abre
+  una ruta de ocultación nueva, contada en 63 rutas ganadoras;
+- obligaba a migrar las fichas viejas en cada carga, para siempre, y dejaba dos
+  copias vivas de la misma aplicación.
+
+**Por qué no hay un sí/no común en la tarjeta**, medido:
+- un «Sí» común creaba una «Aplicación 1» vacía en clientes sin ERP, y su aviso sin
+  condición (`erp_gral_legado`) metía una tarea fantasma en el plan del PDF;
+- un «No» común negaba las licencias de un clic: en un cliente sin M365/Google eso
+  subía la nota +5 con sello.
+Con dos preguntas separadas cada clic hace lo mismo que antes. La tarjeta no abre
+ningún estado de la ficha al que no se llegara ya.
+
+**Cómo está hecho.** `bloque: "apps_licencias"` en las dos secciones; `BLOQUES`,
+`TARJETAS` (derivado de `SECTIONS`) y `estadoTarjeta` en `sections.js`. En
+`App.jsx` el JSX de una sección pasó a una función **interna** del componente,
+`renderSeccion(section, anidada)`, moviendo las líneas tal cual: hereda el mismo
+ámbito, que es lo que evita otra pantalla en blanco (C1). El carril va por tarjetas
+(14 entradas) y su punto de estado solo sale con las dos preguntas decididas.
+
+**Lo que sigue contando secciones, a propósito:** la cabecera («x/15»), el panel y
+el Manual cuentan las **15 preguntas de sí/no**, no las 14 tarjetas, para coincidir
+con el motor y el PDF («faltan N secciones»). El Manual sigue clasificando por
+sección (5/5/5, D23): «Aplicaciones de negocio» es solo inventario y «Licencias y
+contratos» pide motivo.
+
+**El PDF sigue con dos capítulos.** Juntarlos es otro cambio: cada sección es un
+único bloque `pdf-avoid`, y uno el doble de alto tiene más papeletas de no caber en
+una página.
+
+**Nombres.** «Licencias» sale de la etiqueta de `erp` porque invitaba a apuntar allí
+M365, donde no puntúa. Las partes no llevan comas, porque el informe une nombres con
+«, ». De paso, el panel y el informe dejan de escribir ids en crudo
+(«licenciamiento») cuando falta decidir una sección.
+
+**Lo que no se ha tocado y sigue abierto:** una sección sin decidir no cuesta nada
+(A7); `contra_srv_erp` se silencia gratis dejando Aplicaciones en «no»; apuntar una
+licencia como aplicación da +5. La tarjeta no los crea; tenerlas juntas podría hacer
+más fácil el último, y lo mitiga que `erp` ya no diga «Licencias».

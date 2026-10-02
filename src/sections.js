@@ -452,9 +452,16 @@ export const SECTIONS = [
       { id: "notas", label: "Notas adicionales", type: "textarea" },
     ]
   },
+  // `erp` y `licenciamiento` se ENSENAN juntas en una sola tarjeta (`bloque`,
+  // ver TARJETAS al final), pero siguen siendo dos secciones guardadas, cada una
+  // con su si/no. Juntarlas tambien en los datos se descarto con medicion:
+  // documentar una aplicacion pasaba a puntuar peor que no documentarla, y
+  // obligaba a migrar las fichas viejas para siempre (DECISIONS.md D28).
+  // "Licencias" sale de la etiqueta de erp porque invitaba a apuntar alli M365,
+  // donde no puntua.
   {
-    id: "erp", label: "Aplicaciones / ERP / Licencias", icon: "📊",
-    question: "¿Dispone de ERP, CRM u otras aplicaciones críticas?",
+    id: "erp", label: "Aplicaciones de negocio", icon: "📊", bloque: "apps_licencias",
+    question: "¿Usa ERP, CRM u otras aplicaciones de negocio?",
     multi: true, multiLabel: "Aplicación",
     fields: [
       { id: "nombre", label: "Nombre de la aplicación", type: "text" },
@@ -470,8 +477,8 @@ export const SECTIONS = [
     ]
   },
   {
-    id: "licenciamiento", label: "Licenciamiento y contratos", icon: "📋",
-    question: "¿Dispone de licencias o contratos de mantenimiento?",
+    id: "licenciamiento", label: "Licencias y contratos", icon: "📋", bloque: "apps_licencias",
+    question: "¿Dispone de licencias, dominios o contratos de mantenimiento?",
     multi: true, multiLabel: "Licencia / Contrato",
     fields: [
       // Campos del "no": solo se pintan cuando la seccion se declara
@@ -524,6 +531,52 @@ export const SECTIONS = [
     ]
   },
 ];
+
+// ─────────────────────────────────────────────────────────────────────────
+// Tarjetas: como se ENSENAN las secciones, que no siempre es como se guardan.
+//
+// Varias secciones con el mismo `bloque` se pintan como UNA tarjeta, pero cada
+// una conserva su id, sus datos y su propio si/no. NO hay un si/no comun de la
+// tarjeta, a proposito, medido al disenarlo:
+//   - un "Si" comun crearia una aplicacion vacia en clientes sin ERP, y su
+//     aviso sin condicion meteria en el plan del PDF una tarea fantasma;
+//   - un "No" comun negaria las licencias de un clic, y en un cliente sin
+//     M365/Google eso subia la nota +5 con sello.
+// Con dos preguntas separadas cada clic hace exactamente lo mismo que antes:
+// la tarjeta no abre ningun estado de la ficha al que no se llegara ya.
+// ─────────────────────────────────────────────────────────────────────────
+
+export const BLOQUES = {
+  apps_licencias: {
+    label: "Aplicaciones, licencias y contratos",
+    icon: "📋",
+    subtitulo: "Dos preguntas: las aplicaciones de negocio y las licencias, dominios o contratos. Contesta las dos.",
+  },
+};
+
+// Derivado de SECTIONS conservando su orden: una tarjeta por seccion suelta, y
+// una por bloque en la posicion de su primera seccion.
+export const TARJETAS = SECTIONS.reduce((lista, s) => {
+  if (!s.bloque) { lista.push({ id: s.id, miembros: [s] }); return lista; }
+  const existente = lista.find(t => t.id === s.bloque);
+  if (existente) existente.miembros.push(s);
+  else lista.push({ id: s.bloque, bloque: BLOQUES[s.bloque], miembros: [s] });
+  return lista;
+}, []);
+
+/**
+ * Estado de una tarjeta a partir del si/no de sus secciones.
+ *   estado: undefined mientras falte decidir CUALQUIERA de sus secciones (una
+ *           tarjeta a medias no puede contar como contestada); "si" si alguna
+ *           esta en "si"; "no" si todas estan en "no".
+ *   faltan: las secciones sin decidir, para decir cuales.
+ */
+export function estadoTarjeta(tarjeta, sectionEnabled) {
+  const faltan = tarjeta.miembros.filter(m => sectionEnabled[m.id] === undefined);
+  if (faltan.length) return { estado: undefined, faltan };
+  const estado = tarjeta.miembros.some(m => sectionEnabled[m.id] === "si") ? "si" : "no";
+  return { estado, faltan };
+}
 
 /**
  * Lector de campos que respeta los condicionales.
