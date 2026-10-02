@@ -26,8 +26,8 @@ La aplicacion permite registrar informacion detallada en **15 secciones de infra
 | 10 | Almacenamiento | NAS, SAN, almacenamiento compartido |
 | 11 | Telefonia | Centralita, VoIP, lineas |
 | 12 | Impresion | Impresoras, multifuncionales, gestion |
-| 13 | Aplicaciones de negocio | Software de negocio (misma tarjeta que la 14) |
-| 14 | Licencias y contratos | Licencias, dominios, renovaciones, costes, partner |
+| 13 | Aplicaciones de negocio | Software de negocio: ERP, CRM, contabilidad |
+| 14 | Servicios contratados | Licencias, dominios, hosting, SSL, cloud, contratos |
 | 15 | Otros dispositivos | TPV, control de acceso, camaras, IoT, perifericos |
 
 Cada seccion soporta:

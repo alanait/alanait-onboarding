@@ -16,20 +16,31 @@ cosas, todas en ramas y nunca directo a `main`:
    Recomendación: **juntarlas solo en pantalla**, una tarjeta con las dos preguntas
    de sí/no y sin interruptor común; datos y nota intactos. La fusión real se
    descartó con medición (las 5 fichas pasan a no fiables y documentar una aplicación
-   puntuaría peor que no hacerlo). El 02/10 el dueño pidió **probar la versión
-   solo en pantalla**: rama **`feat/tarjeta-apps-licencias`** (D28), pendiente de
-   que la vea en la preview con sesión.
+   puntuaría peor que no hacerlo). El 02/10 el dueño la probó en una sola tarjeta
+   (PR #21, fusionado) y, tras verla, **prefirió dos tarjetas con nombres nuevos**:
+   «Aplicaciones de negocio» y «Servicios contratados» (PR #23, D28).
 2. **PDF seleccionable.** **Fusionado en `main` el 02/10** (PR #20): capa de texto
    invisible sobre la imagen (D27). El dueño eligió que todo sea buscable,
    credenciales incluidas. Sin probar en Firefox/Safari.
-3. **Documento para que lo rellene el cliente.** El dueño no quiere papel: pregunta
-   si se puede **generar un enlace para que un externo lo rellene**, y fácil. Se está
-   diseñando (02/10); ver el bloque que lo cierre.
+3. **Enlace para que un externo rellene la ficha.** Diseñado el 02/10, **no
+   aprobado ni implementado**. Recomendación: portal propio con token, 7–8 días,
+   y un proyecto Supabase de pruebas para no escribir en producción. Diseño y
+   borrador de SQL en la rama `docs/diseno-enlace-cliente`
+   (`.claude/handoff/analisis/enlace-cliente/`).
 
-Y **fusionado en `main` el 02/10** (PR #19): el fallo de producción desde el 18/08
-por el que borrar una instancia movía las marcas de avisos de todas las secciones
-(KNOWN_ISSUES C9). Falta que el dueño ejecute `supabase-detectar-avisos-movidos.sql`
-para localizar las fichas afectadas.
+**Hecho en producción el 02/10:**
+- PR #19: el fallo que movía las marcas de avisos al borrar una instancia (C9).
+  El dueño ejecutó `supabase-detectar-avisos-movidos.sql`: **ninguna ficha
+  afectada**.
+- PR #22 + **`supabase-auditoria.sql` ejecutado por el dueño**: el registro de
+  auditoría ya funciona. Verificado: 15 fichas, 68 versiones y 8 capturas antes y
+  después; `anon` no puede leer ni la tabla ni la vista (AS8); autoría histórica 28
+  derivadas y 40 indeterminadas (las de antes del login, que guardaban el texto
+  libre «Responsable»).
+- **Alta de cuentas cerrada:** el dueño ejecutó `supabase-restringir-alta.sql` y
+  activó el hook «Before User Created» con `public.restringir_alta_a_alanait`.
+  Verificado: la función rechaza @gmail.com con 403 y acepta @alanait.com, y antes
+  de cerrarla **no se había colado ninguna cuenta** fuera de @alanait.com.
 
 Los informes completos de los agentes **no están en el repo**: vivían en el
 scratchpad de la sesión, que se pierde. Lo esencial está en D27 y en este bloque.
@@ -83,8 +94,8 @@ Acciones manuales del dueño, ninguna hecha todavía:
 | | |
 |---|---|
 | Enviar el correo a **Joan Cuello** | cuando vuelva de vacaciones |
-| Ejecutar **`supabase-auditoria.sql`** | sin él no hay registro de accesos y la autoría del historial sigue mal |
-| Verificar el **Auth Hook** de restricción de altas | el registro por correo está ABIERTO (`disable_signup: false`, comprobado el 24/08) |
+| ~~Ejecutar `supabase-auditoria.sql`~~ | **HECHO el 02/10** (con el arreglo de AS8), ver arriba |
+| ~~Verificar el Auth Hook de restricción de altas~~ | **HECHO el 02/10**: no estaba activo; ejecutado y activado, ver arriba |
 | Abrir el **Manual** con sesión iniciada | nadie lo ha visto renderizado: está detrás del login |
 | Decidir sobre **`licenciamiento`** y **`sai`** | ver «Decisiones que tiene que tomar el dueño» |
 

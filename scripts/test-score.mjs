@@ -692,17 +692,21 @@ console.log("\nBorrar una instancia solo reindexa los avisos de su sección");
 }
 
 // ── Tarjetas: como se ensenan las secciones ──────────────────────────────
-// "Aplicaciones de negocio" y "Licencias y contratos" se ven en una tarjeta,
-// pero siguen siendo dos secciones guardadas con su propio si/no. Si una
-// seccion se quedara fuera de TARJETAS desapareceria del formulario sin que
-// fallase nada; si estuviera en dos, se pintaria dos veces.
+// El formulario pinta TARJETAS. Hoy cada seccion es su propia tarjeta (el
+// dueno probo juntar Aplicaciones y Servicios contratados y prefirio dos,
+// D28), pero el mecanismo sigue: si una seccion se quedara fuera de TARJETAS
+// desapareceria del formulario sin que fallase nada; si estuviera en dos, se
+// pintaria dos veces.
 console.log("\nTarjetas del formulario");
 {
   const enTarjetas = TARJETAS.flatMap(t => t.miembros.map(m => m.id));
   es("cada sección está en exactamente una tarjeta, en el orden del esquema", enTarjetas, SECTIONS.map(s => s.id));
-  es("las 15 secciones se ven en 14 tarjetas", [SECTIONS.length, TARJETAS.length], [15, 14]);
-  const apps = TARJETAS.find(t => t.id === "apps_licencias");
-  es("la tarjeta agrupa Aplicaciones y Licencias", apps?.miembros.map(m => m.id), ["erp", "licenciamiento"]);
+  es("hoy cada sección es su propia tarjeta", TARJETAS.length, SECTIONS.length);
+  es("Aplicaciones de negocio y Servicios contratados van separadas",
+     ["erp", "licenciamiento"].map(id => TARJETAS.find(t => t.miembros.some(m => m.id === id))?.miembros.length), [1, 1]);
+  // Si se vuelve a agrupar, la logica de estadoTarjeta tiene que seguir
+  // valiendo: se prueba con una tarjeta construida a mano.
+  const apps = { id: "prueba", miembros: SECTIONS.filter(s => s.id === "erp" || s.id === "licenciamiento") };
   es("todo bloque usado está definido", SECTIONS.filter(s => s.bloque && !BLOQUES[s.bloque]).map(s => s.id), []);
   // El informe une nombres de seccion con ", ": una coma dentro del nombre de
   // una parte de la tarjeta haria ilegible "faltan: Aplicaciones, licencias,
@@ -727,7 +731,9 @@ console.log("\nTarjetas del formulario");
   es("las dos en no: la tarjeta entera es 'no'", caso("no", "no"), ["no", []]);
 
   const avisoDoc = HINTS.pcs.find(h => h.id === "pcs_gral_doc_2");
-  es("el aviso que manda las licencias a otra sección nombra la tarjeta vigente", avisoDoc.texto.includes(BLOQUES.apps_licencias.label), true);
+  const etiqueta = (id) => SECTIONS.find(s => s.id === id).label;
+  es("el aviso que manda las licencias a otra sección nombra las secciones vigentes",
+     [etiqueta("erp"), etiqueta("licenciamiento")].every(l => avisoDoc.texto.includes(l)), true);
 }
 
 console.log("\nInvariantes duros del modelo REAL");
