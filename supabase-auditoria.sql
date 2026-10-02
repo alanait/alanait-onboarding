@@ -637,12 +637,23 @@ revoke execute on function public.purgar_audit_log(integer) from anon, authentic
 --      and occurred_at between '2026-08-01' and '2026-08-31';
 
 -- 9.2 Vista corta para la pantalla de actividad de una ficha.
-create or replace view public.v_actividad_ficha as
+--
+-- security_invoker: una vista normal se ejecuta como su PROPIETARIO (postgres),
+-- que se salta el RLS de audit_log (aqui no hay FORCE, ver arriba). Y Supabase
+-- concede por defecto las vistas nuevas de `public` tambien a `anon`. Sin estas
+-- dos lineas, cualquiera con la clave publica que va en la web podria leer el
+-- registro entero por la API: correos de los tecnicos y nombres de clientes.
+-- Encontrado el 02/10/2026, antes de que nadie ejecutara este fichero.
+-- (security_invoker necesita Postgres 15 o superior; los proyectos de Supabase
+-- creados desde 2023 lo son.)
+create or replace view public.v_actividad_ficha
+  with (security_invoker = true) as
   select id, occurred_at, coalesce(actor_email, '(fuera de la aplicacion)') as quien,
          action, origin, client_id, client_empresa, details
     from public.audit_log
    where action <> 'log_purgado';
 
+revoke all on public.v_actividad_ficha from anon, public;
 grant select on public.v_actividad_ficha to authenticated;
 
 -- 9.3 Lo que sale del sistema. Un PDF o un .alanait en un portatil ya no lo
@@ -678,6 +689,14 @@ grant select on public.v_actividad_ficha to authenticated;
 --    Las dos tienen que devolver error de permisos, y
 --      select count(*) from public.audit_log;
 --    no debe cambiar.
+--
+-- 4-bis) Nadie sin sesion puede leer el log, ni por la tabla ni por la vista:
+--      select has_table_privilege('anon', 'public.audit_log', 'select')        as tabla,
+--             has_table_privilege('anon', 'public.v_actividad_ficha', 'select') as vista;
+--    Las dos tienen que dar false. Y la vista tiene que aplicar el RLS de quien
+--    consulta:
+--      select reloptions from pg_class where relname = 'v_actividad_ficha';
+--    Esperado: {security_invoker=true}.
 --
 -- 5) No se puede firmar como otro. Desde la misma consola:
 --      await supabase.from('audit_log').insert({action:'ficha_abierta',
