@@ -328,7 +328,14 @@ que queda abierto:
 empleado puede leer y BORRAR la cartera entera**, y no hay registro de quién.
 
 Era el multiplicador del alta abierta: convertía «alguien se coló» en «alguien
-tiene todo». El alta ya está cerrada, pero esto sigue igual.
+tiene todo». Esto sigue igual.
+
+> **Corregido el 02/10/2026.** Aquí ponía «el alta ya está cerrada», y **no está
+> comprobado**. Medido ese día con la clave pública: `GET /auth/v1/settings` devuelve
+> `"disable_signup": false`. Que el alta esté cerrada depende de que el Auth Hook
+> `restringir_alta_a_alanait` (`supabase-restringir-alta.sql`) esté **activo**, y eso
+> solo se ve en el panel de Supabase (Authentication → Hooks). Lo tiene que mirar el
+> dueño. Mientras no se confirme, cuenta como abierta.
 
 ### AS2. `deleteClient` ignora los errores del Storage
 
@@ -363,6 +370,26 @@ oportunidades comerciales. La primera página es la que se reenvía suelta.
 
 Los dos paneles laterales suman 536 px fijos que no encogen. El técnico trabaja de
 pie, y en tablet el formulario queda inservible.
+
+### AS8. La vista del registro de auditoría se podía leer sin sesión — CERRADO antes de ejecutarse
+
+Encontrado el 02/10/2026 por los agentes que diseñaban el enlace para clientes, y
+comprobado en el fichero. `supabase-auditoria.sql` protegía bien la tabla
+`audit_log` (`revoke all ... from anon`), pero creaba la vista `v_actividad_ficha`
+sin `security_invoker` y sin quitársela a `anon`:
+- una vista normal se ejecuta como su propietario (`postgres`), que se salta el RLS
+  de `audit_log`, porque no lleva FORCE a propósito;
+- Supabase concede por defecto las vistas nuevas de `public` también a `anon`.
+
+Si se hubiera ejecutado tal cual, cualquiera con la clave pública que va en la web
+habría podido leer el registro entero por la API: correos de los técnicos y nombres
+de clientes. **Nadie lo había ejecutado todavía.** Arreglado en la rama
+`fix/auditoria-vista-anonima`: `with (security_invoker = true)` y `revoke all ...
+from anon, public`, con su comprobación en el propio SQL (paso 4-bis).
+
+**Regla para cualquier SQL nuevo:** toda vista en `public` con `security_invoker` y
+`revoke ... from anon`; toda función con `revoke execute ... from public, anon` y
+grant explícito solo a quien la necesite.
 
 ---
 
