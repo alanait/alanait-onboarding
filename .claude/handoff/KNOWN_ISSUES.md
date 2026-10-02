@@ -480,6 +480,37 @@ nada estuviera roto. Reescritas para comparar notas entre sí
 **Regla:** una prueba del motor debe fijar **comportamiento**, no aritmética,
 salvo que el número sea el objeto de la prueba.
 
+### C9. Borrar una instancia movía las marcas de avisos de TODAS las secciones (18/08 → 01/10)
+
+**En producción del 18/08 (`ffd550a`) al 01/10/2026.** Lo encontraron los agentes
+que analizaban la fusión de `erp` y `licenciamiento`, y se reprodujo con el código
+real.
+
+`reindexarHints` (`src/sections.js`) recibía la sección pero no la usaba: la línea
+`(SECTIONS.find(...)?.fields ?? []) && Object.keys(hints)` devuelve **siempre** todas
+las claves. Como las claves de avisos son `hintId@instancia`, sin la sección, borrar
+la aplicación 1 también:
+- borraba la marca `@0` de **todas** las demás secciones (el «Hecho» del primer aviso
+  de Red, Backup, Correo…);
+- subía un puesto las de posiciones mayores: la marca de la licencia 2 pasaba a la
+  licencia 1, cerrando una tarea que no se había hecho.
+
+Afectaba a las 15 secciones (todas son `multi`), cada vez que alguien pulsaba
+«✕ Eliminar». Ninguna prueba lo cubría.
+
+**Arreglo** (rama `fix/reindexar-hints-por-seccion`): solo se reindexan las claves
+cuyo id está en `HINTS[sectionId]`. Funciona porque los 117 ids de aviso son únicos
+y empiezan por `<seccion>_`, y **`check-score.mjs` lo exige desde ahora**. 8 pruebas
+nuevas en `test-score.mjs`; 5 de ellas fallan con el código viejo.
+
+**Lo ya estropeado SÍ se puede localizar.** Cada guardado deja una instantánea en
+`client_versions` con `instanceCounts` y `__hints__`. `supabase-detectar-avisos-movidos.sql`
+(solo lectura) lista las fichas donde bajó el número de instancias de una sección y
+cambiaron las marcas. Para cada una: mirar en el Historial la versión anterior al
+borrado y volver a marcar a mano. **No restaurar la versión entera**: se perdería
+todo lo posterior. Lo tiene que ejecutar el dueño, porque Claude no tiene acceso a
+la base de datos.
+
 ---
 
 ## D. Cosas que parecían bugs y no lo eran
