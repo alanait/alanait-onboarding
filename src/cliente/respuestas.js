@@ -13,7 +13,7 @@
 //      ensena al tecnico como informacion y lo decide el en la ficha.
 
 import { SECTIONS, lectorEfectivo } from "../sections.js";
-import { catalogoCliente, camposQueLeeElMotor, esPadrePermitido, DATOS_EMPRESA, VERSION_CUESTIONARIO } from "./catalogo.js";
+import { catalogoCliente, camposQueLeeElMotor, esPadrePermitido, esHallazgoSiNo, DATOS_EMPRESA, VERSION_CUESTIONARIO } from "./catalogo.js";
 import { CRITERIOS } from "../score/criterios.js";
 
 export const TAMANO_MAXIMO = 1_000_000;
@@ -162,8 +162,14 @@ export function compararRespuestas(datos, { clientData = {}, sectionEnabled = {}
     const salida = {
       seccion: s.seccion, titulo: s.titulo, etiquetaFila: s.etiquetaFila,
       estadoSeccion: sectionEnabled[s.seccion], comentario: r.comentario,
+      // Una seccion cuyo "no" es un hallazgo critico no se pasa a "si" desde
+      // aqui: quitaria el hallazgo con la palabra del cliente.
+      marcarSiPermitido: !(sectionEnabled[s.seccion] === "no" && esHallazgoSiNo(s.seccion)),
       propuestas: [], filasNuevas: [], infos: [],
     };
+    if (!salida.marcarSiPermitido) {
+      salida.infos.push("En la ficha consta que no tienen esto, y eso es un hallazgo crítico. Si el cliente dice que sí lo tienen, compruébalo y cámbialo tú en la ficha: desde aquí no se aplica.");
+    }
     r.filas.forEach((fila, k) => {
       const existe = fila.origen !== null && fila.origen < count;
       // Sin articulo a proposito: "Servicio", "Impresora", "Red"... no
@@ -186,6 +192,12 @@ export function compararRespuestas(datos, { clientData = {}, sectionEnabled = {}
             salida.propuestas.push({ ...base, estado: "referencia", aplicable: false, preseleccionada: false, motivo: "Decide qué otras preguntas aparecen en la ficha: compruébalo y cámbialo tú si procede." });
             continue;
           }
+          // Condicional congelado: solo si la ficha abre su pregunta. Si no,
+          // se escribiria un valor que nadie ve (un fosil).
+          if (def.depFijo && leer(def.dep.field) !== def.dep.value) {
+            if (!vacio(p.valor)) salida.propuestas.push({ ...base, estado: "referencia", aplicable: false, preseleccionada: false, motivo: "Su pregunta no está abierta en la ficha." });
+            continue;
+          }
           if (vacio(p.valor)) {
             if (!vacio(actual)) salida.propuestas.push({ ...base, estado: "vaciado", aplicable: false, preseleccionada: false, motivo: "El cliente lo ha borrado. La aplicación no borra datos por lo que diga el cliente." });
             continue;
@@ -195,7 +207,9 @@ export function compararRespuestas(datos, { clientData = {}, sectionEnabled = {}
           salida.propuestas.push({ ...base, estado, aplicable: true, preseleccionada: estado === "rellena" });
         }
       } else {
-        const campos = fila.campos.filter(p => !vacio(p.valor)).map(p => {
+        // Una fila nueva no tiene ficha detras: los campos con el condicional
+        // congelado no le tocan.
+        const campos = fila.campos.filter(p => !vacio(p.valor) && !s.campos.find(c => c.id === p.campo)?.depFijo).map(p => {
           const def = s.campos.find(c => c.id === p.campo);
           return { campo: p.campo, etiqueta: def.label, opciones: def.opciones, valor: p.valor, dep: def.dep, padre: def.padre };
         });
@@ -260,6 +274,7 @@ export function aplicarRespuestas(estado, datos, seleccion, { ahora = "" } = {})
     const hayAlgo = s.propuestas.some(p => seleccion.claves.has(p.clave) && p.aplicable) || s.filasNuevas.some(f => seleccion.filas.has(f.clave));
     if (!hayAlgo) continue;
     if (sectionEnabled[s.seccion] !== "si") {
+      if (!s.marcarSiPermitido) { omitidos.push({ seccion: s.titulo, motivo: "En la ficha consta que no lo tienen (hallazgo crítico): cámbialo tú en la ficha si lo compruebas." }); continue; }
       if (!seleccion.marcarSi.has(s.seccion)) { omitidos.push({ seccion: s.titulo, motivo: "La sección no está marcada como «Sí»." }); continue; }
       // Marcar "si" solo puede abrir preguntas, nunca esconderlas.
       sectionEnabled[s.seccion] = "si";

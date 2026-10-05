@@ -53,14 +53,18 @@ export function datosCuestionario({ clientData = {}, sectionEnabled = {}, formDa
     const n = activa ? Math.max(1, instanceCounts[s.seccion] || 1) : 1;
     const filas = Array.from({ length: n }, (_, i) => {
       const valores = {};
-      if (activa) {
-        const leer = lectorEfectivo(s.seccion, getVal, i);
-        for (const c of s.campos) {
-          const v = normalizar(leer(c.id));
-          if (v !== "" && !(Array.isArray(v) && v.length === 0)) valores[c.id] = v;
-        }
+      // Campos con el condicional congelado que NO tocan en esta fila: la
+      // ficha no abre su pregunta (no hay firewall, no hay NAS de copias...).
+      // Sin ficha detras (seccion que no esta en "si"), no toca ninguno.
+      const ocultos = [];
+      const leer = lectorEfectivo(s.seccion, getVal, i);
+      for (const c of s.campos) {
+        if (c.depFijo && (!activa || leer(c.dep.field) !== c.dep.value)) { ocultos.push(c.id); continue; }
+        if (!activa) continue;
+        const v = normalizar(leer(c.id));
+        if (v !== "" && !(Array.isArray(v) && v.length === 0)) valores[c.id] = v;
       }
-      return { origen: i, valores };
+      return { origen: i, valores, ocultos };
     });
     return { ...s, filas };
   });
@@ -135,6 +139,8 @@ main { max-width:920px; margin:0 auto; padding:20px 16px 60px; }
 .fila.nueva { background:#F4F8FD; margin:0 -20px; padding:14px 20px 6px; border-top:1px solid #BBCCE8; }
 .fila-cab { display:flex; justify-content:space-between; align-items:center; gap:10px; margin-bottom:8px; font-size:12px; font-weight:600; letter-spacing:.06em; text-transform:uppercase; color:var(--azul); }
 .rejilla { display:grid; grid-template-columns:repeat(auto-fill, minmax(230px, 1fr)); gap:10px 16px; }
+.grupo { grid-column:1 / -1; margin-top:6px; padding-bottom:3px; border-bottom:1px solid var(--borde); font-size:12.5px; font-weight:600; color:var(--marino); }
+.grupo:first-child { margin-top:0; }
 .campo label { display:block; font-size:12.5px; color:var(--gris); margin-bottom:4px; }
 .campo input[type=text], .campo input[type=number], .campo input[type=date], .campo select, .campo textarea {
   width:100%; padding:8px 10px; border:1px solid var(--borde); border-radius:7px; font:inherit; color:inherit; background:#fff; }
@@ -201,13 +207,36 @@ const PAGINA = String.raw`
     return e;
   }
 
+  // Lo guardado en el navegador se completa con lo que falte en vez de usarse
+  // tal cual: un guardado a medias o de otra version no puede dejar la pagina
+  // en blanco.
+  function completar(g) {
+    var base = estadoInicial();
+    if (!g || typeof g !== "object") return base;
+    if (g.empresa && typeof g.empresa === "object") DATOS.empresa.forEach(function (c) { if (typeof g.empresa[c.id] === "string") base.empresa[c.id] = g.empresa[c.id]; });
+    if (g.rellenadoPor && typeof g.rellenadoPor === "object") {
+      if (typeof g.rellenadoPor.nombre === "string") base.rellenadoPor.nombre = g.rellenadoPor.nombre;
+      if (typeof g.rellenadoPor.cargo === "string") base.rellenadoPor.cargo = g.rellenadoPor.cargo;
+    }
+    DATOS.secciones.forEach(function (s) {
+      var gs = g.secciones && g.secciones[s.seccion];
+      if (!gs || !Array.isArray(gs.filas)) return;
+      base.secciones[s.seccion] = {
+        comentario: typeof gs.comentario === "string" ? gs.comentario : "",
+        filas: gs.filas.filter(function (f) { return f && typeof f === "object" && f.valores && typeof f.valores === "object"; })
+          .map(function (f) { return { origen: typeof f.origen === "number" ? f.origen : null, yaNoExiste: !!f.yaNoExiste, valores: f.valores }; }),
+      };
+    });
+    return base;
+  }
+
   var estado = estadoInicial();
   var recuperado = false;
   try {
     var guardado = localStorage.getItem(CLAVE);
     if (guardado) {
       var g = JSON.parse(guardado);
-      if (g && g.id === DATOS.id && g.estado && g.estado.secciones) { estado = g.estado; recuperado = true; }
+      if (g && g.id === DATOS.id && g.estado) { estado = completar(g.estado); recuperado = true; }
     }
   } catch (e) {}
 
@@ -226,8 +255,19 @@ const PAGINA = String.raw`
     for (var i = 0; i < s.filas.length; i++) if (s.filas[i].origen === origen) return s.filas[i].valores;
     return {};
   }
-  function visible(campo, valores) { return !campo.dep || valores[campo.dep.field] === campo.dep.value; }
-  function decideOtros(s, id) { return s.campos.some(function (c) { return c.dep && c.dep.field === id; }); }
+  function ocultosDe(sid, origen) {
+    if (origen === null || origen === undefined) return null;
+    var s = seccionDe(sid);
+    for (var i = 0; i < s.filas.length; i++) if (s.filas[i].origen === origen) return s.filas[i].ocultos || [];
+    return null;
+  }
+  // depFijo: la pregunta de la que cuelga no se le hace al cliente, asi que el
+  // campo sale segun lo que ya dice la ficha, y nunca en una fila nueva.
+  function visible(s, campo, fila) {
+    if (campo.depFijo) { var oc = ocultosDe(s.seccion, fila.origen); return oc !== null && oc.indexOf(campo.id) === -1; }
+    return !campo.dep || fila.valores[campo.dep.field] === campo.dep.value;
+  }
+  function decideOtros(s, id) { return s.campos.some(function (c) { return c.dep && !c.depFijo && c.dep.field === id; }); }
 
   var contador = 0;
   function controlCampo(campo, valor, alCambiar) {
@@ -260,7 +300,7 @@ const PAGINA = String.raw`
   function nombreFila(s, fila, j, total) {
     if (fila.origen === null) return s.etiquetaFila + " nueva";
     var previo = antesDe(s.seccion, fila.origen);
-    var ident = previo.nombre || previo.marca || previo.producto || previo.proveedor || previo.isp || "";
+    var ident = previo.nombre || previo.marca || previo.marca_modelo || previo.producto || previo.proveedor || previo.solucion || previo.ssids || previo.isp || "";
     var base = total > 1 ? s.etiquetaFila + " " + (j + 1) : s.etiquetaFila;
     return ident ? base + " · " + ident : base;
   }
@@ -276,12 +316,16 @@ const PAGINA = String.raw`
       var accion = null;
       if (nueva) accion = el("button", { type: "button", className: "enlace", text: "Quitar", onclick: function () { st.filas.splice(j, 1); guardarLocal(); pintarSeccion(s, cont); } });
       else if (conDatos) accion = el("label", { className: "ya" }, [el("input", { type: "checkbox", checked: fila.yaNoExiste, onchange: function (ev) { fila.yaNoExiste = ev.target.checked; guardarLocal(); } }), " Ya no lo tenemos"]);
-      var campos = s.campos.filter(function (c) { return visible(c, fila.valores); }).map(function (c) {
-        return controlCampo(c, fila.valores[c.id], function (v) {
+      // Los campos van por apartados (los grupos del formulario): un rotulo
+      // cada vez que cambia el grupo.
+      var campos = [], grupo = null;
+      s.campos.filter(function (c) { return visible(s, c, fila); }).forEach(function (c) {
+        if (c.grupo && c.grupo !== grupo) { campos.push(el("div", { className: "grupo", text: c.grupo })); grupo = c.grupo; }
+        campos.push(controlCampo(c, fila.valores[c.id], function (v) {
           fila.valores[c.id] = v;
           guardarLocal();
           if (decideOtros(s, c.id)) pintarSeccion(s, cont);
-        });
+        }));
       });
       cont.appendChild(el("div", { className: "fila" + (nueva ? " nueva" : "") }, [
         el("div", { className: "fila-cab" }, [el("span", { text: nombreFila(s, fila, j, existentes) }), accion]),
@@ -315,7 +359,7 @@ const PAGINA = String.raw`
       st.filas.forEach(function (fila) {
         var previo = antesDe(s.seccion, fila.origen), campos = [];
         s.campos.forEach(function (c) {
-          if (!visible(c, fila.valores)) return;
+          if (!visible(s, c, fila)) return;
           var v = limpiar(fila.valores[c.id]), a = previo[c.id] === undefined ? "" : previo[c.id];
           if (!igual(v, a)) campos.push({ campo: c.id, antes: a, valor: v });
         });

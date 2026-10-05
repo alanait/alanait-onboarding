@@ -131,9 +131,10 @@ export default function CuestionarioCliente({ estado, tecnico, onAplicar, onDesc
               <div style={{ border: `1px solid ${C.border}`, borderRadius: 10, padding: "14px 16px", marginBottom: 14 }}>
                 <div style={{ fontWeight: 500, color: C.navy, marginBottom: 4 }}>1. Mandárselo al cliente</div>
                 <p style={{ margin: "0 0 10px", lineHeight: 1.5 }}>
-                  Se descarga un fichero <b>.html</b> con lo que ya tenemos de esta ficha: contratos, equipos, correo,
-                  antivirus, telefonía, impresoras, aplicaciones, servicios contratados y otros dispositivos. El cliente lo abre
-                  en su navegador, sin cuenta ni internet, lo rellena y nos devuelve un fichero <b>.json</b>.
+                  Se descarga un fichero <b>.html</b> con el inventario que ya tenemos de esta ficha: Internet, router, firewall
+                  y switches, servidores, equipos, copias, correo, antivirus, WiFi, VPN, armario y SAI, almacenamiento, telefonía,
+                  impresoras, aplicaciones, servicios contratados y otros dispositivos. El cliente lo abre en su navegador, sin
+                  cuenta ni internet, lo rellena y nos devuelve un fichero <b>.json</b>.
                 </p>
                 <p style={{ margin: "0 0 12px", fontSize: 12.5, color: C.textLight, lineHeight: 1.5 }}>
                   Algunos correos bloquean los adjuntos .html: si no le llega, mándaselo comprimido en .zip o como enlace de OneDrive.
@@ -185,8 +186,11 @@ export default function CuestionarioCliente({ estado, tecnico, onAplicar, onDesc
               )}
 
               {cmp.secciones.map(s => {
-                const necesitaSi = s.estadoSeccion !== "si" && (s.propuestas.some(p => p.aplicable) || s.filasNuevas.length > 0);
-                const bloqueada = necesitaSi && !sel.marcarSi[s.seccion];
+                const hayQueAplicar = s.propuestas.some(p => p.aplicable) || s.filasNuevas.length > 0;
+                // Si su "no" es un hallazgo critico, no se ofrece marcarla: lo
+                // dice la informacion de la seccion y lo cambia el tecnico.
+                const necesitaSi = s.estadoSeccion !== "si" && s.marcarSiPermitido && hayQueAplicar;
+                const bloqueada = s.estadoSeccion !== "si" && (!s.marcarSiPermitido || !sel.marcarSi[s.seccion]);
                 return (
                   <div key={s.seccion} style={{ border: `1px solid ${C.border}`, borderRadius: 10, padding: "10px 14px 6px", marginBottom: 12 }}>
                     <div style={{ fontWeight: 500, color: C.navy }}>{s.titulo}</div>

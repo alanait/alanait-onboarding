@@ -78,14 +78,27 @@ console.log("\nCatálogo: qué se le pregunta al cliente");
       const padre = (e.padres ?? []).includes(id);
       if (leidos.has(k) && !(padre && esPadrePermitido(e.seccion, id))) malos.push(`${k}: lo lee el motor`);
       if (disparan.has(k) && !padre) malos.push(`${k}: dispara un aviso de seguridad o de legado`);
-      if (f.dep && !e.campos.includes(f.dep.field)) malos.push(`${k}: depende de ${f.dep.field}, que no se pregunta`);
     }
     for (const p of e.padres ?? []) if (!e.campos.includes(p)) malos.push(`${e.seccion}.${p}: padre declarado que no se pregunta`);
-    // Anadir filas solo donde no mueve la nota, o en licenciamiento a sabiendas.
+    // Anadir filas solo donde no mueve la nota, o a sabiendas donde listar lo
+    // que tiene el cliente es lo que mas vale (servicios y servidores): ahi la
+    // fila nueva deja comprobaciones pendientes y no se preselecciona.
     const conCriterios = CRITERIOS.some(c => c.seccion === e.seccion);
-    if (e.permiteAnadir && conCriterios && e.seccion !== "licenciamiento") malos.push(`${e.seccion}: permite añadir filas y tiene criterios`);
+    if (e.permiteAnadir && conCriterios && !["licenciamiento", "servidores"].includes(e.seccion)) malos.push(`${e.seccion}: permite añadir filas y tiene criterios`);
   }
-  es("ningún campo del cuestionario lo lee el motor, ni dispara una tarea, ni cuelga de algo que no se pregunta", malos, []);
+  es("ningún campo del cuestionario lo lee el motor ni dispara una tarea", malos, []);
+  // Un campo que cuelga de una pregunta que NO se hace va con el condicional
+  // congelado: sale segun la ficha y el cliente no puede abrirlo.
+  const catDep = catalogoCliente();
+  const malDep = [];
+  for (const s of catDep.secciones) for (const c of s.campos) {
+    const preguntado = s.campos.some(x => x.id === c.dep?.field);
+    if (c.dep && !preguntado && !c.depFijo) malDep.push(`${s.seccion}.${c.id}: cuelga de algo que no se pregunta y no va congelado`);
+    if (c.depFijo && c.padre) malDep.push(`${s.seccion}.${c.id}: un padre no puede ir congelado`);
+  }
+  es("lo que cuelga de una pregunta que no se hace va con el condicional congelado", malDep, []);
+  es("hay campos congelados de verdad (marca del firewall, NAS de copias, tenant…)",
+     catDep.secciones.flatMap(s => s.campos.filter(c => c.depFijo).map(c => `${s.seccion}.${c.id}`)).length >= 7, true);
   es("los datos de empresa existen y no incluyen la fecha de visita ni el responsable",
      [DATOS_EMPRESA.every(id => CAMPOS_CLIENTE.some(c => c.id === id)), DATOS_EMPRESA.includes("fecha"), DATOS_EMPRESA.includes("responsable")], [true, false, false]);
   const cat = catalogoCliente();
@@ -93,7 +106,7 @@ console.log("\nCatálogo: qué se le pregunta al cliente");
      cat.secciones.flatMap(s => s.campos.flatMap(c => c.opciones.map(o => o.v))).filter(v => LITERALES_SIN_COMPROBAR.includes(v)), []);
   es("los campos de fecha se piden como fecha, igual que en la ficha",
      cat.secciones.flatMap(s => s.campos.filter(c => c.tipo === "date").map(c => `${s.seccion}.${c.id}`)),
-     ["red.isp_fecha_renovacion", "antivirus.vencimiento", "impresion.contrato_vencimiento", "licenciamiento.fecha_renovacion"]);
+     ["red.isp_fecha_renovacion", "servidores.garantia", "antivirus.vencimiento", "sai.sai_garantia", "impresion.contrato_vencimiento", "licenciamiento.fecha_renovacion"]);
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -214,6 +227,7 @@ console.log("\nLeer el fichero que devuelve el cliente");
       { campo: "tipo", antes: "", valor: "Inventado" },                  // opción que no existe
     ] }] },
     servidores: { filas: [{ origen: 0, campos: [{ campo: "so_soporte", antes: "", valor: "En soporte" }] }] },
+    inventada: { filas: [{ origen: 0, campos: [{ campo: "lo_que_sea", antes: "", valor: "x" }] }] },
     red: { filas: [{ origen: 0, campos: [{ campo: "rdp_expuesto", antes: "", valor: "No" }, { campo: "isp_fecha_renovacion", antes: "", valor: "31/12/2026" }] }] },
     licenciamiento: { filas: [{ origen: 0, campos: [{ campo: "titularidad", antes: "", valor: "A nombre del cliente" }] }] },
     ["__proto__"]: { filas: [] },
@@ -222,7 +236,8 @@ console.log("\nLeer el fichero que devuelve el cliente");
   const erp = r.datos.secciones.erp;
   es("se queda solo con los campos del catálogo y con valores válidos", erp.filas[0].campos.map(c => c.campo), ["version"]);
   es("el comentario llega limpio", erp.comentario, "Tenemos otro programa");
-  es("descarta secciones que no se preguntan (servidores)", "servidores" in r.datos.secciones, false);
+  es("descarta lo que puntúa de una sección que sí se pregunta (servidores.so_soporte)", "servidores" in r.datos.secciones, false);
+  es("y secciones que no existen", "inventada" in r.datos.secciones, false);
   es("descarta un campo que puntúa aunque venga en el fichero (red.rdp_expuesto, titularidad)",
      [r.datos.secciones.red?.filas?.[0]?.campos?.map(c => c.campo) ?? [], "licenciamiento" in r.datos.secciones], [[], false]);
   es("una fecha mal escrita se descarta", (r.datos.secciones.red?.filas ?? []).length, 0);
@@ -314,6 +329,63 @@ console.log("\nComparar con la ficha y aplicar lo que acepta el técnico");
   sel3.padres.add(`${filaServicio}.tipo_servicio`);
   const r3 = aplicarRespuestas(estado, datos, sel3, { ahora: "x" });
   es("aceptando el tipo, se aplica y abre lo que cuelga de él", [r3.formData.licenciamiento[1].tipo_servicio, r3.formData.licenciamiento[1].dominio_dns_gestion], ["Dominio", "En el propio registrador"]);
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+console.log("\nCondicional congelado, servidores nuevos y hallazgos en «No»");
+{
+  // Marca del firewall: solo si la ficha dice que hay firewall.
+  const sinFw = copia(fichas[0]);
+  sinFw.formData.red[0].firewall = "No";
+  const filaRed = (f) => datosCuestionario({ ...f, generado: "x", id: "y" }).secciones.find(s => s.seccion === "red").filas[0];
+  es("sin firewall en la ficha, la marca del firewall no se le pregunta", filaRed(sinFw).ocultos.includes("firewall_marca"), true);
+  es("con firewall, sí, y viene rellena", [filaRed(fichas[0]).ocultos.includes("firewall_marca"), !!filaRed(fichas[0]).valores.firewall_marca], [false, true]);
+
+  const estadoDe = (f) => ({ clientData: f.clientData, sectionEnabled: f.sectionEnabled, formData: f.formData, instanceCounts: f.instanceCounts || {} });
+  // Un fichero manipulado que trae la marca del firewall de un cliente sin firewall.
+  const trucado = leerRespuestas(respuestaDe({ red: { filas: [{ origen: 0, campos: [{ campo: "firewall_marca", antes: "", valor: "Fortinet" }] }] } })).datos;
+  const pFw = compararRespuestas(trucado, estadoDe(sinFw)).secciones.find(s => s.seccion === "red").propuestas[0];
+  es("y si llega igualmente, no se aplica: su pregunta no está abierta", [pFw.estado, pFw.aplicable], ["referencia", false]);
+
+  // Servidor nuevo: tipo y sistema solo con marca explicita, y lo que cuelga del tipo detras.
+  const datosSrv = leerRespuestas(respuestaDe({ servidores: { filas: [{ origen: null, campos: [
+    { campo: "nombre", antes: "", valor: "SRV-NUEVO" },
+    { campo: "tipo", antes: "", valor: "Físico" },
+    { campo: "serial", antes: "", valor: "CZJ999" },
+    { campo: "so_familia", antes: "", valor: "Windows Server" },
+  ] }] } })).datos;
+  const est = estadoDe(fichas[0]);
+  const cmpS = compararRespuestas(datosSrv, est);
+  const filaS = cmpS.secciones.find(s => s.seccion === "servidores").filasNuevas[0];
+  es("un servidor nuevo no va preseleccionado (deja comprobaciones pendientes)", filaS.preseleccionada, false);
+  const selS = seleccionInicial(cmpS);
+  selS.filas.add(filaS.clave);
+  const sinTipo = aplicarRespuestas(est, datosSrv, selS, { ahora: "x" });
+  const nS = (r) => (r.instanceCounts.servidores ?? 1) - 1;
+  es("sin aceptar su tipo, se añade sin tipo, sin sistema y sin lo que cuelga del tipo",
+     [sinTipo.formData.servidores[nS(sinTipo)].nombre, sinTipo.formData.servidores[nS(sinTipo)].tipo ?? "", sinTipo.formData.servidores[nS(sinTipo)].serial ?? ""], ["SRV-NUEVO", "", ""]);
+  selS.padres.add(`${filaS.clave}.tipo`);
+  selS.padres.add(`${filaS.clave}.so_familia`);
+  const conTipo = aplicarRespuestas(est, datosSrv, selS, { ahora: "x" });
+  const srv = conTipo.formData.servidores[nS(conTipo)];
+  es("aceptando tipo y sistema, se aplican y abren lo suyo", [srv.tipo, srv.so_familia, srv.serial], ["Físico", "Windows Server", "CZJ999"]);
+  const antesS = puntuar(fichas[0]), despuesS = puntuar({ ...fichas[0], ...conTipo });
+  es("un servidor nuevo no sube la nota: deja sin comprobar lo que puntúa de él", (despuesS.nota ?? 0) <= (antesS.nota ?? 0), true);
+
+  // Hallazgo en "No": las copias. El cuestionario no puede quitarlo.
+  const sinBackup = copia(fichas[0]);
+  sinBackup.sectionEnabled.backup = "no";
+  const datosBk = leerRespuestas(respuestaDe({ backup: { filas: [{ origen: 0, campos: [{ campo: "software", antes: "", valor: "Nakivo" }, { campo: "retencion", antes: "", valor: "30 días" }] }] } })).datos;
+  const cmpB = compararRespuestas(datosBk, estadoDe(sinBackup));
+  const secB = cmpB.secciones.find(s => s.seccion === "backup");
+  es("una sección «No» que es hallazgo crítico no se ofrece marcar «Sí»", [secB.marcarSiPermitido, secB.infos.some(t => t.includes("hallazgo crítico"))], [false, true]);
+  const selB = seleccionInicial(cmpB);
+  selB.marcarSi.add("backup");                                   // aunque lo intente
+  for (const p of secB.propuestas) selB.claves.add(p.clave);
+  const rB = aplicarRespuestas(estadoDe(sinBackup), datosBk, selB, { ahora: "x" });
+  es("y aunque se intente, ni se marca «Sí» ni se aplica nada",
+     [rB.sectionEnabled.backup, JSON.stringify(rB.formData.backup) === JSON.stringify(sinBackup.formData.backup), rB.resumen.campos], ["no", true, 0]);
+  es("la nota no cambia", JSON.stringify(puntuar({ ...sinBackup, ...rB })), JSON.stringify(puntuar(sinBackup)));
 }
 
 // ═══════════════════════════════════════════════════════════════════════════

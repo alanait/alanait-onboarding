@@ -22,7 +22,7 @@
 // preguntas ya contestadas.
 
 import { SECTIONS, CAMPOS_CLIENTE, textoOpcion } from "../sections.js";
-import { CRITERIOS, CONTRADICCIONES, LITERALES_SIN_COMPROBAR, CAMPOS_PADRE_SIN_CRITERIO } from "../score/criterios.js";
+import { CRITERIOS, CONTRADICCIONES, LITERALES_SIN_COMPROBAR, CAMPOS_PADRE_SIN_CRITERIO, PRECONDICIONES } from "../score/criterios.js";
 import { HINTS, TIPOS_HINT } from "../hints.js";
 
 // Sube si cambia el formato del fichero de respuestas, no por anadir campos.
@@ -33,33 +33,78 @@ export const VERSION_CUESTIONARIO = 1;
 export const DATOS_EMPRESA = ["empresa", "sector", "trabajadores", "sedes", "contacto", "telefono", "email", "direccion", "web"];
 
 // Por seccion: que campos, si puede anadir filas, y un titulo y una ayuda
-// escritos para alguien que no es tecnico.
+// escritos para alguien que no es tecnico. En el orden de SECTIONS.
 //
-// `permiteAnadir` solo en secciones SIN criterios (una fila nueva no mueve la
-// nota) y en licenciamiento, a proposito: que el cliente liste sus dominios y
-// licencias es lo que mas valor tiene, y una fila nueva ahi deja pendiente de
-// comprobar su titularidad y su panel, que es lo honesto. El tecnico la anade
-// fila a fila, nunca en bloque.
+// De cada seccion se pregunta el INVENTARIO (marcas, modelos, numeros de
+// serie, nombres, cantidades, garantias), nunca la pregunta que puntua: si el
+// firewall esta en soporte, el cifrado de la WiFi o el parcheo de un servidor
+// los comprueba el tecnico en la visita.
+//
+// Algunos campos de inventario cuelgan de una pregunta que puntua (la marca
+// del firewall solo existe si hay firewall). Esos van con su condicional
+// CONGELADO (`depFijo`, calculado en catalogoCliente): salen segun lo que ya
+// dice la ficha, y el cliente no puede cambiar la pregunta de la que cuelgan.
+//
+// `permiteAnadir` en secciones SIN criterios (una fila nueva no mueve la nota)
+// y, a proposito, en licenciamiento y servidores: que el cliente liste sus
+// dominios, licencias y servidores es lo que mas valor tiene. Una fila nueva
+// ahi deja pendiente comprobar lo que puntua de ella, que es lo honesto, y el
+// tecnico la anade fila a fila, nunca en bloque.
 export const CUESTIONARIO = [
   {
-    seccion: "red", titulo: "Conexión a Internet",
-    ayuda: "Los datos del contrato con su operador de Internet.",
-    campos: ["isp", "isp_contrato", "isp_soporte", "isp_fecha_renovacion", "conexion_tipo", "conexion_vel"],
+    seccion: "red", titulo: "Internet y red",
+    ayuda: "Su contrato de Internet, el router, el firewall y los switches.",
+    campos: ["isp", "isp_contrato", "isp_soporte", "isp_fecha_renovacion", "conexion_tipo", "conexion_vel", "ip_publica_tipo",
+      "router_marca", "firewall_marca", "firewall_serial", "switches_num", "switches_marca"],
+  },
+  {
+    seccion: "servidores", titulo: "Servidores",
+    ayuda: "Una ficha por servidor, físico o virtual. Añada los que falten.",
+    campos: ["nombre", "tipo", "marca", "serial", "roles", "ram", "almacenamiento", "garantia", "so_familia", "so",
+      "hipervisor", "version_hipervisor", "host_fisico", "cluster", "nombre_cluster"],
+    padres: ["tipo", "so_familia"],
+    permiteAnadir: true,
   },
   {
     seccion: "pcs", titulo: "Ordenadores",
-    ayuda: "Cuántos equipos de trabajo tienen, aproximadamente.",
-    campos: ["cantidad", "portatiles_num"],
+    ayuda: "Cuántos equipos de trabajo tienen y qué antigüedad, aproximadamente.",
+    campos: ["cantidad", "portatiles_num", "antiguedad"],
+  },
+  {
+    seccion: "backup", titulo: "Copias de seguridad",
+    ayuda: "Qué programa hace las copias, qué se copia y adónde van.",
+    campos: ["software", "backup_cobertura", "destino", "retencion", "backup_endpoints", "herramienta_endpoints", "repo_marca_modelo", "repo_capacidad"],
   },
   {
     seccion: "email", titulo: "Correo electrónico",
-    ayuda: "El dominio de su correo y cuántos buzones tienen.",
-    campos: ["dominio", "buzones", "plan"],
+    ayuda: "El dominio de su correo, cuántos buzones tienen y con qué lo protegen.",
+    campos: ["dominio", "tenant_nombre", "buzones", "plan", "antispam_cual", "backup_correo_solucion"],
   },
   {
     seccion: "antivirus", titulo: "Antivirus",
     ayuda: "Qué antivirus usan y cuándo vence la licencia.",
     campos: ["solucion", "licencias", "vencimiento"],
+  },
+  {
+    seccion: "wifi", titulo: "WiFi",
+    ayuda: "Sus redes WiFi y los puntos de acceso.",
+    campos: ["ssids", "invitados", "controlador", "marca", "cantidad", "cobertura"],
+  },
+  {
+    seccion: "vpn", titulo: "Acceso remoto (VPN)",
+    ayuda: "Cómo se conectan a la oficina desde fuera.",
+    campos: ["tipo", "solucion", "usuarios", "uso"],
+  },
+  {
+    seccion: "sai", titulo: "Armario de comunicaciones y SAI",
+    ayuda: "Dónde están los equipos de red y el SAI (la batería) que los protege de los cortes de luz.",
+    campos: ["sala_ubicacion", "rack_us", "marca", "sai_serial", "cantidad", "autonomia", "sai_garantia", "protegidos"],
+  },
+  {
+    seccion: "almacenamiento", titulo: "Almacenamiento de archivos",
+    ayuda: "Dónde guardan los archivos: NAS, servidor, OneDrive, Google Drive… Uno por cada sistema.",
+    campos: ["proveedor", "marca_modelo", "capacidad", "ubicacion", "sincronizacion", "acceso_remoto"],
+    permiteAnadir: true,
   },
   {
     seccion: "telefonia", titulo: "Telefonía",
@@ -164,8 +209,12 @@ export function catalogoCliente() {
         label: f.label,
         tipo,
         placeholder: f.placeholder ?? "",
+        grupo: f.group ?? "",
         opciones: (f.options ?? []).filter(o => !LITERALES_SIN_COMPROBAR.includes(o)).map(o => ({ v: o, t: textoOpcion(f, o) })),
         dep: f.dep ? { field: f.dep.field, value: f.dep.value } : null,
+        // La pregunta de la que cuelga no se le hace al cliente (casi siempre
+        // porque puntua): el campo sale o no segun lo que ya dice la ficha.
+        depFijo: !!f.dep && !entrada.campos.includes(f.dep.field),
         padre: padres.has(id),
       };
     });
@@ -183,3 +232,10 @@ export function catalogoCliente() {
 
 // Para los guardarrailes: que tipos de campo pueden ir en el cuestionario.
 export const tipoAdmitido = (f) => TIPOS_ADMITIDOS.has(f.type);
+
+// Secciones cuyo "no" es un hallazgo critico (precondicion: red, equipos,
+// correo, antivirus, copias). Si estan en "no", lo que diga el cliente no puede
+// pasarlas a "si": quitaria el hallazgo y subiria la nota solo con su palabra.
+// Si de verdad lo tienen, lo comprueba y lo cambia el tecnico en la ficha.
+const CON_PRECONDICION = new Set(PRECONDICIONES.filter(p => p.cuando === "no").map(p => p.seccion));
+export const esHallazgoSiNo = (seccion) => CON_PRECONDICION.has(seccion);

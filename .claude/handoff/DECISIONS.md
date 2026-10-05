@@ -875,26 +875,52 @@ pruebas y 7–8 días. El fichero no toca la base de datos ni su seguridad, y sa
 uno. Lo que se pierde: no hay aviso automático de que el cliente ha terminado, y
 algunos correos bloquean los adjuntos .html (se manda en .zip o por OneDrive).
 
-**Qué se le pregunta (`src/cliente/catalogo.js`).** Solo inventario que el cliente
-sabe: datos de contacto, contrato de Internet, nº de equipos, dominio y buzones del
-correo, antivirus y su vencimiento, telefonía, impresoras, aplicaciones de negocio,
-servicios contratados y otros dispositivos. 54 campos. Nada de seguridad, ni la nota,
-ni los avisos, ni las notas internas, ni IPs ni credenciales.
+**Qué se le pregunta (`src/cliente/catalogo.js`).** El **inventario** de las 15
+secciones, no las preguntas que puntúan: contrato de Internet, router, marca y serie
+del firewall, switches; servidores (nombre, tipo, marca, roles, RAM, discos,
+garantía, sistema, virtualización); nº y antigüedad de equipos; software y destino de
+las copias; dominio, buzones y plan del correo; antivirus y vencimiento; redes WiFi y
+puntos de acceso; VPN; armario y SAI; almacenamiento; telefonía, impresoras,
+aplicaciones, servicios contratados y otros dispositivos. Unos 100 campos, por
+apartados. Nada de seguridad (soporte, firmware, cifrado, parcheo, MFA, accesos), ni
+la nota, ni los avisos, ni las notas internas, ni IPs ni credenciales.
+
+> **Ampliado el mismo día a petición del dueño** («faltan muchos apartados, router,
+> firewall, wifi, switch, servidores…»). La primera versión solo tenía 9 secciones
+> por prudencia; la regla no obligaba a eso, solo a no preguntar lo que puntúa.
+
+**Condicional congelado (`depFijo`).** Algunos campos de inventario cuelgan de una
+pregunta que puntúa: la marca del firewall solo existe si hay firewall; el modelo del
+NAS de copias, si hay NAS; el tenant, si el correo es M365. Esos se preguntan con el
+condicional **congelado**: salen según lo que ya dice la ficha, nunca en una fila
+nueva, y el cliente no puede cambiar la pregunta de la que cuelgan. Al aplicar, solo
+entran si la ficha sigue teniendo esa pregunta abierta; si no, serían un valor que
+nadie ve.
+
+**Una sección cuyo «no» es un hallazgo crítico no se pasa a «Sí» desde el
+cuestionario** (red, equipos, correo, antivirus, copias). Hacerlo quitaría el hallazgo
+y subiría la nota solo con la palabra del cliente. Si de verdad lo tiene, lo comprueba
+y lo cambia el técnico en la ficha. En las demás secciones, marcar «Sí» sí se ofrece:
+solo puede abrir preguntas.
 
 **La regla que lo sostiene: el cliente no puede tocar nada que lea el motor.** Los
 campos que lee el motor se **derivan del propio modelo** (criterios, sus padres, los
 campos de los que se deduce otro, las señales de contradicción, los campos del
 «no»), y los que disparan un aviso de seguridad o de legado también se excluyen.
 `scripts/test-cuestionario.mjs` (8.º guardarraíl) barre **cada campo con cada valor**
-sobre las 5 fichas y un cliente perfecto (1 095 combinaciones) y exige que la
+sobre las 5 fichas y un cliente perfecto (2 178 combinaciones) y exige que la
 salida **entera** de `computeScore` y los avisos marcables no cambien. Dos controles
 prueban que el barrido sí ve un cambio cuando lo hay.
 
-**La excepción: `licenciamiento.tipo_servicio`**, que no puntúa pero decide qué otras
-preguntas salen. Se le pregunta al cliente como referencia y **solo se puede aplicar
-a una fila nueva**, marcándolo a mano. En una fila nueva no hay nada que esconder:
-solo puede abrir preguntas. En una existente, cambiarlo podría cerrar preguntas ya
-contestadas, que es la ruta de ocultación A2.
+**La excepción: los padres** `licenciamiento.tipo_servicio`, `servidores.tipo` y
+`servidores.so_familia`, que no puntúan pero deciden qué otras preguntas salen. Se le
+preguntan al cliente como referencia y **solo se pueden aplicar a una fila nueva**,
+marcándolos a mano. En una fila nueva no hay nada que esconder: solo pueden abrir
+preguntas. En una existente, cambiarlos podría cerrar preguntas ya contestadas, que es
+la ruta de ocultación A2. Pueden añadirse filas en las secciones sin criterios y, a
+propósito, en servicios contratados y servidores (sin preseleccionar): un servidor
+nuevo deja la nota no fiable hasta que el técnico complete su sistema y lo que
+puntúa de él (medido: 98 → 93).
 
 **Cómo se revisa (`src/cliente/respuestas.js`, funciones puras):**
 - *Rellena un hueco* → preseleccionado.

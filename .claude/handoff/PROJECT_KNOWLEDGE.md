@@ -157,13 +157,13 @@ Encadenados en `npm run build`: **fallan el deploy de Vercel**, no solo avisan.
 | Script | Qué protege |
 |---|---|
 | `check-ids.mjs` | El contrato de datos (ids y opciones). 408 claves. |
-| `check-imports.mjs` | Símbolos usados pero no importados. 100 símbolos. |
+| `check-imports.mjs` | Símbolos usados pero no importados. 101 símbolos. |
 | `check-score.mjs` | Literales de criterios contra el esquema, clasificación de toda opción de campo puntuado, peso entre 1 y 5, **y desde 2.6.0**: que `depSeccion` apunte a una sección real, que cada señal de `CONTRADICCIONES` case con literales reales, y que las opciones de `sin_servicio_motivo` coincidan con `MOTIVOS_INEXISTENCIA`. **Desde el 01/10**, que los ids de aviso sean únicos y empiecen por su sección (C9). |
 | `test-score.mjs` | **152** pruebas del motor (incluye tarjetas y `reindexarHints`). |
 | `test-informe.mjs` | **64** pruebas del informe, sin navegador. |
 | `test-borrador.mjs` | **33** pruebas del borrador local, con un `localStorage` de mentira **con cupo**. |
 | `test-capa-texto.mjs` | **23** pruebas de la capa de texto del PDF (D27). |
-| `test-cuestionario.mjs` | **59** pruebas del cuestionario para el cliente (D29): el barrido de que nada de lo que conteste el cliente mueve la nota ni las tareas, y la lectura y aplicación de sus respuestas. |
+| `test-cuestionario.mjs` | **72** pruebas del cuestionario para el cliente (D29): el barrido de que nada de lo que conteste el cliente mueve la nota ni las tareas, y la lectura y aplicación de sus respuestas. |
 
 **Lo que NO cubren:** identificadores fuera de ámbito en JSX (causó una pantalla en
 blanco en producción — C1) y la paginación real del PDF. **Un barrido con regex
