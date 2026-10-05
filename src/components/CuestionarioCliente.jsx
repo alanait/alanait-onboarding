@@ -19,6 +19,7 @@ const ETIQUETA_ESTADO = {
   cambia: { texto: "Corrige un dato", color: C.blue, fondo: C.blueLight },
   conflicto: { texto: "La ficha ha cambiado", color: C.amber, fondo: C.amberLight },
   vaciado: { texto: "Lo ha borrado", color: C.gray, fondo: C.grayLight },
+  anota: { texto: "A las notas", color: C.blue, fondo: C.blueLight },
   referencia: { texto: "Solo referencia", color: C.gray, fondo: C.grayLight },
 };
 
@@ -30,15 +31,15 @@ function Etiqueta({ estado }) {
   return <span style={{ fontSize: 11, color: e.color, background: e.fondo, borderRadius: 10, padding: "1px 8px", whiteSpace: "nowrap" }}>{e.texto}</span>;
 }
 
-function Propuesta({ p, marcada, alCambiar, bloqueada }) {
-  const desactivada = !p.aplicable || bloqueada;
+function Propuesta({ p, marcada, alCambiar, bloqueada, falta }) {
+  const desactivada = !p.aplicable || bloqueada || !!falta;
   return (
     <label style={{ display: "flex", gap: 10, alignItems: "flex-start", padding: "8px 0", borderTop: `1px solid ${C.border}`, cursor: desactivada ? "default" : "pointer", opacity: desactivada ? 0.75 : 1 }}>
       <input type="checkbox" checked={!!marcada && !desactivada} disabled={desactivada} onChange={e => alCambiar(e.target.checked)} style={{ marginTop: 3 }} />
       <span style={{ flex: 1, minWidth: 0 }}>
         <span style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
           <b style={{ fontWeight: 500, color: C.text }}>{p.etiqueta}</b>
-          {p.origen !== undefined && p.origen !== null && <span style={{ fontSize: 11, color: C.textLight }}>nº {p.origen + 1}</span>}
+          {p.fila && <span style={{ fontSize: 11.5, color: C.textLight }}>{p.fila}</span>}
           <Etiqueta estado={p.estado} />
         </span>
         <span style={{ display: "block", fontSize: 13, color: C.textLight, marginTop: 2 }}>
@@ -46,6 +47,7 @@ function Propuesta({ p, marcada, alCambiar, bloqueada }) {
           {"  →  "}Cliente: <span style={{ color: C.text, fontWeight: 500 }}>{textoValor(p.valor, p.opciones)}</span>
         </span>
         {p.motivo && <span style={{ display: "block", fontSize: 12, color: C.textLight, marginTop: 2 }}>{p.motivo}</span>}
+        {falta && <span style={{ display: "block", fontSize: 12, color: C.amber, marginTop: 2 }}>Marca también «{falta}»: este dato cuelga de esa respuesta.</span>}
       </span>
     </label>
   );
@@ -104,13 +106,22 @@ export default function CuestionarioCliente({ estado, tecnico, onAplicar, onDesc
     setPaso("hecho");
   };
 
-  const cuantos = sel ? Object.values(sel.claves).filter(Boolean).length + Object.values(sel.filas).filter(Boolean).length : 0;
+  // Lo que se aplicaria de verdad: sin contar lo marcado en una seccion
+  // bloqueada ni un dato que cuelga de otro sin marcar.
+  const bloqueadaDe = (s) => s.estadoSeccion !== "si" && (!s.marcarSiPermitido || !sel.marcarSi[s.seccion]);
+  const cuantos = !sel || !cmp ? 0
+    : cmp.empresa.filter(p => p.aplicable && sel.claves[p.clave]).length
+      + cmp.secciones.filter(s => !bloqueadaDe(s)).reduce((n, s) => n
+        + s.propuestas.filter(p => p.aplicable && sel.claves[p.clave] && !(p.requiere && !sel.claves[p.requiere.clave])).length
+        + s.filasNuevas.filter(f => sel.filas[f.clave]).length
+        + (s.comentario?.aplicable && sel.claves[s.comentario.clave] ? 1 : 0), 0);
   const empresaDistinta = lectura && lectura.datos.meta.empresa && estado.clientData.empresa
     && lectura.datos.meta.empresa.trim().toLowerCase() !== estado.clientData.empresa.trim().toLowerCase();
 
   const boton = { padding: "9px 16px", borderRadius: 8, fontSize: 13.5, fontWeight: 500, cursor: "pointer", fontFamily: "inherit" };
   const primario = { ...boton, background: C.green, color: "#fff", border: "none" };
   const secundario = { ...boton, background: "#fff", color: C.blue, border: `1px solid ${C.blueBorder}` };
+  const plural = (n, uno, varios) => `${n} ${n === 1 ? uno : varios}`;
 
   return (
     <div style={{ position: "fixed", inset: 0, zIndex: 99999, background: "rgba(0,0,0,0.6)", display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }}>
@@ -131,14 +142,14 @@ export default function CuestionarioCliente({ estado, tecnico, onAplicar, onDesc
               <div style={{ border: `1px solid ${C.border}`, borderRadius: 10, padding: "14px 16px", marginBottom: 14 }}>
                 <div style={{ fontWeight: 500, color: C.navy, marginBottom: 4 }}>1. Mandárselo al cliente</div>
                 <p style={{ margin: "0 0 10px", lineHeight: 1.5 }}>
-                  Se descarga un fichero <b>.html</b> con el inventario que ya tenemos de esta ficha: Internet, router, firewall
-                  y switches, servidores, equipos, copias, correo, antivirus, WiFi, VPN, armario y SAI, almacenamiento, telefonía,
-                  impresoras, aplicaciones, servicios contratados y otros dispositivos. El cliente lo abre en su navegador, sin
-                  cuenta ni internet, lo rellena y nos devuelve un fichero <b>.json</b>.
+                  Se descarga un fichero <b>.html</b> con el inventario que ya tenemos de esta ficha, para que el cliente lo
+                  complete: Internet y equipos de red, servidores, ordenadores, copias, correo, antivirus, WiFi, VPN, armario y SAI,
+                  almacenamiento, telefonía, impresoras, aplicaciones, servicios contratados y otros dispositivos. Lo abre en su
+                  navegador, sin cuenta ni internet, y nos devuelve un fichero <b>.json</b>.
                 </p>
                 <p style={{ margin: "0 0 12px", fontSize: 12.5, color: C.textLight, lineHeight: 1.5 }}>
                   Algunos correos bloquean los adjuntos .html: si no le llega, mándaselo comprimido en .zip o como enlace de OneDrive.
-                  No pregunta nada de seguridad ni le enseña la nota ni los avisos.
+                  No le deja cambiar nada que puntúe ni le enseña la nota ni los avisos.
                 </p>
                 <button onClick={descargar} style={primario}>Descargar cuestionario</button>
               </div>
@@ -186,50 +197,80 @@ export default function CuestionarioCliente({ estado, tecnico, onAplicar, onDesc
               )}
 
               {cmp.secciones.map(s => {
-                const hayQueAplicar = s.propuestas.some(p => p.aplicable) || s.filasNuevas.length > 0;
+                const hayQueAplicar = s.propuestas.some(p => p.aplicable) || s.filasNuevas.length > 0 || !!s.comentario?.aplicable;
                 // Si su "no" es un hallazgo critico, no se ofrece marcarla: lo
                 // dice la informacion de la seccion y lo cambia el tecnico.
                 const necesitaSi = s.estadoSeccion !== "si" && s.marcarSiPermitido && hayQueAplicar;
-                const bloqueada = s.estadoSeccion !== "si" && (!s.marcarSiPermitido || !sel.marcarSi[s.seccion]);
+                const bloqueada = bloqueadaDe(s);
                 return (
                   <div key={s.seccion} style={{ border: `1px solid ${C.border}`, borderRadius: 10, padding: "10px 14px 6px", marginBottom: 12 }}>
                     <div style={{ fontWeight: 500, color: C.navy }}>{s.titulo}</div>
                     {necesitaSi && (
                       <label style={{ display: "flex", gap: 8, alignItems: "center", margin: "8px 0", padding: "6px 10px", background: C.amberLight, borderRadius: 7, fontSize: 13, color: C.amber, cursor: "pointer" }}>
                         <input type="checkbox" checked={!!sel.marcarSi[s.seccion]} onChange={e => marcar("marcarSi", s.seccion, e.target.checked)} />
-                        En la ficha esta sección no está marcada «Sí». Márcala para poder aplicar lo que dice el cliente.
+                        {s.estadoSeccion === "no"
+                          ? "En la ficha esta sección está marcada «No». Márcala «Sí» para poder aplicar lo que dice el cliente."
+                          : "En la ficha esta sección está sin decidir. Márcala «Sí» para poder aplicar lo que dice el cliente."}
                       </label>
-                    )}
-                    {s.comentario && (
-                      <div style={{ margin: "8px 0", padding: "8px 10px", background: C.blueLight, borderRadius: 7, fontSize: 13 }}>
-                        <span style={{ color: C.textLight }}>Comentario del cliente: </span>{s.comentario}
-                      </div>
                     )}
                     {s.infos.map((t, i) => (
                       <div key={i} style={{ margin: "6px 0", fontSize: 13, color: C.amber }}>{t}</div>
                     ))}
-                    {s.propuestas.map(p => <Propuesta key={p.clave} p={p} marcada={sel.claves[p.clave]} bloqueada={bloqueada} alCambiar={v => marcar("claves", p.clave, v)} />)}
+                    {s.comentario && (s.comentario.aplicable ? (
+                      <label style={{ display: "flex", gap: 10, alignItems: "flex-start", margin: "8px 0", padding: "8px 10px", background: C.blueLight, borderRadius: 7, fontSize: 13, cursor: bloqueada ? "default" : "pointer", opacity: bloqueada ? 0.75 : 1 }}>
+                        <input type="checkbox" disabled={bloqueada} checked={!bloqueada && !!sel.claves[s.comentario.clave]} onChange={e => marcar("claves", s.comentario.clave, e.target.checked)} style={{ marginTop: 3 }} />
+                        <span><span style={{ color: C.textLight }}>Comentario del cliente, a las notas de la sección: </span>{s.comentario.texto}</span>
+                      </label>
+                    ) : (
+                      <div style={{ margin: "8px 0", padding: "8px 10px", background: C.blueLight, borderRadius: 7, fontSize: 13 }}>
+                        <span style={{ color: C.textLight }}>Comentario del cliente: </span>{s.comentario.texto}
+                      </div>
+                    ))}
+                    {s.propuestas.map(p => (
+                      <Propuesta key={p.clave} p={p} marcada={sel.claves[p.clave]} bloqueada={bloqueada}
+                        falta={p.requiere && !sel.claves[p.requiere.clave] ? p.requiere.etiqueta : null}
+                        alCambiar={v => marcar("claves", p.clave, v)} />
+                    ))}
                     {s.filasNuevas.map(f => {
                       const marcadaFila = !!sel.filas[f.clave] && !bloqueada;
+                      const propios = f.campos.filter(c => !c.padre && !c.cuelgaDePadre);
+                      const hijos = f.campos.filter(c => c.cuelgaDePadre);
                       return (
                         <div key={f.clave} style={{ padding: "8px 0", borderTop: `1px solid ${C.border}`, opacity: bloqueada ? 0.75 : 1 }}>
                           <label style={{ display: "flex", gap: 10, alignItems: "center", cursor: bloqueada ? "default" : "pointer" }}>
                             <input type="checkbox" checked={marcadaFila} disabled={bloqueada} onChange={e => marcar("filas", f.clave, e.target.checked)} />
-                            <b style={{ fontWeight: 500 }}>Añadir {s.etiquetaFila.toLowerCase()} nueva</b>
+                            <b style={{ fontWeight: 500 }}>Añadir «{f.titulo}»</b>
                           </label>
-                          <div style={{ marginLeft: 26, fontSize: 13, color: C.textLight }}>
-                            {f.campos.filter(c => !c.padre).map(c => `${c.etiqueta}: ${textoValor(c.valor, c.opciones)}`).join(" · ")}
-                          </div>
+                          {propios.length > 0 && (
+                            <div style={{ marginLeft: 26, fontSize: 13, color: C.textLight }}>
+                              {propios.map(c => `${c.etiqueta}: ${textoValor(c.valor, c.opciones)}`).join(" · ")}
+                            </div>
+                          )}
                           {f.campos.filter(c => c.padre).map(c => (
                             <label key={c.campo} style={{ display: "flex", gap: 8, alignItems: "center", marginLeft: 26, marginTop: 4, fontSize: 13, cursor: marcadaFila ? "pointer" : "default" }}>
                               <input type="checkbox" disabled={!marcadaFila} checked={marcadaFila && !!sel.padres[`${f.clave}.${c.campo}`]} onChange={e => marcar("padres", `${f.clave}.${c.campo}`, e.target.checked)} />
-                              Usar el tipo que indica el cliente: <b style={{ fontWeight: 500 }}>{textoValor(c.valor, c.opciones)}</b>
-                              <span style={{ color: C.textLight }}>(decide qué preguntas aparecen: compruébalo)</span>
+                              <span>Usar lo que indica el cliente: <b style={{ fontWeight: 500 }}>{c.etiqueta}: {textoValor(c.valor, c.opciones)}</b>
+                                <span style={{ color: C.textLight }}> (decide qué preguntas aparecen: compruébalo)</span></span>
                             </label>
                           ))}
+                          {hijos.length > 0 && (
+                            <div style={{ marginLeft: 26, marginTop: 2, fontSize: 12.5, color: C.textLight }}>
+                              Solo si usas el tipo: {hijos.map(c => `${c.etiqueta}: ${textoValor(c.valor, c.opciones)}`).join(" · ")}
+                            </div>
+                          )}
+                          {f.anotar?.length > 0 && (
+                            <div style={{ marginLeft: 26, marginTop: 2, fontSize: 12.5, color: C.textLight }}>
+                              A las notas, para comprobar en la visita (cuelgan de preguntas que puntúan): {f.anotar.map(c => `${c.etiqueta}: ${textoValor(c.valor, c.opciones)}`).join(" · ")}
+                            </div>
+                          )}
+                          {f.parecida && (
+                            <div style={{ marginLeft: 26, marginTop: 4, fontSize: 12, color: C.amber }}>
+                              Puede que ya esté en la ficha como «{f.parecida}»: compruébalo antes de añadirla.
+                            </div>
+                          )}
                           {f.conCriterios && (
                             <div style={{ marginLeft: 26, marginTop: 4, fontSize: 12, color: C.textLight }}>
-                              Al añadirlo quedan pendientes de comprobar en la visita su titularidad y su acceso al panel.
+                              Al añadirla quedan pendientes de comprobar en la visita {s.pendiente}.
                             </div>
                           )}
                         </div>
@@ -247,7 +288,7 @@ export default function CuestionarioCliente({ estado, tecnico, onAplicar, onDesc
           {paso === "hecho" && resumen && (
             <div style={{ lineHeight: 1.6 }}>
               <p style={{ margin: "0 0 8px" }}>
-                Aplicados <b>{resumen.campos}</b> {resumen.campos === 1 ? "dato" : "datos"} y <b>{resumen.filas}</b> {resumen.filas === 1 ? "fila nueva" : "filas nuevas"}
+                Aplicados {plural(resumen.campos, "dato", "datos")}, {plural(resumen.filas, "fila nueva", "filas nuevas")} y {plural(resumen.comentarios + resumen.anotados, "nota", "notas")}
                 {resumen.marcadas.length ? `, y ${resumen.marcadas.length === 1 ? "una sección marcada" : `${resumen.marcadas.length} secciones marcadas`} «Sí»` : ""}.
               </p>
               <p style={{ margin: "0 0 8px", color: C.green, fontWeight: 500 }}>Pulsa «Guardar» para conservarlos.</p>
@@ -266,7 +307,7 @@ export default function CuestionarioCliente({ estado, tecnico, onAplicar, onDesc
             <>
               <button onClick={() => { setPaso("inicio"); setLectura(null); setCmp(null); }} style={secundario}>Volver</button>
               <button onClick={aplicar} disabled={cuantos === 0} style={{ ...primario, opacity: cuantos === 0 ? 0.5 : 1 }}>
-                Aplicar {cuantos} {cuantos === 1 ? "elemento" : "elementos"}
+                Aplicar {plural(cuantos, "elemento", "elementos")}
               </button>
             </>
           )}

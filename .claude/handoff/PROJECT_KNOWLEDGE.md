@@ -163,7 +163,7 @@ Encadenados en `npm run build`: **fallan el deploy de Vercel**, no solo avisan.
 | `test-informe.mjs` | **64** pruebas del informe, sin navegador. |
 | `test-borrador.mjs` | **33** pruebas del borrador local, con un `localStorage` de mentira **con cupo**. |
 | `test-capa-texto.mjs` | **23** pruebas de la capa de texto del PDF (D27). |
-| `test-cuestionario.mjs` | **72** pruebas del cuestionario para el cliente (D29): el barrido de que nada de lo que conteste el cliente mueve la nota ni las tareas, y la lectura y aplicación de sus respuestas. |
+| `test-cuestionario.mjs` | **137** pruebas del cuestionario para el cliente (D29): el barrido de que nada de lo que conteste el cliente mueve la nota ni las tareas, la lectura y aplicación de sus respuestas, que cada fila vuelve a la suya, y la página real de punta a punta sobre un DOM mínimo. |
 
 **Lo que NO cubren:** identificadores fuera de ámbito en JSX (causó una pantalla en
 blanco en producción — C1) y la paginación real del PDF. **Un barrido con regex
@@ -252,6 +252,15 @@ el técnico no puede resolver, y que puntúe.
 - `catalogo.js`: qué se pregunta (`CUESTIONARIO`, `DATOS_EMPRESA`) y qué lee el motor
   (`camposQueLeeElMotor`, derivado del modelo). **Si añades un criterio sobre un
   campo de esta lista, `test-cuestionario` falla: sácalo del catálogo.**
+  Cada sección declara además cómo se le pregunta al **cliente**: `etiquetas`,
+  `textosOpcion` (otro texto, el mismo valor guardado), `grupos`, con qué se
+  identifica cada fila (`identificar`, también su huella), cómo se llaman sus filas
+  y su botón, `ocultarSiFicha` y, para el técnico, `pendiente`. Si renombras un
+  apartado (`group`) o una opción en `sections.js`, `test-cuestionario` avisa de lo
+  que el catálogo nombra y ya no existe.
+- Lo que el cliente dice de algo que cuelga de una pregunta que puntúa y que la ficha
+  aún no contesta (marca del firewall en una ficha en blanco) va a las **notas** de la
+  sección, nunca a su campo.
 - `cuestionarioHTML.js`: `construirCuestionario()` es pura y devuelve el .html entero.
   El código de la página del cliente va en `PAGINA` como `String.raw`, en JavaScript
   sencillo, **sin plantillas de texto ni `${`** (rompería el `String.raw`) y sin
@@ -261,9 +270,11 @@ el técnico no puede resolver, y que puntúe.
 - El formato del fichero de respuestas lleva `version`; si cambia la forma (no por
   añadir campos), subir `VERSION_CUESTIONARIO`. Los ficheros viejos se rechazan con
   un mensaje, no se leen a medias.
-- Prueba de punta a punta (no automatizada): generar el .html con
-  `construirCuestionario`, abrirlo en el navegador, rellenarlo, capturar la descarga y
-  pasarla por `leerRespuestas`/`aplicarRespuestas`. Se hizo así el 05/10.
+- Prueba de punta a punta: **automatizada** en `test-cuestionario`, que ejecuta el
+  código real de la página sobre un DOM mínimo (rellenar, descargar, importar). En
+  navegador se hizo el 05/10 generando el .html con `construirCuestionario`,
+  sirviéndolo en local, capturando la descarga y pasándola por
+  `leerRespuestas`/`aplicarRespuestas`.
 
 ---
 

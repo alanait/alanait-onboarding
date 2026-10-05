@@ -27,8 +27,12 @@ cosas, todas en ramas y nunca directo a `main`:
    **descartó por ser mucha faena** el 05/10. En su lugar: **cuestionario en un
    fichero .html** que se descarga desde la ficha (botón 📨), el cliente lo rellena
    sin cuenta ni internet y devuelve un .json que el técnico revisa dato a dato
-   (D29). Rama **`feat/cuestionario-cliente`**: pendiente de que el dueño lo pruebe
-   con sesión y, si puede, con un cliente real.
+   (D29). Rama **`feat/cuestionario-cliente`** (PR #24): pendiente de que el dueño lo
+   pruebe con sesión y, si puede, con un cliente real. El mismo 05/10 el dueño vio
+   campos «que no cuadran»: un agente revisó los 120 y ninguno era inventado, pero
+   había 20 problemas de contexto (etiquetas de técnico, filas sin nombre, respuestas
+   aplicadas por posición, el firewall que no salía en una ficha en blanco…). Todos
+   arreglados y medidos (D29, «Revisión de todos los campos»).
 
 **Hecho en producción el 02/10:**
 - PR #19: el fallo que movía las marcas de avisos al borrar una instancia (C9).
