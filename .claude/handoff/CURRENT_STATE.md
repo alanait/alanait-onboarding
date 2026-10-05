@@ -27,8 +27,9 @@ cosas, todas en ramas y nunca directo a `main`:
    **descartó por ser mucha faena** el 05/10. En su lugar: **cuestionario en un
    fichero .html** que se descarga desde la ficha (botón 📨), el cliente lo rellena
    sin cuenta ni internet y devuelve un .json que el técnico revisa dato a dato
-   (D29). Rama **`feat/cuestionario-cliente`** (PR #24): pendiente de que el dueño lo
-   pruebe con sesión y, si puede, con un cliente real. El mismo 05/10 el dueño vio
+   (D29). **En producción desde el 05/10** (PR #24): el dueño lo vio en la preview y
+   pidió subirlo («vale me gusta, a producción»). Falta probarlo con un cliente real y abrir el
+   .html en Safari/iPad, Firefox y el visor de adjuntos de Outlook. El mismo 05/10 el dueño vio
    campos «que no cuadran»: un agente revisó los 120 y ninguno era inventado, pero
    había 20 problemas de contexto (etiquetas de técnico, filas sin nombre, respuestas
    aplicadas por posición, el firewall que no salía en una ficha en blanco…). Todos

@@ -22,7 +22,7 @@ La app cubre 15 areas de infraestructura IT:
 | Antivirus / EDR | Solucion, consola, licencias, cobertura |
 | WiFi | SSIDs, APs, controlador, cobertura |
 | VPN | Tipo, solucion, usuarios, MFA |
-| SAI / UPS | Marca, autonomia, equipos protegidos |
+| Armario y SAI | Rack, sala, cableado, alimentacion, SAI y su autonomia |
 | Almacenamiento | NAS, cloud, permisos, sincronizacion |
 | Telefonia | VoIP, centralita, extensiones, moviles |
 | Impresion | Impresoras, IPs, consumibles, mantenimiento |
@@ -42,16 +42,45 @@ que no encajan en ninguna de las anteriores.
 - Guardado en la nube con base de datos
 - Historial de versiones (restaurar cualquier estado anterior)
 - Exportar/importar archivos `.alanait` como backup
-- **CiberScore**: nota 0-100 sobre 7 dominios ponderados, calculada en vivo
+- **CiberScore**: nota 0-100 sobre 8 dominios ponderados, calculada en vivo
   mientras se rellena (`src/score/`). Solo se publica como fiable cuando hay
   evidencia suficiente detras.
 - **Avisos de buenas practicas** contextuales segun lo que se va contestando
   (`src/hints.js`), marcables como Hecho / Pendiente / N/A.
 - Exportar informe a PDF, con **parte ejecutiva interna**: diagnostico por
   dominios, hallazgos criticos, preguntas criticas sin contestar, plan de accion
-  y oportunidades comerciales
-- Login con email y contrasena (restringido a dominio corporativo)
+  y oportunidades comerciales. El PDF lleva **texto seleccionable y buscable**
+  (una capa de texto invisible sobre cada pagina, como un PDF con OCR, pero con
+  el texto exacto). Es de uso interno: no se entrega al cliente.
+- **Cuestionario para el cliente** (boton 📨): el cliente adelanta su inventario
+  en un fichero que rellena sin cuenta y el tecnico revisa cada dato antes de
+  aplicarlo (ver abajo).
+- Sirve para onboarding y para **mantenimientos**: los campos de quien gestiona,
+  controla o es titular admiten ALANA IT.
+- Login con email y contrasena; el alta de cuentas solo admite `@alanait.com`,
+  tambien en el servidor (`supabase-restringir-alta.sql`)
+- Registro de auditoria de quien abre, modifica, borra o exporta cada ficha
+  (`supabase-auditoria.sql`)
 - Dashboard con listado y busqueda de clientes
+
+## Cuestionario para el cliente
+
+Para que el cliente adelante su inventario antes de la visita (`src/cliente/`):
+
+1. En la ficha, boton 📨 → **Descargar cuestionario**: un `.html` con lo que ya se
+   sabe de ese cliente. Se le envia por correo; si su correo bloquea los `.html`,
+   comprimido en `.zip` o por OneDrive.
+2. El cliente lo abre en cualquier navegador, sin cuenta ni internet, completa lo
+   que sepa y pulsa **Descargar respuestas**: devuelve un `.json`.
+3. Boton 📨 → **Cargar lo que ha contestado**: cada dato aparece junto al de la
+   ficha. Lo que rellena un hueco viene marcado; lo que cambia algo ya escrito lo
+   decide el tecnico. Sus comentarios van a las notas de la seccion. La app nunca
+   borra nada por lo que diga el cliente.
+
+Solo pregunta inventario (contratos, equipos, impresoras, aplicaciones, servicios
+contratados...). Nunca lo que puntua, ni ensena la nota o los avisos: una prueba
+del build lo comprueba campo a campo contra el motor. Detalle en
+`.claude/handoff/DECISIONS.md` D29.
 
 ## Para desarrollar
 
