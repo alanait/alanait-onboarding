@@ -149,18 +149,21 @@ reescribirla, no.
 
 ---
 
-## 5. Los SEIS guardarraíles
+## 5. Los OCHO guardarraíles
 
 Encadenados en `npm run build`: **fallan el deploy de Vercel**, no solo avisan.
+(Eran seis hasta el 01/10; las cifras de abajo son las del 05/10.)
 
 | Script | Qué protege |
 |---|---|
-| `check-ids.mjs` | El contrato de datos (ids y opciones). 406 campos. |
-| `check-imports.mjs` | Símbolos usados pero no importados. 72 símbolos. |
-| `check-score.mjs` | Literales de criterios contra el esquema, clasificación de toda opción de campo puntuado, peso entre 1 y 5, **y desde 2.6.0**: que `depSeccion` apunte a una sección real, que cada señal de `CONTRADICCIONES` case con literales reales, y que las opciones de `sin_servicio_motivo` coincidan con `MOTIVOS_INEXISTENCIA`. |
-| `test-score.mjs` | **115** pruebas del motor. |
-| `test-informe.mjs` | **58** pruebas del informe, sin navegador. |
+| `check-ids.mjs` | El contrato de datos (ids y opciones). 408 claves. |
+| `check-imports.mjs` | Símbolos usados pero no importados. 101 símbolos. |
+| `check-score.mjs` | Literales de criterios contra el esquema, clasificación de toda opción de campo puntuado, peso entre 1 y 5, **y desde 2.6.0**: que `depSeccion` apunte a una sección real, que cada señal de `CONTRADICCIONES` case con literales reales, y que las opciones de `sin_servicio_motivo` coincidan con `MOTIVOS_INEXISTENCIA`. **Desde el 01/10**, que los ids de aviso sean únicos y empiecen por su sección (C9). |
+| `test-score.mjs` | **152** pruebas del motor (incluye tarjetas y `reindexarHints`). |
+| `test-informe.mjs` | **64** pruebas del informe, sin navegador. |
 | `test-borrador.mjs` | **33** pruebas del borrador local, con un `localStorage` de mentira **con cupo**. |
+| `test-capa-texto.mjs` | **23** pruebas de la capa de texto del PDF (D27). |
+| `test-cuestionario.mjs` | **137** pruebas del cuestionario para el cliente (D29): el barrido de que nada de lo que conteste el cliente mueve la nota ni las tareas, la lectura y aplicación de sus respuestas, que cada fila vuelve a la suya, y la página real de punta a punta sobre un DOM mínimo. |
 
 **Lo que NO cubren:** identificadores fuera de ámbito en JSX (causó una pantalla en
 blanco en producción — C1) y la paginación real del PDF. **Un barrido con regex
@@ -241,6 +244,37 @@ el técnico no puede resolver, y que puntúe.
   y `.pdf-avoid`.
 - Contenedor a `190mm` = A4 menos los márgenes de 10 mm.
 - `pagebreak: { mode: ['legacy'], ... }`; `avoid-all` queda fuera a propósito.
+
+---
+
+## 10-bis. Cuestionario para el cliente (`src/cliente/`, D29)
+
+- `catalogo.js`: qué se pregunta (`CUESTIONARIO`, `DATOS_EMPRESA`) y qué lee el motor
+  (`camposQueLeeElMotor`, derivado del modelo). **Si añades un criterio sobre un
+  campo de esta lista, `test-cuestionario` falla: sácalo del catálogo.**
+  Cada sección declara además cómo se le pregunta al **cliente**: `etiquetas`,
+  `textosOpcion` (otro texto, el mismo valor guardado), `grupos`, con qué se
+  identifica cada fila (`identificar`, también su huella), cómo se llaman sus filas
+  y su botón, `ocultarSiFicha` y, para el técnico, `pendiente`. Si renombras un
+  apartado (`group`) o una opción en `sections.js`, `test-cuestionario` avisa de lo
+  que el catálogo nombra y ya no existe.
+- Lo que el cliente dice de algo que cuelga de una pregunta que puntúa y que la ficha
+  aún no contesta (marca del firewall en una ficha en blanco) va a las **notas** de la
+  sección, nunca a su campo.
+- `cuestionarioHTML.js`: `construirCuestionario()` es pura y devuelve el .html entero.
+  El código de la página del cliente va en `PAGINA` como `String.raw`, en JavaScript
+  sencillo, **sin plantillas de texto ni `${`** (rompería el `String.raw`) y sin
+  sintaxis reciente (navegadores viejos de clientes).
+- `respuestas.js`: `leerRespuestas` → `compararRespuestas` → `aplicarRespuestas`, puras.
+  La pantalla (`components/CuestionarioCliente.jsx`) solo enseña y recoge marcas.
+- El formato del fichero de respuestas lleva `version`; si cambia la forma (no por
+  añadir campos), subir `VERSION_CUESTIONARIO`. Los ficheros viejos se rechazan con
+  un mensaje, no se leen a medias.
+- Prueba de punta a punta: **automatizada** en `test-cuestionario`, que ejecuta el
+  código real de la página sobre un DOM mínimo (rellenar, descargar, importar). En
+  navegador se hizo el 05/10 generando el .html con `construirCuestionario`,
+  sirviéndolo en local, capturando la descarga y pasándola por
+  `leerRespuestas`/`aplicarRespuestas`.
 
 ---
 

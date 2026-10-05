@@ -237,6 +237,24 @@ console.log("\nEl inventario no imprime un campo oculto por su dep");
   es("pero si imprime el campo que si esta vigente", html.includes(">No<"), true);
 }
 
+// ── El motivo del "no" no se imprime en una seccion que esta en "si" ─────
+// Se marca "no" con motivo, luego "si": el motivo sigue guardado. Imprimirlo
+// en el inventario contradice a la propia ficha. Pasa al aplicar respuestas
+// del cuestionario del cliente, que puede marcar una seccion "si".
+console.log("\nEl inventario no imprime el motivo del «no» de una sección en «sí»");
+{
+  const c = {
+    clientData: { empresa: "Motivo SL" },
+    sectionEnabled: { wifi: "si" },
+    formData: { wifi: { 0: { sin_servicio_motivo: "No hay WiFi: todo el parque va por cable", ssids: "OFICINA" } } },
+    instanceCounts: {}, sectionImages: {},
+  };
+  const { html } = informe(c);
+  es("no imprime «¿Por qué no tiene esto?»", html.includes("¿Por qué no tiene esto?"), false);
+  es("ni el motivo viejo", html.includes("todo el parque va por cable"), false);
+  es("pero sí lo vigente", html.includes("OFICINA"), true);
+}
+
 // ── Una opcion se imprime como se ensena, no como se guarda ──────────────
 // "Ambos" era cliente + proveedor anterior. Al entrar ALANA IT como tercera
 // parte dejo de entenderse, y no se puede reescribir sin dejar huerfano lo ya

@@ -22,11 +22,18 @@ cosas, todas en ramas y nunca directo a `main`:
 2. **PDF seleccionable.** **Fusionado en `main` el 02/10** (PR #20): capa de texto
    invisible sobre la imagen (D27). El dueño eligió que todo sea buscable,
    credenciales incluidas. Sin probar en Firefox/Safari.
-3. **Enlace para que un externo rellene la ficha.** Diseñado el 02/10, **no
-   aprobado ni implementado**. Recomendación: portal propio con token, 7–8 días,
-   y un proyecto Supabase de pruebas para no escribir en producción. Diseño y
-   borrador de SQL en la rama `docs/diseno-enlace-cliente`
-   (`.claude/handoff/analisis/enlace-cliente/`).
+3. **Que el cliente rellene su ficha.** El enlace se diseñó el 02/10 (portal con
+   token, 7–8 días; diseño en la rama `docs/diseno-enlace-cliente`) y el dueño lo
+   **descartó por ser mucha faena** el 05/10. En su lugar: **cuestionario en un
+   fichero .html** que se descarga desde la ficha (botón 📨), el cliente lo rellena
+   sin cuenta ni internet y devuelve un .json que el técnico revisa dato a dato
+   (D29). **En producción desde el 05/10** (PR #24): el dueño lo vio en la preview y
+   pidió subirlo («vale me gusta, a producción»). Falta probarlo con un cliente real y abrir el
+   .html en Safari/iPad, Firefox y el visor de adjuntos de Outlook. El mismo 05/10 el dueño vio
+   campos «que no cuadran»: un agente revisó los 120 y ninguno era inventado, pero
+   había 20 problemas de contexto (etiquetas de técnico, filas sin nombre, respuestas
+   aplicadas por posición, el firewall que no salía en una ficha en blanco…). Todos
+   arreglados y medidos (D29, «Revisión de todos los campos»).
 
 **Hecho en producción el 02/10:**
 - PR #19: el fallo que movía las marcas de avisos al borrar una instancia (C9).

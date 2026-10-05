@@ -121,6 +121,10 @@ export function buildPrintFragment(clientData, sectionEnabled, formData, instanc
       const orden = [];
       const porGrupo = new Map();
       section.fields.forEach(f => {
+        // Los campos del "no" (motivo de que no exista) no pintan nada en una
+        // seccion que esta en "si": si se marco "no" y luego "si", el motivo
+        // viejo seguia guardado y el inventario lo imprimia como vigente.
+        if (f.soloSiNo) return;
         const v = leer(f.id);
         if (!v || v === "" || (Array.isArray(v) && v.length === 0)) return;
         const g = f.group || "";

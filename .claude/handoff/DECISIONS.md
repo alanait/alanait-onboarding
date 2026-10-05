@@ -853,3 +853,177 @@ M365, donde no puntúa. Las partes no llevan comas, porque el informe une nombre
 (A7); `contra_srv_erp` se silencia gratis dejando Aplicaciones en «no»; apuntar una
 licencia como aplicación da +5. La tarjeta no los crea; tenerlas juntas podría hacer
 más fácil el último, y lo mitiga que `erp` ya no diga «Licencias».
+
+---
+
+## D29. El cliente rellena un fichero, no un enlace
+
+**Decisión (05/10/2026, del dueño: «lo de enlace para cliente me parece mucha faena,
+¿podemos hacer una plantilla html o algo sencillo para pasarle al cliente y luego
+cargarlo?»).** Botón 📨 «Cuestionario para el cliente» en la barra del editor:
+1. Descarga un **.html autónomo** con lo que ya hay en la ficha. El cliente lo abre en
+   cualquier navegador, sin cuenta, sin internet y sin servidor, y lo corrige o
+   completa. Lo que escribe se guarda en su equipo mientras lo rellena.
+2. El cliente pulsa «Descargar respuestas» y devuelve un **.json** por correo (o el
+   texto pegado, si su navegador no deja descargar).
+3. El técnico lo carga en la ficha y ve cada dato al lado del que hay. Aplica lo que
+   marque, y el cambio queda pendiente de «Guardar» como cualquier otro.
+
+**Por qué no el enlace (D-diseño en `analisis/enlace-cliente/`).** El enlace pedía un
+portal público, dos funciones SQL abiertas a anónimos, un proyecto Supabase de
+pruebas y 7–8 días. El fichero no toca la base de datos ni su seguridad, y salió en
+uno. Lo que se pierde: no hay aviso automático de que el cliente ha terminado, y
+algunos correos bloquean los adjuntos .html (se manda en .zip o por OneDrive).
+
+**Qué se le pregunta (`src/cliente/catalogo.js`).** El **inventario** de las 15
+secciones, no las preguntas que puntúan: contrato de Internet, router, marca y serie
+del firewall, switches; servidores (nombre, tipo, marca, roles, RAM, discos,
+garantía, sistema, virtualización); nº y antigüedad de equipos; software y destino de
+las copias; dominio, buzones y plan del correo; antivirus y vencimiento; redes WiFi y
+puntos de acceso; VPN; armario y SAI; almacenamiento; telefonía, impresoras,
+aplicaciones, servicios contratados y otros dispositivos. Unos 100 campos, por
+apartados. Nada de seguridad (soporte, firmware, cifrado, parcheo, MFA, accesos), ni
+la nota, ni los avisos, ni las notas internas, ni IPs ni credenciales.
+
+> **Ampliado el mismo día a petición del dueño** («faltan muchos apartados, router,
+> firewall, wifi, switch, servidores…»). La primera versión solo tenía 9 secciones
+> por prudencia; la regla no obligaba a eso, solo a no preguntar lo que puntúa.
+
+**Condicional congelado (`depFijo`).** Algunos campos de inventario cuelgan de una
+pregunta que puntúa: la marca del firewall solo existe si hay firewall; el modelo del
+NAS de copias, si hay NAS; el tenant, si el correo es M365. El cliente no puede
+cambiar la pregunta de la que cuelgan. Si la ficha la contesta, el campo sale según
+lo que diga (con «No» no se pregunta; con «Sí», sí, y se aplica a su campo). **Si la
+ficha aún no la contesta** (ficha en blanco, fila nueva), el campo se pregunta igual
+y lo que diga el cliente **va a las notas de la sección** («Dato del cliente,
+pendiente de comprobar en la visita: Marca/Modelo Firewall: FortiGate 40F»), nunca a
+su campo: escribirlo ahí sería un valor que nadie ve, y abrir la pregunta para que se
+viera sería contestar por el cliente algo que puntúa. *Corregido el 05/10:* la primera
+versión no preguntaba nunca estos campos en una ficha en blanco, así que el firewall
+—que el dueño pidió expresamente— no salía.
+
+**Una sección cuyo «no» es un hallazgo crítico no se pasa a «Sí» desde el
+cuestionario** (red, equipos, correo, antivirus, copias). Hacerlo quitaría el hallazgo
+y subiría la nota solo con la palabra del cliente. Si de verdad lo tiene, lo comprueba
+y lo cambia el técnico en la ficha. En las demás secciones, marcar «Sí» sí se ofrece:
+solo puede abrir preguntas.
+
+**La regla que lo sostiene: el cliente no puede tocar nada que lea el motor.** Los
+campos que lee el motor se **derivan del propio modelo** (criterios, sus padres, los
+campos de los que se deduce otro, las señales de contradicción, los campos del
+«no»), y los que disparan un aviso de seguridad o de legado también se excluyen.
+`scripts/test-cuestionario.mjs` (8.º guardarraíl) barre **cada campo con cada valor**
+sobre las 5 fichas y un cliente perfecto, más las notas de cada sección, donde acaban
+los comentarios (2 207 combinaciones), y exige que la salida **entera** de
+`computeScore` y los avisos marcables no cambien. Dos controles prueban que el
+barrido sí ve un cambio cuando lo hay.
+
+**La excepción: los padres** `licenciamiento.tipo_servicio`, `servidores.tipo` y
+`servidores.so_familia`, que no puntúan pero deciden qué otras preguntas salen. **Solo
+se pueden aplicar a una fila nueva**, marcándolos a mano. En una fila nueva no hay
+nada que esconder: solo pueden abrir preguntas. En una existente, cambiarlos podría
+cerrar preguntas ya contestadas, que es la ruta de ocultación A2; por eso, si la ficha
+ya tiene el tipo, el cliente lo ve como **texto fijo** («si no es así, díganoslo en el
+comentario») y lo que cuelga de él sigue al tipo de la ficha. Una sección sin decidir,
+o con una única fila vacía, se le presenta al cliente como **fila nueva**: así, en
+una ficha en blanco, el tipo que diga el cliente sí se puede aceptar.
+
+**Filas nuevas en todas las secciones menos Ordenadores.** En las secciones sin
+criterios llegan preseleccionadas; en las que puntúan, nunca, y la revisión dice qué
+queda pendiente de comprobar de esa fila (`pendiente` en el catálogo: «su firewall, los
+puertos expuestos y los accesos heredados», «el MFA de la VPN»…). Una fila nueva
+nunca sube la nota: entra con lo que puntúa sin comprobar (medido: un servidor nuevo,
+98 → 93). Ordenadores no, porque sus filas son grupos que hace el técnico y al
+cliente solo se le pide el número aproximado: con el botón, lo natural sería añadir
+una fila por ordenador.
+
+**Cómo se revisa (`src/cliente/respuestas.js`, funciones puras):**
+- *Rellena un hueco* → preseleccionado. Un «No revisado» / «No sabe» de la ficha
+  cuenta como hueco: al cliente se le envía en blanco y su respuesta lo rellena.
+- *Corrige un dato* que nadie ha tocado desde el envío → lo marca el técnico.
+- *La ficha ha cambiado* desde el envío y el cliente dice otra cosa → lo marca el técnico.
+- *Lo ha borrado*, *ya no lo tenemos* → solo información: **la app nunca borra** un
+  dato, una instancia ni el sí/no de una sección por lo que diga el cliente.
+- Lo que el cliente no ha tocado no se ofrece: la página devuelve la fila entera
+  (para poder rehacerla si ya no está en la ficha), pero solo cuenta lo cambiado.
+- Un dato que cuelga de otra respuesta del cliente (la empresa de mantenimiento
+  cuelga de «¿tiene contrato?») solo se aplica junto con ella, y solo se
+  preselecciona si ella también.
+- **Cada fila vuelve a SU fila.** Cada fila viaja con su nombre y su *huella* (los
+  datos que la identifican en la ficha: nombre del servidor, marca de la impresora,
+  dominio del correo…). Si el técnico borra o cambia filas mientras el cuestionario
+  está fuera, la respuesta busca su fila por la huella; si ya no está, se ofrece como
+  fila nueva, entera. Una huella sin datos solo vale en su sitio: buscarla en otro
+  emparejaría dos filas sin nombre al azar.
+- Filas nuevas: preseleccionadas en secciones sin criterios; en las que puntúan, no.
+  Si se llaman como una que ya está en la ficha, tampoco («puede que ya esté»).
+- **Comentarios** del cliente → a las **notas** de la sección, con quién y cuándo, sin
+  pisar lo que había. Preseleccionados. En una sección cuyo «no» es un hallazgo, solo
+  se leen.
+- Una sección que no está en «Sí» no recibe nada hasta que el técnico la marca. Marcar
+  «Sí» solo puede abrir preguntas, nunca esconderlas.
+- `aplicarRespuestas` recalcula la comparación por su cuenta y vuelve a excluir lo que
+  lee el motor: un fichero manipulado no cuela nada aunque la pantalla fallara.
+- Queda constancia en `formData.__cliente__.importaciones` (fecha, quién lo rellenó y
+  su cargo, cuántos datos, filas, comentarios y notas, y por su nombre lo que el
+  cliente dice que ya no tiene), **sin índices de instancia**, para no repetir el
+  fallo C9.
+
+**Medido.** Aceptándolo todo (filas nuevas con su tipo, secciones marcadas «Sí») en
+las 5 fichas y en una en blanco, la nota **nunca sube** (01: 98 → 68, porque las filas
+nuevas entran sin comprobar). El **sello de nota fiable** no lo da nunca lo que trae
+el cliente: con lo preseleccionado no aparece en ningún caso. Solo puede aparecer si
+el técnico **decide algo que estaba sin decidir** —marcar «Sí» una sección sin
+decidir—, exactamente igual que si lo marcara en la ficha (medido con la VPN sin
+decidir en la 01: 98 → 97 y fiable; a mano, 98 → 98 y fiable). Probado de punta a
+punta en el navegador con las fichas 01, 05 y una en blanco, y además en
+`test-cuestionario` sobre un DOM mínimo: se rellena la página real, se descarga el
+.json y se importa con el código de la app.
+
+**Revisión de todos los campos (05/10, a petición del dueño: «te has inventado campos
+en la plantilla que no cuadran»).** Un agente comprobó los 120 campos: ninguno
+inventado (todos existen con su id, etiqueta y opciones), pero encontró 20 cosas que
+no cuadraban **en contexto**, todas arregladas:
+- Etiquetas escritas para el técnico que, sueltas, no se entienden («¿Cuál?»,
+  «Retención (detalle)», «Roles principales»): el catálogo lleva ahora la etiqueta
+  **del cliente** (`etiquetas`) y la revisión del técnico sigue usando la de la app.
+  Lo mismo con algunas opciones (`textosOpcion`: roles del servidor en castellano,
+  «En la oficina / En la nube»): se enseña otro texto, **se guarda el mismo valor**.
+- Filas que no decían qué eran («Armario · APC…», que era el SAI): cada sección
+  declara con qué se identifica (`identificar`) y cómo se llaman sus filas, con su
+  género («Impresora nueva», «Otro servidor», «+ Añadir un aparato» si aún no hay).
+- Respuestas aplicadas por posición: ahora por huella (arriba).
+- Ficha en blanco: el tipo del servidor no se podía aceptar y lo que colgaba de él se
+  perdía: ahora es fila nueva.
+- El tipo de una fila existente se podía cambiar en la página y luego no se aplicaba:
+  ahora es texto fijo.
+- Apartados que prometían preguntas que no estaban («Router y firewall» sin firewall,
+  ayudas que hablaban de protección del correo): rótulos para el cliente, solo cuando
+  hay más de un apartado, y ayudas que no prometen nada.
+- Se le preguntaba la marca del SAI a quien la ficha dice que no tiene SAI
+  (`ocultarSiFicha`).
+- Secciones en «no» sin explicación: llevan una nota; si el «no» es un hallazgo, solo
+  admiten el comentario.
+- Comentarios y cargo que no se guardaban: ahora sí (notas y constancia).
+- «No revisado» de la ficha comparado como conflicto: ahora es hueco.
+- Textos del técnico inexactos («No pregunta nada de seguridad», la nota de
+  «titularidad y panel» en cualquier sección): corregidos.
+- Ocho secciones de varias filas sin «Añadir»: ahora todas menos Ordenadores.
+Quedan dos que no se tocan a propósito: el condicional de dos niveles (es igual en la
+app, `lectorEfectivo`) y el nombre de las fichas de ejemplo, que lleva la nota
+(«Ex. Ciberscore 98/100») y saldría en el cuestionario de una ficha de ejemplo; los
+ejemplos no se usan con clientes.
+
+**Seguridad del fichero.** Los datos van como JSON con «<» escapado y se pintan con
+`textContent`; ninguna petición de red; el código de la página va como texto
+(`String.raw`) para que el empaquetador no lo transforme. La descarga del cuestionario
+se registra en la auditoría como `fichero_exportado` con `{ cuestionario: 1 }`, sin
+contenido y sin tocar el SQL.
+
+**De paso:** el PDF dejaba de imprimir el «¿Por qué no tiene esto?» de una sección
+que pasó de «no» a «sí» (se imprimía el motivo viejo como vigente). Este flujo puede
+hacer ese paso, así que se arregló con su prueba.
+
+**Lo que no está probado:** abrir el .html en Safari/iPad, Firefox y desde el visor de
+adjuntos de Outlook; y la pantalla de revisión dentro de la app, que solo puede ver el
+dueño con sesión.
