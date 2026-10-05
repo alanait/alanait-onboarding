@@ -75,19 +75,27 @@ No hace falta migración: la nota no se guarda en BD, se recalcula.
 ## Comandos
 
 ```bash
-npm run build     # 7 guardarraíles encadenados + vite build
-node scripts/test-score.mjs          # 130 pruebas del motor
-node scripts/test-informe.mjs        # 61 pruebas del informe
+npm run build     # 8 guardarraíles encadenados + vite build
+node scripts/test-score.mjs          # 152 pruebas del motor
+node scripts/test-informe.mjs        # 64 pruebas del informe
 node scripts/test-borrador.mjs       # 33 pruebas del borrador local
 node scripts/test-capa-texto.mjs     # 23 pruebas de la capa de texto del PDF
+node scripts/test-cuestionario.mjs   # 59 pruebas del cuestionario para el cliente
 node scripts/verificar-pdf.mjs informe.pdf "búsqueda"   # ¿el PDF lleva texto? (fuera del build)
 node scripts/puntuar-ejemplos.mjs    # notas de las 5 fichas de ejemplo
 node scripts/etiquetar-ejemplos.mjs  # reetiquetar tras cambiar el modelo
 ```
 
-Los siete guardarraíles (`check-ids`, `check-imports`, `check-score`,
-`test-score`, `test-informe`, `test-borrador`, `test-capa-texto`) están encadenados en
-`npm run build`, así que **fallan el deploy**, no solo avisan.
+Los ocho guardarraíles (`check-ids`, `check-imports`, `check-score`,
+`test-score`, `test-informe`, `test-borrador`, `test-capa-texto`,
+`test-cuestionario`) están encadenados en `npm run build`, así que **fallan el
+deploy**, no solo avisan.
+
+**Cuestionario para el cliente (`src/cliente/`):** ningún campo que lea el motor
+puede preguntarse al cliente. `test-cuestionario` lo comprueba barriendo cada
+campo con cada valor sobre las fichas de ejemplo; si un criterio nuevo cae sobre un
+campo del cuestionario, el build falla y hay que sacarlo de `catalogo.js`
+(`DECISIONS.md` D29).
 
 ## Verificación
 

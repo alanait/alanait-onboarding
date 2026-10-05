@@ -149,18 +149,21 @@ reescribirla, no.
 
 ---
 
-## 5. Los SEIS guardarraíles
+## 5. Los OCHO guardarraíles
 
 Encadenados en `npm run build`: **fallan el deploy de Vercel**, no solo avisan.
+(Eran seis hasta el 01/10; las cifras de abajo son las del 05/10.)
 
 | Script | Qué protege |
 |---|---|
-| `check-ids.mjs` | El contrato de datos (ids y opciones). 406 campos. |
-| `check-imports.mjs` | Símbolos usados pero no importados. 72 símbolos. |
-| `check-score.mjs` | Literales de criterios contra el esquema, clasificación de toda opción de campo puntuado, peso entre 1 y 5, **y desde 2.6.0**: que `depSeccion` apunte a una sección real, que cada señal de `CONTRADICCIONES` case con literales reales, y que las opciones de `sin_servicio_motivo` coincidan con `MOTIVOS_INEXISTENCIA`. |
-| `test-score.mjs` | **115** pruebas del motor. |
-| `test-informe.mjs` | **58** pruebas del informe, sin navegador. |
+| `check-ids.mjs` | El contrato de datos (ids y opciones). 408 claves. |
+| `check-imports.mjs` | Símbolos usados pero no importados. 100 símbolos. |
+| `check-score.mjs` | Literales de criterios contra el esquema, clasificación de toda opción de campo puntuado, peso entre 1 y 5, **y desde 2.6.0**: que `depSeccion` apunte a una sección real, que cada señal de `CONTRADICCIONES` case con literales reales, y que las opciones de `sin_servicio_motivo` coincidan con `MOTIVOS_INEXISTENCIA`. **Desde el 01/10**, que los ids de aviso sean únicos y empiecen por su sección (C9). |
+| `test-score.mjs` | **152** pruebas del motor (incluye tarjetas y `reindexarHints`). |
+| `test-informe.mjs` | **64** pruebas del informe, sin navegador. |
 | `test-borrador.mjs` | **33** pruebas del borrador local, con un `localStorage` de mentira **con cupo**. |
+| `test-capa-texto.mjs` | **23** pruebas de la capa de texto del PDF (D27). |
+| `test-cuestionario.mjs` | **59** pruebas del cuestionario para el cliente (D29): el barrido de que nada de lo que conteste el cliente mueve la nota ni las tareas, y la lectura y aplicación de sus respuestas. |
 
 **Lo que NO cubren:** identificadores fuera de ámbito en JSX (causó una pantalla en
 blanco en producción — C1) y la paginación real del PDF. **Un barrido con regex
@@ -241,6 +244,26 @@ el técnico no puede resolver, y que puntúe.
   y `.pdf-avoid`.
 - Contenedor a `190mm` = A4 menos los márgenes de 10 mm.
 - `pagebreak: { mode: ['legacy'], ... }`; `avoid-all` queda fuera a propósito.
+
+---
+
+## 10-bis. Cuestionario para el cliente (`src/cliente/`, D29)
+
+- `catalogo.js`: qué se pregunta (`CUESTIONARIO`, `DATOS_EMPRESA`) y qué lee el motor
+  (`camposQueLeeElMotor`, derivado del modelo). **Si añades un criterio sobre un
+  campo de esta lista, `test-cuestionario` falla: sácalo del catálogo.**
+- `cuestionarioHTML.js`: `construirCuestionario()` es pura y devuelve el .html entero.
+  El código de la página del cliente va en `PAGINA` como `String.raw`, en JavaScript
+  sencillo, **sin plantillas de texto ni `${`** (rompería el `String.raw`) y sin
+  sintaxis reciente (navegadores viejos de clientes).
+- `respuestas.js`: `leerRespuestas` → `compararRespuestas` → `aplicarRespuestas`, puras.
+  La pantalla (`components/CuestionarioCliente.jsx`) solo enseña y recoge marcas.
+- El formato del fichero de respuestas lleva `version`; si cambia la forma (no por
+  añadir campos), subir `VERSION_CUESTIONARIO`. Los ficheros viejos se rechazan con
+  un mensaje, no se leen a medias.
+- Prueba de punta a punta (no automatizada): generar el .html con
+  `construirCuestionario`, abrirlo en el navegador, rellenarlo, capturar la descarga y
+  pasarla por `leerRespuestas`/`aplicarRespuestas`. Se hizo así el 05/10.
 
 ---
 

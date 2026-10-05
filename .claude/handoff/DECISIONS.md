@@ -853,3 +853,81 @@ M365, donde no puntúa. Las partes no llevan comas, porque el informe une nombre
 (A7); `contra_srv_erp` se silencia gratis dejando Aplicaciones en «no»; apuntar una
 licencia como aplicación da +5. La tarjeta no los crea; tenerlas juntas podría hacer
 más fácil el último, y lo mitiga que `erp` ya no diga «Licencias».
+
+---
+
+## D29. El cliente rellena un fichero, no un enlace
+
+**Decisión (05/10/2026, del dueño: «lo de enlace para cliente me parece mucha faena,
+¿podemos hacer una plantilla html o algo sencillo para pasarle al cliente y luego
+cargarlo?»).** Botón 📨 «Cuestionario para el cliente» en la barra del editor:
+1. Descarga un **.html autónomo** con lo que ya hay en la ficha. El cliente lo abre en
+   cualquier navegador, sin cuenta, sin internet y sin servidor, y lo corrige o
+   completa. Lo que escribe se guarda en su equipo mientras lo rellena.
+2. El cliente pulsa «Descargar respuestas» y devuelve un **.json** por correo (o el
+   texto pegado, si su navegador no deja descargar).
+3. El técnico lo carga en la ficha y ve cada dato al lado del que hay. Aplica lo que
+   marque, y el cambio queda pendiente de «Guardar» como cualquier otro.
+
+**Por qué no el enlace (D-diseño en `analisis/enlace-cliente/`).** El enlace pedía un
+portal público, dos funciones SQL abiertas a anónimos, un proyecto Supabase de
+pruebas y 7–8 días. El fichero no toca la base de datos ni su seguridad, y salió en
+uno. Lo que se pierde: no hay aviso automático de que el cliente ha terminado, y
+algunos correos bloquean los adjuntos .html (se manda en .zip o por OneDrive).
+
+**Qué se le pregunta (`src/cliente/catalogo.js`).** Solo inventario que el cliente
+sabe: datos de contacto, contrato de Internet, nº de equipos, dominio y buzones del
+correo, antivirus y su vencimiento, telefonía, impresoras, aplicaciones de negocio,
+servicios contratados y otros dispositivos. 54 campos. Nada de seguridad, ni la nota,
+ni los avisos, ni las notas internas, ni IPs ni credenciales.
+
+**La regla que lo sostiene: el cliente no puede tocar nada que lea el motor.** Los
+campos que lee el motor se **derivan del propio modelo** (criterios, sus padres, los
+campos de los que se deduce otro, las señales de contradicción, los campos del
+«no»), y los que disparan un aviso de seguridad o de legado también se excluyen.
+`scripts/test-cuestionario.mjs` (8.º guardarraíl) barre **cada campo con cada valor**
+sobre las 5 fichas y un cliente perfecto (1 095 combinaciones) y exige que la
+salida **entera** de `computeScore` y los avisos marcables no cambien. Dos controles
+prueban que el barrido sí ve un cambio cuando lo hay.
+
+**La excepción: `licenciamiento.tipo_servicio`**, que no puntúa pero decide qué otras
+preguntas salen. Se le pregunta al cliente como referencia y **solo se puede aplicar
+a una fila nueva**, marcándolo a mano. En una fila nueva no hay nada que esconder:
+solo puede abrir preguntas. En una existente, cambiarlo podría cerrar preguntas ya
+contestadas, que es la ruta de ocultación A2.
+
+**Cómo se revisa (`src/cliente/respuestas.js`, funciones puras):**
+- *Rellena un hueco* → preseleccionado.
+- *Corrige un dato* que nadie ha tocado desde el envío → lo marca el técnico.
+- *La ficha ha cambiado* desde el envío y el cliente dice otra cosa → lo marca el técnico.
+- *Lo ha borrado*, *ya no lo tenemos* → solo información: **la app nunca borra** un
+  dato, una instancia ni el sí/no de una sección por lo que diga el cliente.
+- Filas nuevas: preseleccionadas en secciones sin criterios (impresoras,
+  aplicaciones, telefonía, otros); en «Servicios contratados», no.
+- Una sección que no está en «Sí» no recibe nada hasta que el técnico la marca. Marcar
+  «Sí» solo puede abrir preguntas, nunca esconderlas.
+- `aplicarRespuestas` recalcula la comparación por su cuenta y vuelve a excluir lo que
+  lee el motor: un fichero manipulado no cuela nada aunque la pantalla fallara.
+- Queda constancia en `formData.__cliente__.importaciones` (fecha, quién lo rellenó,
+  cuántos datos), **sin índices de instancia**, para no repetir el fallo C9.
+
+**Medido.** Aceptándolo todo en las 5 fichas, la nota **nunca sube** y el sello nunca
+aparece. Añadir un servicio nuevo baja la nota 0–3 puntos y deja una comprobación
+crítica pendiente (su panel), o la deja no fiable si no se le da tipo: lo que trae el
+cliente obliga a comprobar, no regala nota. Probado de punta a punta en Chromium: el
+HTML real se rellenó en el navegador, se descargaron las respuestas y se aplicaron
+con el código de la app sobre la misma ficha.
+
+**Seguridad del fichero.** Los datos van como JSON con «<» escapado y se pintan con
+`textContent`; ninguna petición de red; el código de la página va como texto
+(`String.raw`) para que el empaquetador no lo transforme. La descarga del cuestionario
+se registra en la auditoría como `fichero_exportado` con `{ cuestionario: 1 }`, sin
+contenido y sin tocar el SQL.
+
+**De paso:** el PDF dejaba de imprimir el «¿Por qué no tiene esto?» de una sección
+que pasó de «no» a «sí» (se imprimía el motivo viejo como vigente). Este flujo puede
+hacer ese paso, así que se arregló con su prueba.
+
+**Lo que no está probado:** abrir el .html en Safari/iPad, Firefox y desde el visor de
+adjuntos de Outlook; y la pantalla de revisión dentro de la app, que solo puede ver el
+dueño con sesión.

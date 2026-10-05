@@ -3,11 +3,11 @@ import Dashboard from "./components/Dashboard.jsx";
 import VersionHistory from "./components/VersionHistory.jsx";
 import LoginPage from "./components/LoginPage.jsx";
 import { isSupabaseConfigured } from "./lib/supabase.js";
-import { getSession, onAuthChange, signOut, getUserName } from "./lib/auth.js";
+import { getSession, onAuthChange, signOut, getUserName, getUserEmail } from "./lib/auth.js";
 import { saveClient as saveToCloud, loadClient, resolveImagesToBase64, searchClients } from "./lib/clientService.js";
 import { guardarBorrador, leerBorrador, borrarBorrador, borradorTieneContenido, haceCuanto } from "./lib/borrador.js";
 import { registrarEvento } from "./lib/auditoria.js";
-import { SECTIONS, TARJETAS, estadoTarjeta, lectorEfectivo, reindexarHints } from "./sections.js";
+import { SECTIONS, TARJETAS, estadoTarjeta, lectorEfectivo, reindexarHints, CAMPOS_CLIENTE } from "./sections.js";
 import { C, inp, FUENTE } from "./theme.js";
 import { SiNoToggle, ImageZone, SectionFields } from "./components/fields.jsx";
 import { buildPrintFragment } from "./print/buildPrintHTML.js";
@@ -17,6 +17,7 @@ import { CRITERIOS, PRECONDICIONES, CAMPOS_QUE_PUNTUAN, MOTIVO_OTRO } from "./sc
 import { hintsVisibles, claveHint, TIPOS_HINT } from "./hints.js";
 import ReportPanel from "./components/ReportPanel.jsx";
 import SectionRail from "./components/SectionRail.jsx";
+import CuestionarioCliente from "./components/CuestionarioCliente.jsx";
 
 // ── Print View ──────────────────────────────────────────────────────────────
 // Vista para Ctrl+P del navegador. Renderiza el mismo HTML que la exportacion a
@@ -54,6 +55,7 @@ export default function App() {
   const [currentClientId, setCurrentClientId] = useState(null);
   const [saving, setSaving] = useState(false);
   const [showVersionHistory, setShowVersionHistory] = useState(false);
+  const [showCuestionario, setShowCuestionario] = useState(false);
 
   const [clientData, setClientData] = useState({ empresa: "", sector: "", trabajadores: "", sedes: "", contacto: "", telefono: "", email: "", web: "", direccion: "", fecha: new Date().toISOString().split("T")[0], responsable: "" });
   const [sectionEnabled, setSectionEnabled] = useState({});
@@ -546,19 +548,9 @@ export default function App() {
     doNewProject();
   };
 
-  const clientFields = [
-    { id: "empresa", label: "Nombre de la empresa", placeholder: "Empresa S.L.", full: true },
-    { id: "sector", label: "Sector de la empresa", placeholder: "Ej: Construcción, Retail, Sanidad..." },
-    { id: "trabajadores", label: "Nº de trabajadores", placeholder: "Ej: 25" },
-    { id: "sedes", label: "Nº de sedes", placeholder: "Ej: 3" },
-    { id: "contacto", label: "Persona de contacto", placeholder: "Nombre Apellidos" },
-    { id: "telefono", label: "Teléfono", placeholder: "+34 6XX XXX XXX" },
-    { id: "email", label: "Email", placeholder: "contacto@empresa.com" },
-    { id: "direccion", label: "Dirección", placeholder: "Calle, Número, Población", full: true },
-    { id: "web", label: "Página web", placeholder: "Ej: www.empresa.com" },
-    { id: "fecha", label: "Fecha de visita", placeholder: "DD/MM/AAAA" },
-    { id: "responsable", label: "Responsable ALANA IT", placeholder: "Nombre técnico" },
-  ];
+  // Vive en sections.js porque el cuestionario para el cliente tambien los
+  // pregunta: una sola lista, para que la etiqueta no se desfase entre los dos.
+  const clientFields = CAMPOS_CLIENTE;
 
   // Auth guard - show login if Supabase is configured but no session
   if (isSupabaseConfigured() && authLoading) {
@@ -801,6 +793,32 @@ export default function App() {
           onClose={() => setShowVersionHistory(false)}
         />
       )}
+      {/* CUESTIONARIO PARA EL CLIENTE */}
+      {showCuestionario && (
+        <CuestionarioCliente
+          estado={{ clientData, sectionEnabled, formData, instanceCounts }}
+          tecnico={getUserEmail(session)}
+          onAplicar={(r) => {
+            // Lo aceptado entra como cualquier otro cambio: queda en la ficha
+            // pendiente de "Guardar", y la version la firma el tecnico.
+            setClientData(r.clientData);
+            setSectionEnabled(r.sectionEnabled);
+            setFormData(r.formData);
+            setInstanceCounts(r.instanceCounts);
+            setIsDirty(true);
+          }}
+          onDescargado={() => {
+            // El cuestionario lleva inventario del cliente y sale de la
+            // aplicacion: se registra como una exportacion mas. Solo
+            // contadores, nunca contenido (auditoria.js).
+            registrarEvento("fichero_exportado", {
+              clientId: currentClientId, empresa: clientData.empresa,
+              detalle: { cuestionario: 1 },
+            });
+          }}
+          onCerrar={() => setShowCuestionario(false)}
+        />
+      )}
       {/* BORRADOR RECUPERABLE */}
       {modalBorrador}
       {/* UNSAVED CHANGES MODAL */}
@@ -892,6 +910,7 @@ export default function App() {
             {isSupabaseConfigured() && currentClientId && (
               <button onClick={() => setShowVersionHistory(true)} title="Historial de versiones" aria-label="Historial de versiones" style={btnIcono(false)}>🕘</button>
             )}
+            <button onClick={() => setShowCuestionario(true)} title="Cuestionario para el cliente" aria-label="Cuestionario para el cliente" style={btnIcono(showCuestionario)}>📨</button>
 
             <button onClick={handleSave} disabled={saving} style={{
               background: isDirty ? C.green : "rgba(255,255,255,0.12)", color: "#fff",

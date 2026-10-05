@@ -12,6 +12,23 @@ import { HINTS } from "./hints.js";
 // scripts/check-ids.mjs verifica este contrato en cada build.
 // ─────────────────────────────────────────────────────────────────────────
 
+// Datos generales del cliente (clientData). No son secciones: van en la
+// cabecera de la ficha y el motor solo lee `fecha`. Los usa el formulario y el
+// cuestionario para el cliente, que pregunta los de contacto.
+export const CAMPOS_CLIENTE = [
+  { id: "empresa", label: "Nombre de la empresa", placeholder: "Empresa S.L.", full: true },
+  { id: "sector", label: "Sector de la empresa", placeholder: "Ej: Construcción, Retail, Sanidad..." },
+  { id: "trabajadores", label: "Nº de trabajadores", placeholder: "Ej: 25" },
+  { id: "sedes", label: "Nº de sedes", placeholder: "Ej: 3" },
+  { id: "contacto", label: "Persona de contacto", placeholder: "Nombre Apellidos" },
+  { id: "telefono", label: "Teléfono", placeholder: "+34 6XX XXX XXX" },
+  { id: "email", label: "Email", placeholder: "contacto@empresa.com" },
+  { id: "direccion", label: "Dirección", placeholder: "Calle, Número, Población", full: true },
+  { id: "web", label: "Página web", placeholder: "Ej: www.empresa.com" },
+  { id: "fecha", label: "Fecha de visita", placeholder: "DD/MM/AAAA" },
+  { id: "responsable", label: "Responsable ALANA IT", placeholder: "Nombre técnico" },
+];
+
 export const SECTIONS = [
   {
     id: "red", label: "Internet y Red (Router, Switches, Firewall)", icon: "🌐",

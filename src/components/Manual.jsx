@@ -294,6 +294,9 @@ export default function Manual({ onClose }) {
                 <h3>Datos del cliente</h3>
                 <p>Empresa, contacto, trabajadores y sedes. La fecha de la visita decide si los
                 sistemas están en soporte: déjala correcta.</p>
+                <p>Si el cliente puede adelantar el inventario (contratos, impresoras, aplicaciones,
+                servicios contratados), mándale el <b>cuestionario</b> con el botón 📨 y carga sus
+                respuestas: cada dato lo revisas tú antes de que entre en la ficha.</p>
               </div>
               <div className="mn-fase">
                 <span className="mn-orden">DESPUÉS</span>
