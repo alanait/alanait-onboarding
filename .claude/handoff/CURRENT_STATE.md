@@ -1,8 +1,55 @@
 # Estado actual — ALANA IT Onboarding
 
 > Última actualización: 2026-08-25. Verificado contra el repositorio
-> ejecutándolo, no solo contra la conversación. Bloque del 01/10/2026 añadido
-> justo debajo.
+> ejecutándolo, no solo contra la conversación. Bloques del 01/10/2026 y del
+> 06/10/2026 añadidos justo debajo.
+
+---
+
+## ▶ 06/10/2026: siguiente hito, integración con Hudu (analizada; arquitectura elegida)
+
+El dueño quiere que, al finalizar una ficha, se documente todo en Hudu solo
+(assets, datos…), como hacía Claude a mano. Se analizó a fondo con 11 agentes en
+**solo lectura**: no se creó ni cambió nada en Hudu, Supabase, GitHub ni Vercel.
+
+**Arquitectura que eligió el dueño tras leer el análisis:** la app **se queda como
+está** (Vercel + Supabase) y el **conector va aparte, en un servidor de ALANA en su
+CPD**. El conector solo hace conexiones de salida: recoge de Supabase las solicitudes
+de la app, prepara la vista previa con lo que hay en Hudu, espera la confirmación
+del técnico y escribe en Hudu. Ventajas frente a la función de Vercel que proponía
+el análisis: no hay que publicar nada del CPD; si el conector se cae, las visitas no
+se enteran; la clave de Hudu no sale del CPD y se puede limitar a su IP; las
+previews de Vercel no pueden escribir en Hudu; y sobran los envíos troceados por el
+límite de tiempo de las funciones.
+
+**Lo que sigue valiendo del análisis:**
+- Un botón **«Documentar en Hudu»** en la ficha, con vista previa y confirmación. Se
+  documenta la ficha GUARDADA, leída con `lectorEfectivo`.
+- El MVP **siembra, no sincroniza**: crea y vincula, pero nunca sobrescribe,
+  archiva ni borra en Hudu, que tras el alta es la documentación viva.
+- Nunca envía contraseñas, notas libres, capturas, datos de contacto ni avisos
+  comerciales. Ordenadores y usuarios de M365 los ponen sus integraciones
+  (NinjaOne, Microsoft 365); los servidores sin asset esperan a NinjaOne.
+- Las instancias necesitan un identificador estable (`__uid__`, aditivo) por C9, y
+  el guardado necesita bloqueo optimista: hoy gana el último que guarda.
+- La lógica (mapeo, emparejado, plan, artículo) va en módulos puros con sus
+  pruebas, igual que el resto del proyecto, y no depende de dónde se ejecute: se
+  puede empezar ya.
+- Quedan decisiones del dueño: levantar la pausa (revisión de Joan), fuente de
+  verdad tras el alta, quién lo usa y si se siembran 1–3 altas antes del botón.
+
+**Repositorio público por decisión del dueño (06/10).** Se hizo privado ese día y
+Vercel (Hobby) empezó a bloquear los despliegues de las ramas; el dueño eligió
+volver a público antes que pagar Vercel Pro. Consecuencia permanente: en ningún
+fichero versionado van nombres ni ids de clientes, detalles de seguridad, ni nada
+que no pueda leer cualquiera.
+
+**Dónde está el análisis completo:** en el equipo del dueño, en
+`.claude/analisis-hudu/` (`informe-final.md` y los diez informes de los agentes);
+git no sube esa carpeta. Lleva nombres de clientes, ids de Hudu y hallazgos de
+seguridad, y por eso **no entra en el repositorio**. También está publicado como
+artifact privado del dueño en claude.ai. Sus acciones de seguridad son para el
+dueño y están allí, no aquí.
 
 ---
 
